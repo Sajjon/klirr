@@ -113,14 +113,15 @@ fn get_exchange_rates_if_needed_with_fetcher(
         }
     }
     debug!("✅ Fetched exchanges rates for #{} expenses.", rates.len());
-    Ok(ExchangeRates::builder()
+    let rates = ExchangeRates::builder()
         .target_currency(target_currency)
         .rates(rates)
-        .build())
+        .build();
+    Ok(rates)
 }
 
 #[cfg(test)]
-mod tests_frankfurter_api {
+mod tests {
     use super::*;
     use test_log::test;
 
@@ -202,5 +203,21 @@ mod tests_frankfurter_api {
         let rates = rates.rates();
         assert_eq!(rates.len(), 1);
         assert!(rates.contains_key(&Currency::GBP));
+    }
+
+    #[test]
+    fn test_get_exchange_rate_with_fetcher_when_from_to_is_equal() {
+        let date = Date::from_str("2025-04-30").unwrap();
+        let from = Currency::EUR;
+        let to = Currency::EUR;
+        let rate = get_exchange_rate_with_fetcher(date, from, to, |url| {
+            assert_eq!(
+                url,
+                "https://api.frankfurter.app/2025-04-30?from=EUR&to=EUR"
+            );
+            Ok(Mock { json: "{}" }) // Mocking the fetcher to return an empty response
+        });
+        assert!(rate.is_ok());
+        assert_eq!(rate.unwrap(), UnitPrice::from(1.0));
     }
 }
