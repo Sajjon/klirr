@@ -36,13 +36,18 @@ mod tests {
 
     #[test]
     fn test_create_pdf() {
-        let input = ValidInput::builder().month(YearAndMonth::sample()).build();
+        let out = NamedTempFile::new().unwrap().path().to_path_buf();
+        let input = ValidInput::builder()
+            .maybe_output_path(out.clone())
+            .month(YearAndMonth::sample())
+            .build();
         let dummy_pdf_data = Vec::from(b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n");
         let path = create_pdf(input, |_, _| {
             // Simulate PDF rendering
             Ok(Pdf::from(dummy_pdf_data.clone()))
         })
         .unwrap();
+        assert_eq!(path, out);
         let result = std::fs::read(&path).unwrap();
         assert_eq!(result, dummy_pdf_data);
     }
