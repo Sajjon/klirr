@@ -54,7 +54,7 @@ jobs:
                   components: clippy
 
             - name: Clippy Check
-              run: cargo clippy --all
+              run: cargo clippy --locked --all -- -D warnings
 
     # Rust unit, doc and integration
     test-rust:

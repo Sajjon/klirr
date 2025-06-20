@@ -22,3 +22,15 @@ impl HasSample for ItemConvertedIntoTargetCurrency {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn item_converted_into_target_currency_sample() {
+        let sample = ItemConvertedIntoTargetCurrency::sample();
+        assert_eq!(*sample.total_cost(), Cost::sample());
+    }
+}

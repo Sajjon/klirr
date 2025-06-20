@@ -29,3 +29,15 @@ impl HasSample for ValidInput {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn valid_input_sample() {
+        let sample = ValidInput::sample();
+        assert!(sample.maybe_output_path.is_some());
+    }
+}

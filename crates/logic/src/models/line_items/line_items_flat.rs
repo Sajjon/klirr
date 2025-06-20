@@ -60,3 +60,29 @@ impl HasSample for LineItemsFlat {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn test_line_items_flat_conversion() {
+        let line_items = LineItemsPricedInSourceCurrency::sample();
+        let exchange_rates = ExchangeRates::builder()
+            .rates(HashMap::from_iter([(Currency::GBP, UnitPrice::from(10.0))]))
+            .target_currency(Currency::EUR)
+            .build();
+        let result = LineItemsFlat::try_from((line_items, exchange_rates));
+        assert!(
+            result.is_ok(),
+            "Expected conversion to succeed, got: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_is_expenses() {
+        assert!(!LineItemsFlat::sample().is_expenses());
+    }
+}

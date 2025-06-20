@@ -27,3 +27,15 @@ impl HasSample for InvoicedItems {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn is_expenses() {
+        assert!(!InvoicedItems::Service { days_off: None }.is_expenses());
+        assert!(InvoicedItems::Expenses.is_expenses());
+    }
+}

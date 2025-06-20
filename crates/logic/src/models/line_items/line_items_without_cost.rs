@@ -28,3 +28,14 @@ impl HasSample for LineItemsPricedInSourceCurrency {
         Self::Service(Item::sample())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn is_expenses() {
+        assert!(!LineItemsPricedInSourceCurrency::sample().is_expenses());
+    }
+}

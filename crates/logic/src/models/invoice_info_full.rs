@@ -56,3 +56,15 @@ impl InvoiceInfoFull {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn test_invoice_info_full_sample() {
+        let sample = InvoiceInfoFull::sample();
+        assert!(!sample.footer_text().is_empty());
+    }
+}

@@ -10,3 +10,14 @@ impl HasSample for InvoiceNumber {
         Self::from(9876)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_invoice_number_sample() {
+        let sample = InvoiceNumber::sample();
+        assert_eq!(*sample, 9876);
+    }
+}

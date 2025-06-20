@@ -1,5 +1,6 @@
 mod calendar_logic;
 mod create_pdf;
+mod file_path_logic;
 mod models;
 mod pdf;
 mod prepare_data;
@@ -10,6 +11,7 @@ mod serde_to_typst;
 pub mod prelude {
     pub use crate::calendar_logic::*;
     pub use crate::create_pdf::*;
+    pub use crate::file_path_logic::*;
     pub use crate::models::*;
     pub use crate::pdf::*;
     pub use crate::prepare_data::*;
@@ -19,6 +21,7 @@ pub mod prelude {
 
     pub use std::{
         collections::HashMap,
+        fs,
         path::{Path, PathBuf},
         str::FromStr,
     };

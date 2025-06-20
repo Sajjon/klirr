@@ -107,3 +107,32 @@ impl TryFrom<u32> for Month {
         Self::try_from(month as i32)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn test_month_conversion() {
+        assert_eq!(Month::try_from(1).unwrap(), Month::January);
+        assert_eq!(Month::try_from(2).unwrap(), Month::February);
+        assert_eq!(Month::try_from(10).unwrap(), Month::October);
+        assert_eq!(Month::try_from(11).unwrap(), Month::November);
+        assert_eq!(Month::try_from(12).unwrap(), Month::December);
+        assert!(Month::try_from(0).is_err());
+        assert!(Month::try_from(13).is_err());
+    }
+
+    #[test]
+    fn test_month_display() {
+        assert_eq!(Month::January.to_string(), "1");
+        assert_eq!(Month::December.to_string(), "12");
+    }
+
+    #[test]
+    fn test_month_deref() {
+        let month: &u8 = &Month::March;
+        assert_eq!(*month, 3);
+    }
+}
