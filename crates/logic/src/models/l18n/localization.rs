@@ -42,7 +42,6 @@ impl L18n {
             path: "CARGO_MANIFEST_DIR".to_owned(),
         })?;
         let path = format!("{}/../../input/l18n/{}.ron", dir, language);
-        println!("{}", path);
         deserialize_contents_of_ron(Path::new(&path))
     }
 }

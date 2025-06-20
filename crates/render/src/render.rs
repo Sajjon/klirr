@@ -83,8 +83,8 @@ pub fn fixture(relative: impl AsRef<Path>) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use magick_rust::{LayerMethod, MagickWand, magick_wand_genesis};
-    use std::{env, sync::Once};
+    use std::{env, io::Write, process::Command};
+    use tempfile::NamedTempFile;
     use test_log::test;
 
     fn running_in_ci() -> bool {
@@ -156,6 +156,8 @@ mod tests {
             }
         };
 
+        save_new_image_as_expected(new_image.clone());
+
         let image_one = image::load_from_memory(&new_image)
             .expect("Could convert new image bytes to image")
             .into_rgb8();
@@ -206,8 +208,6 @@ mod tests {
         convert_pdf_to_pngs(pdf.as_ref(), 85.0).expect("Should be able to convert")
     }
 
-    static INIT: Once = Once::new();
-
     use std::error::Error;
 
     /// Converts PDF bytes to a single PNG image, with a white background and correct size.
@@ -219,49 +219,51 @@ mod tests {
     /// # Returns
     /// Result containing the number of pages converted or an error.
     fn convert_pdf_to_pngs(pdf_bytes: &[u8], dpi: f64) -> Result<Vec<u8>, Box<dyn Error>> {
-        // Initialize MagickWand environment once
-        INIT.call_once(|| {
-            magick_wand_genesis();
-        });
+        // Write PDF bytes to a temporary file
+        let mut temp_pdf = NamedTempFile::new()?;
+        temp_pdf.write_all(pdf_bytes)?;
+        let pdf_path = temp_pdf.path();
 
-        // Create a new MagickWand instance
-        let mut wand = MagickWand::new();
+        // Create another temp file for the output PNG
+        let temp_png = NamedTempFile::new()?;
+        let png_path = temp_png.path().with_extension("png");
 
-        // Set resolution before reading the PDF (e.g., 300 DPI for better quality)
-        wand.set_resolution(dpi, dpi)?;
+        // Construct DPI argument (as integer string)
+        let dpi_arg = format!("{}", dpi as u32);
 
-        // Read PDF bytes into the wand
-        wand.read_image_blob(pdf_bytes)?;
+        // Run the `convert` command using ImageMagick
+        let status = Command::new("magick")
+            .arg("-density")
+            .arg(&dpi_arg)
+            .arg("-units")
+            .arg("PixelsPerInch")
+            .arg(pdf_path)
+            .arg("-colorspace")
+            .arg("RGB")
+            .arg("-background")
+            .arg("white")
+            .arg("-alpha")
+            .arg("remove")
+            .arg("-flatten")
+            .arg("+profile")
+            .arg("*")
+            .arg("-strip")
+            .arg("-define")
+            .arg("png:compression-filter=0")
+            .arg("-define")
+            .arg("png:compression-level=9")
+            .arg("-define")
+            .arg("png:compression-strategy=1")
+            .arg(&png_path)
+            .status()?;
 
-        // Get the number of pages
-        let num_pages = wand.get_number_images();
+        if !status.success() {
+            return Err("ImageMagick convert command failed".into());
+        }
 
-        assert_eq!(num_pages, 1);
+        // Read the resulting PNG bytes
+        let png_bytes = std::fs::read(&png_path)?;
 
-        // Set the current image in the sequence
-        wand.set_iterator_index(0)?;
-
-        // Get page dimensions (in pixels, based on DPI)
-        let width = wand.get_image_width();
-        let height = wand.get_image_height();
-
-        // Set the background color to white
-        let mut background = magick_rust::PixelWand::new();
-        background.set_color("white")?;
-        wand.set_image_background_color(&background)?;
-
-        // Extend the canvas to ensure the background covers the full area
-        wand.extend_image(width, height, 0, 0)?;
-
-        // Flatten the image to apply the white background
-        wand.merge_image_layers(LayerMethod::Flatten)?;
-
-        // Set the output format to PNG
-        wand.set_format("PNG")?;
-
-        // Get the image blob (PNG data)
-        let png_data = wand.write_image_blob("PNG")?;
-
-        Ok(png_data)
+        Ok(png_bytes)
     }
 }
