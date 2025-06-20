@@ -93,6 +93,10 @@ mod tests {
 
     #[test]
     fn test_sample_expenses() {
+        if running_in_ci() {
+            // Skip this test in CI, as it requires imagemagick to be installed.
+            return;
+        }
         compare_image_against_expected(
             DataFromDisk::sample(),
             ValidInput::builder()
@@ -106,6 +110,10 @@ mod tests {
 
     #[test]
     fn test_sample_services() {
+        if running_in_ci() {
+            // Skip this test in CI, as it requires imagemagick to be installed.
+            return;
+        }
         compare_image_against_expected(
             DataFromDisk::sample(),
             ValidInput::builder()

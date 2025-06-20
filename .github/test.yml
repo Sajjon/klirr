@@ -1,0 +1,92 @@
+# Testing CI - Runs on each PR and Push
+
+name: Test
+on:
+    pull_request: {}
+    push:
+        branches:
+            - main
+
+permissions:
+    id-token: write
+    contents: read
+env:
+    CARGO_TERM_COLOR: always
+    RUST_TOOLCHAIN: 1.85.0
+    RUST_COMPONENTS: "rust-std"
+jobs:
+    spelling:
+        name: Spell Check with Typos
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Actions Repository
+              uses: actions/checkout@v4
+            - name: Spell Check Repo
+              uses: crate-ci/typos@v1.33.1
+
+    # cargo fmt check
+    check-formatting:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install Rust Toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: ${{ env.RUST_TOOLCHAIN }}
+                  default: true
+                  components: rustfmt
+
+            - name: Check formatting
+              run: cargo fmt --check
+
+    # clippy
+    check-clippy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install Rust Toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: ${{ env.RUST_TOOLCHAIN }}
+                  default: true
+                  components: clippy
+
+            - name: Clippy Check
+              run: cargo clippy --all
+
+    # Rust unit, doc and integration
+    test-rust:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install Rust Toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: ${{ env.RUST_TOOLCHAIN }}
+                  default: true
+
+            - name: Run rust tests
+              run: cargo test --locked -- --test-threads=1
+
+    coverage:
+        runs-on: ubuntu-latest
+        container:
+            image: xd009642/tarpaulin:develop-nightly
+            options: --security-opt seccomp=unconfined
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: Generate code coverage
+              run: |
+                  cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
+
+            - name: Upload to codecov.io
+              uses: codecov/codecov-action@v2
+              with:
+                  token: ${{secrets.CODECOV_TOKEN}} # not required for public repos
+                  slug: Sajjon/invoice_typst
+                  fail_ci_if_error: true
