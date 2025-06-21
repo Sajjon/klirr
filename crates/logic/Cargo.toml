@@ -25,6 +25,7 @@ thiserror.workspace = true
 typed-builder.workspace = true
 
 [dev-dependencies]
+httpmock = "0.7.0"
 insta.workspace = true
 pretty_assertions.workspace = true
 tempfile.workspace = true

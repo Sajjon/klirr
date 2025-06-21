@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use crate::prelude::*;
 
+const FRANKFURTER_API: &str = "https://api.frankfurter.app";
+
 /// Response has format:
 /// ```json
 /// {
@@ -54,14 +56,8 @@ fn get_exchange_rate_with_fetcher<T: DeserializableResponse>(
     if from == to {
         return Ok(UnitPrice::from(1.0));
     }
-    debug!(
-        "Fetching exchange rate for {} from {} to {}",
-        date, from, to
-    );
-    let url = format!(
-        "https://api.frankfurter.app/{}?from={}&to={}",
-        date, from, to
-    );
+    debug!("Fetching {}/{}@{} rate.", from, to, date);
+    let url = format!("{}/{}?from={}&to={}", FRANKFURTER_API, date, from, to);
     fetcher(url)?
         .json::<FrankfurterApiResponse>()
         .and_then(|response| {
@@ -99,10 +95,7 @@ fn get_exchange_rates_if_needed_with_fetcher(
             .rates(HashMap::new())
             .build());
     };
-    debug!(
-        "☑️ Fetching exchanges rates for #{} expenses...",
-        expenses.len()
-    );
+    debug!("☑️ Fetching rates for #{} expenses...", expenses.len());
     let mut rates = HashMap::new();
     for expense in expenses {
         let from = *expense.currency();
@@ -124,6 +117,15 @@ fn get_exchange_rates_if_needed_with_fetcher(
 mod tests {
     use super::*;
     use test_log::test;
+
+    use httpmock::Method::GET;
+    use httpmock::MockServer;
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct MyData {
+        name: String,
+        age: u32,
+    }
 
     #[test]
     fn test_frankfurter_api_response() {
@@ -178,6 +180,51 @@ mod tests {
             Ok(Mock { json: response })
         });
         assert!(rate.is_ok());
+    }
+
+    #[test]
+    fn test_successful_deserialization() {
+        let server = MockServer::start();
+
+        let mock = server.mock(|when, then| {
+            when.method(GET).path("/test");
+            then.status(200)
+                .header("Content-Type", "application/json")
+                .body(r#"{"name": "Alice", "age": 30}"#);
+        });
+
+        let response = reqwest::blocking::get(&format!("{}/test", server.base_url())).unwrap();
+
+        let result: Result<MyData, _> = response.json(); // our trait method
+
+        assert_eq!(
+            result.unwrap(),
+            MyData {
+                name: "Alice".to_string(),
+                age: 30
+            }
+        );
+
+        mock.assert();
+    }
+
+    #[test]
+    fn test_json_parse_error() {
+        let server = MockServer::start();
+
+        server.mock(|when, then| {
+            when.method(GET).path("/badjson");
+            then.status(200)
+                .header("Content-Type", "application/json")
+                .body("invalid json");
+        });
+
+        let response =
+            reqwest::blocking::get(&format!("{}/badjson", server.url("/rates"))).unwrap();
+
+        let result: Result<MyData, _> = response.json(); // our trait method
+
+        assert!(result.is_err());
     }
 
     #[test]
