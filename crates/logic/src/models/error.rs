@@ -25,6 +25,10 @@ pub enum Error {
     )]
     TargetMonthMustHaveExpenses { target_month: YearAndMonth },
 
+    /// Failed to parse year
+    #[error("Failed to parse year: {invalid_string}")]
+    FailedToParseYear { invalid_string: String },
+
     /// Failed to load file
     #[error("Failed to load file: {path}")]
     FileNotFound { path: String },

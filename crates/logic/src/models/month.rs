@@ -94,6 +94,29 @@ impl TryFrom<i32> for Month {
     }
 }
 
+impl FromStr for Month {
+    type Err = crate::prelude::Error;
+
+    /// Parses a month from a string.
+    /// The string must be a valid month number (1-12).
+    /// If the string is not a valid month, an `Error::InvalidMonth` is returned.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate invoice_typst_logic;
+    /// use invoice_typst_logic::prelude::*;
+    /// let month: Month = "3".parse().unwrap();
+    /// assert_eq!(month, Month::March);
+    /// ```
+    fn from_str(s: &str) -> Result<Self> {
+        let month = s.parse::<i32>().map_err(|_| Error::InvalidMonth {
+            month: 0,
+            reason: "Failed to parse month from string".to_string(),
+        })?;
+        Self::try_from(month)
+    }
+}
+
 impl TryFrom<u8> for Month {
     type Error = crate::prelude::Error;
     fn try_from(month: u8) -> Result<Self> {
