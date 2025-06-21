@@ -20,36 +20,28 @@ pub fn type_name<T>() -> String {
 /// - `Error::FileNotFound` if the file does not exist or cannot be read
 /// - `Error::Deserialize` if the contents cannot be deserialized into the specified type
 pub fn deserialize_contents_of_ron<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T> {
-    debug!(
-        "☑️ Deserializing {} from {}",
-        type_name::<T>(),
-        path.as_ref().display()
-    );
     use ron::de::from_str;
     use std::fs;
     let path = path.as_ref();
+    let path_display = path.display().to_string();
+    let type_name = type_name::<T>();
+    debug!("☑️ Deserializing {} from {}", type_name, path_display);
     let ron_str = fs::read_to_string(path).map_err(|e| {
-        error!(
-            "Failed to read data from '{}', error: {:?}",
-            path.display(),
-            e
-        );
+        error!("Failed to read data from '{}': {:?}", path_display, e);
         Error::FileNotFound {
             path: path.display().to_string(),
         }
     })?;
-    let result = from_str(&ron_str).map_err(|e| {
-        error!("Failed to deserialize {}: {}", path.display(), e);
-        Error::Deserialize {
-            type_name: type_name::<T>(),
-            error: e.to_string(),
-        }
-    })?;
-    debug!(
-        "✅ Deserialized {} from {}",
-        type_name::<T>(),
-        path.display()
-    );
+    let result = from_str(&ron_str)
+        .inspect(|_| debug!("✅ Deserialized {} from {}", type_name, path_display))
+        .map_err(|e| {
+            error!("Failed to deserialize {}: {}", path.display(), e);
+            Error::Deserialize {
+                type_name,
+                error: e.to_string(),
+            }
+        })?;
+
     Ok(result)
 }
 

@@ -21,15 +21,15 @@ repos:
             types: [file, rust]
             entry: cargo clippy --all -- -D warnings # Use -D warnings option to ensure the job fails whenencountering warnings
             pass_filenames: false
-          - id: unit tests
-            name: unit tests
-            language: system
-            types: [file, rust]
-            entry: cargo nextest run --all
-            pass_filenames: false
           - id: doc tests
             name: doc tests
             language: system
             types: [file, rust]
             entry: cargo test --doc
+            pass_filenames: false
+          - id: unit tests
+            name: unit tests
+            language: system
+            types: [file, rust]
+            entry: cargo nextest run --all
             pass_filenames: false

@@ -33,6 +33,13 @@ pub enum Error {
     #[error("Failed to deserialize {type_name}, because: {error}")]
     Deserialize { type_name: String, error: String },
 
+    /// Failed to parse Day from String
+    #[error("Invalid day from String: {invalid_string}, reason: {reason}")]
+    InvalidDayFromString {
+        invalid_string: String,
+        reason: String,
+    },
+
     /// Invalid day of the month, e.g. when the day is not between 1 and 31.
     #[error("Invalid day: {day}, reason: {reason}")]
     InvalidDay { day: i32, reason: String },

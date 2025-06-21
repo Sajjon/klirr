@@ -25,7 +25,7 @@ impl PaymentTerms {
 
 impl HasSample for PaymentTerms {
     fn sample() -> Self {
-        Self::net30()
+        Self::default()
     }
 }
 
@@ -66,10 +66,48 @@ impl FromStr for NetDays {
         Ok(Self::builder().due_in(days).build())
     }
 }
+
 impl NetDays {
     pub fn net30() -> Self {
         Self::builder()
             .due_in(Day::try_from(30).expect("LEQ 31 days"))
             .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use insta::assert_ron_snapshot;
+
+    #[test]
+    fn test_payment_terms_net_days() {
+        let net_days: NetDays = "Net 30".parse().unwrap();
+        assert_eq!(net_days.due_in(), &Day::try_from(30).unwrap());
+        assert_ron_snapshot!(net_days);
+    }
+
+    #[test]
+    fn test_payment_terms_default() {
+        let payment_terms = PaymentTerms::default();
+        assert!(matches!(payment_terms, PaymentTerms::Net(_)));
+        assert_ron_snapshot!(payment_terms);
+    }
+
+    #[test]
+    fn from_str_invalid_all_reasons() {
+        let invalid_strings = [
+            "Net",          // Missing days
+            "Net 0",        // Invalid days (0)
+            "Net -30",      // Invalid days (negative)
+            "Net 32",       // Invalid days (more than 31)
+            "Net abc",      // Non-numeric days
+            "Net 30 extra", // Extra text after valid input
+        ];
+
+        for invalid in invalid_strings {
+            let result: Result<NetDays, _> = invalid.parse();
+            assert!(result.is_err(), "Expected error for '{}'", invalid);
+        }
     }
 }
