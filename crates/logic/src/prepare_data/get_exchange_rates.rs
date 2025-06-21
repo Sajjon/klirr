@@ -221,7 +221,7 @@ mod tests {
 
         let response = reqwest::blocking::get(format!("{}/badjson", server.url("/rates"))).unwrap();
 
-        let result: Result<MyData, _> = response.json(); // our trait method
+        let result: Result<MyData, _> = DeserializableResponse::json(response);
 
         assert!(result.is_err());
     }

@@ -224,21 +224,8 @@ impl std::str::FromStr for YearAndMonth {
             });
         }
 
-        let year = Year::from(
-            parts[0]
-                .parse::<i32>()
-                .map_err(|_| Error::FailedToParseDate {
-                    underlying: "Invalid year".to_owned(),
-                })?,
-        );
-        let month =
-            Month::try_from(
-                parts[1]
-                    .parse::<i32>()
-                    .map_err(|_| Error::FailedToParseDate {
-                        underlying: "Invalid month".to_owned(),
-                    })?,
-            )?;
+        let year = Year::from_str(parts[0])?;
+        let month = Month::from_str(parts[1])?;
 
         Ok(Self::builder().year(year).month(month).build())
     }

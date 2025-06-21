@@ -127,10 +127,7 @@ impl DataFromDisk {
                         LineItemsPricedInSourceCurrency::Service(service)
                     }
                     InvoicedItems::Expenses => {
-                        let expenses = get_expenses_for_month(
-                            target_month,
-                            self.expensed_months.expenses_for_months(),
-                        )?;
+                        let expenses = self.expensed_months.get(target_month)?;
                         LineItemsPricedInSourceCurrency::Expenses(expenses.clone())
                     }
                 })

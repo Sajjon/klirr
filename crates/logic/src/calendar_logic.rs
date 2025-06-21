@@ -106,10 +106,7 @@ impl YearAndMonth {
     pub fn elapsed_months_since(&self, start: impl Borrow<Self>) -> u16 {
         let end = self;
         let start = start.borrow();
-        assert!(
-            start <= end,
-            "Start month must be before or equal to end month"
-        );
+        assert!(start <= end, "Expected start <= end month");
         let start_year = **start.year();
         let start_month = **start.month() as u16;
         let end_year = **end.year();
@@ -259,33 +256,6 @@ pub fn working_days_in_month(
     Ok(working_days)
 }
 
-/// Retrieves the expenses for a specific month from a collection of expenses
-/// organized by `YearAndMonth`.
-///
-/// /// # Errors
-/// Returns an error if the target month does not have any expenses recorded.
-///
-/// ```
-/// extern crate invoice_typst_logic;
-/// use invoice_typst_logic::prelude::*;
-/// let target_month = YearAndMonth::january(2024);
-/// let expenses_for_months = IndexMap::from_iter([(YearAndMonth::january(2024), vec![Item::sample_expense_breakfast()])]);
-/// let expenses = get_expenses_for_month(&target_month, &expenses_for_months);
-/// assert_eq!(expenses.unwrap().len(), 1); // January 2024 has one expense
-/// ```
-pub fn get_expenses_for_month(
-    target_month: &YearAndMonth,
-    expenses_for_months: &IndexMap<YearAndMonth, Vec<Item>>,
-) -> Result<Vec<Item>> {
-    if let Some(items) = expenses_for_months.get(target_month) {
-        Ok(items.clone())
-    } else {
-        Err(Error::TargetMonthMustHaveExpenses {
-            target_month: *target_month,
-        })
-    }
-}
-
 #[cfg(test)]
 mod tests {
     #![allow(non_snake_case)]
@@ -295,6 +265,8 @@ mod tests {
 
     /// 2025 is not a leap year
     const JAN_2025: YearAndMonth = YearAndMonth::january(2025);
+    /// 2025 is not a leap year
+    const FEB_2025: YearAndMonth = YearAndMonth::february(2025);
     /// 2025 is not a leap year
     const APR_2025: YearAndMonth = YearAndMonth::april(2025);
     /// 2025 is not a leap year
@@ -619,6 +591,8 @@ mod tests {
         assert_eq!(OCT_2025.last_day_of_month(), Day::try_from(31).unwrap());
         assert_eq!(NOV_2025.last_day_of_month(), Day::try_from(30).unwrap());
         assert_eq!(DEC_2025.last_day_of_month(), Day::try_from(31).unwrap());
+
+        assert_eq!(FEB_2025.last_day_of_month(), Day::try_from(28).unwrap());
     }
 
     #[test]
@@ -629,7 +603,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Start month must be before or equal to end month")]
+    #[should_panic]
     fn test_elapsed_months_since_panic() {
         let start = YearAndMonth::april(2025);
         let end = YearAndMonth::march(2025);
