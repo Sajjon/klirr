@@ -1,0 +1,8 @@
+[all]
+exclude-files = ["crates/cli/src/main.rs"]
+verbose = false
+timeout = "2m"
+locked = true
+all-features = true
+jobs = 1
+out = ["Html"]

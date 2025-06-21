@@ -193,7 +193,7 @@ mod tests {
                 .body(r#"{"name": "Alice", "age": 30}"#);
         });
 
-        let response = reqwest::blocking::get(&format!("{}/test", server.base_url())).unwrap();
+        let response = reqwest::blocking::get(format!("{}/test", server.base_url())).unwrap();
 
         let result: Result<MyData, _> = response.json(); // our trait method
 
@@ -219,8 +219,7 @@ mod tests {
                 .body("invalid json");
         });
 
-        let response =
-            reqwest::blocking::get(&format!("{}/badjson", server.url("/rates"))).unwrap();
+        let response = reqwest::blocking::get(format!("{}/badjson", server.url("/rates"))).unwrap();
 
         let result: Result<MyData, _> = response.json(); // our trait method
 

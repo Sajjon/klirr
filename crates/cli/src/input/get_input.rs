@@ -75,19 +75,6 @@ impl Input {
     }
 }
 
-/// Reads the input from the command line and returns a `ValidInput`.
-/// This function parses the command line arguments
-/// and validates them, returning an error if the input is
-/// invalid.
-///
-/// # Errors
-/// Returns an error if the input is invalid, e.g. if the output path does not
-/// exist or if the items are not specified correctly.
-pub fn get_input() -> Result<ValidInput> {
-    let input = Input::parse();
-    input.parsed()
-}
-
 #[cfg(test)]
 mod tests_input {
     use super::*;
