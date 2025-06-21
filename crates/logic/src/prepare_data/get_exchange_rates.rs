@@ -195,7 +195,7 @@ mod tests {
 
         let response = reqwest::blocking::get(format!("{}/test", server.base_url())).unwrap();
 
-        let result: Result<MyData, _> = response.json(); // our trait method
+        let result: Result<MyData, _> = DeserializableResponse::json(response); // our trait method
 
         assert_eq!(
             result.unwrap(),

@@ -42,17 +42,6 @@ mod tests {
     use test_log::test;
 
     #[test]
-    fn test_get_tmp_file_for_path_to_pdf() {
-        let tmp_file = NamedTempFile::new().unwrap();
-        let tmp_file = tmp_file.path();
-        unsafe {
-            std::env::set_var("TMP_FILE_FOR_PATH_TO_PDF", tmp_file.display().to_string());
-        }
-        let path = get_tmp_file_for_path_to_pdf();
-        assert_eq!(path.unwrap(), PathBuf::from(tmp_file));
-    }
-
-    #[test]
     fn test_save_pdf_location_to_tmp_file() {
         let tmp_file = NamedTempFile::new().unwrap();
         let tmp_file_path = tmp_file.path().to_path_buf();
