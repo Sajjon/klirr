@@ -1,5 +1,8 @@
 [all]
-exclude-files = ["crates/cli/src/main.rs"]
+exclude-files = [
+    "crates/cli/src/main.rs",
+    "crates/render/src/render_test_helpers.rs",
+]
 verbose = false
 timeout = "2m"
 locked = true
