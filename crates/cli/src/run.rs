@@ -1,9 +1,8 @@
 use invoice_typst_render::prelude::render;
 
-use crate::{init_logging, prelude::*};
+use crate::prelude::*;
 
 pub(super) fn run(input: Input) -> Result<()> {
-    init_logging::init_logging();
     let input = input.parsed()?;
     info!("🔮 Starting PDF creation, input: {}...", input);
     let pdf_location = create_pdf(input, |l18n, data| {

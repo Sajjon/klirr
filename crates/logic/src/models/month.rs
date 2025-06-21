@@ -111,6 +111,7 @@ impl TryFrom<u32> for Month {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::assert_debug_snapshot;
     use test_log::test;
 
     #[test]
@@ -134,5 +135,10 @@ mod tests {
     fn test_month_deref() {
         let month: &u8 = &Month::March;
         assert_eq!(*month, 3);
+    }
+
+    #[test]
+    fn test_month_debug() {
+        assert_debug_snapshot!(Month::April, @"4");
     }
 }

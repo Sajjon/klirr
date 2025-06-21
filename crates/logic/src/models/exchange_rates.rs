@@ -70,3 +70,15 @@ impl ExchangeRates {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn test_hard_coded() {
+        let exchange_rates = ExchangeRates::hard_coded();
+        assert_eq!(exchange_rates.rates().is_empty(), false);
+    }
+}

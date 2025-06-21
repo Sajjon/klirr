@@ -7,7 +7,7 @@ use crate::prelude::*;
 #[derive(
     Clone,
     Copy,
-    Debug,
+    derive_more::Debug,
     Display,
     PartialEq,
     Eq,
@@ -19,6 +19,7 @@ use crate::prelude::*;
     Constructor,
 )]
 #[display("{year:04}-{month:02}")]
+#[debug("{year:04}-{month:02}")]
 pub struct YearAndMonth {
     /// e.g. 2025
     #[builder(setter(into))]
@@ -202,6 +203,19 @@ impl PartialOrd for YearAndMonth {
 impl std::str::FromStr for YearAndMonth {
     type Err = crate::prelude::Error;
 
+    /// Parses a `YearAndMonth` from a string in the format "YYYY-MM".
+    /// # Examples
+    /// ```
+    /// extern crate invoice_typst_logic;
+    /// use invoice_typst_logic::prelude::*;
+    /// let year_and_month: YearAndMonth = "2025-05".parse().unwrap();
+    /// assert_eq!(year_and_month.year(), &Year::new(2025));
+    /// assert_eq!(year_and_month.month(), &Month::May);
+    /// ```
+    ///
+    /// # Errors
+    /// Returns an error if the string is not in the correct format or if the year or month
+    /// cannot be parsed.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('-').collect();
         if parts.len() != 2 {
@@ -233,6 +247,7 @@ impl std::str::FromStr for YearAndMonth {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::assert_debug_snapshot;
     use test_log::test;
 
     #[test]
@@ -316,5 +331,23 @@ mod tests {
         let december = YearAndMonth::december(2025);
         assert_eq!(december.year(), &Year::new(2025));
         assert_eq!(december.month(), &Month::December);
+    }
+
+    #[test]
+    fn test_from_str_valid() {
+        let year_and_month: YearAndMonth = "2025-05".parse().unwrap();
+        assert_eq!(year_and_month.year(), &Year::new(2025));
+        assert_eq!(year_and_month.month(), &Month::May);
+    }
+
+    #[test]
+    fn test_from_str_invalid_format() {
+        let result: Result<YearAndMonth, _> = "2025/05".parse();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_debug() {
+        assert_debug_snapshot!(YearAndMonth::new(Year::new(2025), Month::May), @"2025-05");
     }
 }

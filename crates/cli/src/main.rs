@@ -14,6 +14,7 @@ pub mod prelude {
 use prelude::*;
 
 fn main() {
+    init_logging::init_logging();
     let input = input::Input::parse();
     let _ = run(input).inspect_err(|e| error!("Error creating PDF: {}", e));
 }
