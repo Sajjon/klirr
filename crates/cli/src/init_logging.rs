@@ -89,11 +89,24 @@ pub fn init_logging() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test_log::test;
 
     #[test]
     #[should_panic(expected = "")]
     fn invalid_log_level() {
         init_logging_with_level_str("foobar");
+    }
+
+    #[test]
+    fn test_init_logging() {
+        // Set the environment variable for testing
+        unsafe {
+            std::env::set_var(RUST_LOG_ENV, "info");
+        }
+
+        // Call the init_logging function
+        init_logging();
+
+        // Check if the log level was set correctly
+        assert_eq!(log::max_level(), log::LevelFilter::Info);
     }
 }
