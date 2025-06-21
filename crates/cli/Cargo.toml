@@ -1,5 +1,5 @@
 [package]
-name = "invoice"
+name = "inrost"
 version = "0.1.0"
 edition = "2024"
 
@@ -12,7 +12,9 @@ invoice-typst-render.workspace = true
 chrono.workspace = true
 colored = "3.0.0"
 derive_more.workspace = true
+dirs-next.workspace = true
 fern = "0.7.1"
+inquire = "0.7.5"
 clap = { version = "4.5.39", features = ["derive"] }
 log.workspace = true
 thiserror.workspace = true

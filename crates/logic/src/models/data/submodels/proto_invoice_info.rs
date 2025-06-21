@@ -93,7 +93,7 @@ mod tests {
         let invoice_info = ProtoInvoiceInfo::builder()
             .offset(
                 TimestampedInvoiceNumber::builder()
-                    .month(month.clone())
+                    .month(month)
                     .offset(237)
                     .build(),
             )

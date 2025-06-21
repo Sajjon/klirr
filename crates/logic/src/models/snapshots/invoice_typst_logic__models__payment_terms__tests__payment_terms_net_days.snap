@@ -1,5 +1,0 @@
----
-source: crates/logic/src/models/payment_terms.rs
-expression: net_days
----
-"Net 30"

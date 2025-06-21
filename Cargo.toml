@@ -10,6 +10,7 @@ invoice-typst-logic = { path = "crates/logic" }
 
 # External dependencies
 chrono = "0.4.41"
+dirs-next = "2.0.0"
 derive_more = { version = "2.0.1", features = ["full"] }
 getset = { version = "0.1.4", default-features = false, features = [] }
 indexmap = { version = "2.9.0", features = ["serde"] }

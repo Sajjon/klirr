@@ -2,7 +2,7 @@ use invoice_typst_render::prelude::render;
 
 use crate::prelude::*;
 
-pub(super) fn run(input: Input) -> Result<()> {
+pub(super) fn run(input: InvoiceInput) -> Result<()> {
     let input = input.parsed()?;
     info!("🔮 Starting PDF creation, input: {}...", input);
     let pdf_location = create_pdf(input, |l18n, data| {
@@ -18,12 +18,12 @@ pub(super) fn run(input: Input) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::Input;
+    use crate::input::InvoiceInput;
 
     #[test]
     fn test_run() {
         let tempfile = tempfile::NamedTempFile::new().expect("Failed to create temp file");
-        let input = Input::parse_from([
+        let input = InvoiceInput::parse_from([
             "invoice",
             "--out",
             &format!("{}", tempfile.path().display()),

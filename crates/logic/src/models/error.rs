@@ -6,6 +6,10 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError)]
 pub enum Error {
+    /// Error while building CompanyInformation from Terminal UI input.
+    #[error("Failed to build CompanyInformation from Terminal UI input, because: {reason}")]
+    InvalidCompanyInformation { reason: String },
+
     /// The offset month must not be in the record of months off.
     #[error("Offset month must not be in the record of months off: {offset_month}")]
     OffsetMonthMustNotBeInRecordOfMonthsOff { offset_month: YearAndMonth },

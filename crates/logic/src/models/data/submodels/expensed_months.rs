@@ -66,7 +66,7 @@ mod tests {
     fn test_expensed_months_contains() {
         let month = YearAndMonth::january(2024);
         let expenses = ExpensedMonths::new(IndexMap::from_iter([(
-            month.clone(),
+            month,
             vec![Item::sample_expense_coffee()],
         )]));
         assert!(expenses.contains(&month));

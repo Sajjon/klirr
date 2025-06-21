@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn test_hard_coded() {
         let exchange_rates = ExchangeRates::hard_coded();
-        assert_eq!(exchange_rates.rates().is_empty(), false);
+        assert!(!exchange_rates.rates().is_empty());
     }
 
     #[test]
