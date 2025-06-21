@@ -30,8 +30,8 @@ pub enum Error {
     FailedToParseYear { invalid_string: String },
 
     /// Failed to load file
-    #[error("Failed to load file: {path}")]
-    FileNotFound { path: String },
+    #[error("Failed to load file: {path}, underlying: {underlying}")]
+    FileNotFound { path: String, underlying: String },
 
     /// Failed to deserialize a type
     #[error("Failed to deserialize {type_name}, because: {error}")]
@@ -51,6 +51,10 @@ pub enum Error {
     /// Invalid month, e.g. when the month is not between 1 and 12.
     #[error("Invalid month: {month}, reason: {reason}")]
     InvalidMonth { month: i32, reason: String },
+
+    /// Failed to parse Month from String
+    #[error("Failed to parse Month: {invalid_string}")]
+    FailedToParseMonth { invalid_string: String },
 
     /// Failed to parse expense item from a string, e.g. when the format is incorrect.
     #[error("Failed to parse expense item from string: {invalid_string}, reason: {reason}")]

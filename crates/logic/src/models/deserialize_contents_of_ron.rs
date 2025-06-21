@@ -26,20 +26,15 @@ pub fn deserialize_contents_of_ron<T: DeserializeOwned>(path: impl AsRef<Path>) 
     let path_display = path.display().to_string();
     let type_name = type_name::<T>();
     debug!("☑️ Deserializing {} from {}", type_name, path_display);
-    let ron_str = fs::read_to_string(path).map_err(|e| {
-        error!("Failed to read data from '{}': {:?}", path_display, e);
-        Error::FileNotFound {
-            path: path.display().to_string(),
-        }
+    let ron_str = fs::read_to_string(path).map_err(|e| Error::FileNotFound {
+        path: path.display().to_string(),
+        underlying: format!("{:?}", e),
     })?;
     let result = from_str(&ron_str)
         .inspect(|_| debug!("✅ Deserialized {} from {}", type_name, path_display))
-        .map_err(|e| {
-            error!("Failed to deserialize {}: {}", path.display(), e);
-            Error::Deserialize {
-                type_name,
-                error: e.to_string(),
-            }
+        .map_err(|e| Error::Deserialize {
+            type_name,
+            error: e.to_string(),
         })?;
 
     Ok(result)
@@ -61,7 +56,11 @@ mod tests {
         let result: Result<CompanyInformation> =
             deserialize_contents_of_ron(Path::new("non_existent_file.ron"));
         assert!(result.is_err(), "Expected error, got: {:?}", result);
-        if let Err(Error::FileNotFound { path: _ }) = result {
+        if let Err(Error::FileNotFound {
+            path: _,
+            underlying: _,
+        }) = result
+        {
             // Expected error
         } else {
             panic!("Expected FileNotFound error, got: {:?}", result);

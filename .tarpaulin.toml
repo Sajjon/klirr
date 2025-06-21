@@ -2,6 +2,9 @@
 exclude-files = [
     "crates/cli/src/main.rs",
     "crates/render/src/render_test_helpers.rs",
+    "crates/render/src/render.rs",
+    "crates/cli/src/init_logging.rs",
+    "crates/logic/src/prepare_data/fetch_exchange_rate_with_reqwest.rs",
 ]
 verbose = false
 timeout = "2m"

@@ -282,4 +282,10 @@ mod tests {
         assert_eq!(Currency::from_str("XRD").unwrap(), Currency::XRD);
         assert_eq!(Currency::from_str("DOT").unwrap(), Currency::DOT);
     }
+
+    #[test]
+    fn sample() {
+        let sample_currency = Currency::sample();
+        assert_eq!(sample_currency, Currency::EUR);
+    }
 }

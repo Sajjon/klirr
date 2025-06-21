@@ -25,13 +25,8 @@ impl LoadSource for Source {
         // Create a new FileId for the virtual main file ("/main.typ").
         let file_id = FileId::new(None, VirtualPath::new(path));
         // Read the Typst source from the file.
-        let source_text = std::fs::read_to_string(path).map_err(|e| {
-            let msg = format!(
-                "Failed to read Typst source from {:?}, error: {:?}",
-                path, e
-            );
-            error!("{}", msg);
-            Error::LoadSource { underlying: msg }
+        let source_text = std::fs::read_to_string(path).map_err(|e| Error::LoadSource {
+            underlying: format!("{:?}", e),
         })?;
         // Prepare the Typst source.
         Ok(Source::new(file_id, source_text))

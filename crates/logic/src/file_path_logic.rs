@@ -21,10 +21,6 @@ pub fn create_folder_relative_to_workspace(path: impl AsRef<Path>) -> Result<Pat
     let target_path = directory_relative_workspace_with_path_components(path);
     let target_folder = target_path.parent().expect("Path should have a parent");
     if !target_folder.exists() {
-        trace!(
-            "Target folder: '{}' does not exist, creating now...",
-            target_folder.display()
-        );
         fs::create_dir_all(&target_path).map_err(|e| Error::FailedToCreateOutputDirectory {
             underlying: format!("{:?}", e),
         })?;

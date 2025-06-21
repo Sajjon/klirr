@@ -6,7 +6,7 @@ Before you can use this software you need to install one font and modify a coupl
 
 ## Font
 
-```sh
+```bash
 brew tap homebrew/cask-fonts
 brew install --cask font-computer-modern
 ```

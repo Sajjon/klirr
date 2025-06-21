@@ -18,10 +18,21 @@
 // Thank you for being a good person.
 
 use chrono::Local;
-use colored::Colorize;
+use colored::{ColoredString, Colorize};
+use log::Level;
 use std::str::FromStr;
 
 const RUST_LOG_ENV: &str = "RUST_LOG";
+
+fn color_from_level(level: Level) -> ColoredString {
+    match level {
+        log::Level::Error => "ERROR".red(),
+        log::Level::Warn => "WARN".yellow(),
+        log::Level::Info => "INFO".green(),
+        log::Level::Debug => "DEBUG".blue(),
+        log::Level::Trace => "TRACE".white(),
+    }
+}
 
 /// # Panics
 /// Panics if `log_level` is not a valid log level.
@@ -30,14 +41,8 @@ pub(crate) fn init_logging_with_level(log_level: log::LevelFilter) {
     fern::Dispatch::new()
         .format(|out, message, record| {
             let time = Local::now().format("%H:%M:%S");
-            let level = match record.level() {
-                log::Level::Error => "ERROR".red(),
-                log::Level::Warn => "WARN".yellow(),
-                log::Level::Info => "INFO".green(),
-                log::Level::Debug => "DEBUG".blue(),
-                log::Level::Trace => "TRACE".white(),
-            };
-            out.finish(format_args!("{time} {level} > {message}"));
+            let color = color_from_level(record.level());
+            out.finish(format_args!("{time} {color} > {message}"));
         })
         .level(log_level)
         .chain(std::io::stdout())
@@ -89,7 +94,6 @@ pub fn init_logging() {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
 
     use super::*;
 
@@ -100,11 +104,31 @@ mod tests {
     }
 
     #[test]
-    fn init_logging_with_level_str_valid() {
-        if env::var("CI").is_ok() {
-            // fails for tarpaulin in ci
-            return;
-        }
+    fn init_logging_with_level_str_info() {
         init_logging_with_level_str("info");
+    }
+
+    #[test]
+    fn test_color_from_level() {
+        assert_eq!(
+            color_from_level(Level::Error).to_string(),
+            "ERROR".red().to_string()
+        );
+        assert_eq!(
+            color_from_level(Level::Warn).to_string(),
+            "WARN".yellow().to_string()
+        );
+        assert_eq!(
+            color_from_level(Level::Info).to_string(),
+            "INFO".green().to_string()
+        );
+        assert_eq!(
+            color_from_level(Level::Debug).to_string(),
+            "DEBUG".blue().to_string()
+        );
+        assert_eq!(
+            color_from_level(Level::Trace).to_string(),
+            "TRACE".white().to_string()
+        );
     }
 }

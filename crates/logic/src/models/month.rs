@@ -109,9 +109,8 @@ impl FromStr for Month {
     /// assert_eq!(month, Month::March);
     /// ```
     fn from_str(s: &str) -> Result<Self> {
-        let month = s.parse::<i32>().map_err(|_| Error::InvalidMonth {
-            month: 0,
-            reason: "Failed to parse month from string".to_string(),
+        let month = s.parse::<i32>().map_err(|_| Error::FailedToParseMonth {
+            invalid_string: s.to_owned(),
         })?;
         Self::try_from(month)
     }
@@ -165,5 +164,18 @@ mod tests {
     #[test]
     fn test_month_debug() {
         assert_debug_snapshot!(Month::April, @"4");
+    }
+
+    #[test]
+    fn test_from_str_invalid_all_reasons() {
+        let invalid_months = ["0", "13", "abc", "1.5"];
+        for &invalid in &invalid_months {
+            let result: Result<Month> = invalid.parse();
+            assert!(
+                result.is_err(),
+                "Expected error for invalid month '{}'",
+                invalid
+            );
+        }
     }
 }

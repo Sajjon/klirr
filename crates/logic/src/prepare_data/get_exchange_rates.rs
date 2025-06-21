@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::prelude::*;
+use crate::{prelude::*, prepare_data::fetch_exchange_rate_with_reqwest::get_exchange_rate};
 
 const FRANKFURTER_API: &str = "https://api.frankfurter.app";
 
@@ -22,32 +22,23 @@ struct FrankfurterApiResponse {
     rates: HashMap<Currency, f64>,
 }
 
-trait DeserializableResponse {
+pub(super) trait DeserializableResponse {
     fn json<T: serde::de::DeserializeOwned>(self) -> Result<T>;
 }
 impl DeserializableResponse for reqwest::blocking::Response {
     fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
-        self.json().map_err(|e| {
-            let msg = format!("Failed to parse response JSON: {}", e);
-            error!("{}", msg);
-            Error::ParseError { underlying: msg }
+        self.json().map_err(|e| Error::ParseError {
+            underlying: format!("Parse JSON: {}", e),
         })
     }
 }
 
-/// Makes blocking requests to the Frankfurter API to get the exchange rate
-fn get_exchange_rate(date: Date, from: Currency, to: Currency) -> Result<UnitPrice> {
-    get_exchange_rate_with_fetcher(date, from, to, |url| {
-        reqwest::blocking::get(&url).map_err(|e| {
-            let msg = format!("Failed to fetch exchange rate from {}: {}", url, e);
-            error!("{}", msg);
-            Error::NetworkError { underlying: msg }
-        })
-    })
+fn format_url(date: Date, from: Currency, to: Currency) -> String {
+    format!("{}/{}?from={}&to={}", FRANKFURTER_API, date, from, to)
 }
 
 /// Makes blocking requests to the Frankfurter API to get the exchange rate
-fn get_exchange_rate_with_fetcher<T: DeserializableResponse>(
+pub(super) fn get_exchange_rate_with_fetcher<T: DeserializableResponse>(
     date: Date,
     from: Currency,
     to: Currency,
@@ -57,8 +48,7 @@ fn get_exchange_rate_with_fetcher<T: DeserializableResponse>(
         return Ok(UnitPrice::from(1.0));
     }
     debug!("Fetching {}/{}@{} rate.", from, to, date);
-    let url = format!("{}/{}?from={}&to={}", FRANKFURTER_API, date, from, to);
-    fetcher(url)?
+    fetcher(format_url(date, from, to))?
         .json::<FrankfurterApiResponse>()
         .and_then(|response| {
             response
@@ -128,6 +118,18 @@ mod tests {
     }
 
     #[test]
+    fn test_format_url() {
+        let date = Date::from_str("2025-04-30").unwrap();
+        let from = Currency::GBP;
+        let to = Currency::EUR;
+        let url = format_url(date, from, to);
+        assert_eq!(
+            url,
+            "https://api.frankfurter.app/2025-04-30?from=GBP&to=EUR"
+        );
+    }
+
+    #[test]
     fn test_frankfurter_api_response() {
         let response = r#"{
             "amount": 1.0,
@@ -150,10 +152,8 @@ mod tests {
     }
     impl DeserializableResponse for Mock<'_> {
         fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
-            serde_json::from_str(self.json).map_err(|e| {
-                let msg = format!("Failed to parse mock response JSON: {}", e);
-                error!("{}", msg);
-                Error::ParseError { underlying: msg }
+            serde_json::from_str(self.json).map_err(|e| Error::ParseError {
+                underlying: format!("Parse mock response JSON: {}", e),
             })
         }
     }

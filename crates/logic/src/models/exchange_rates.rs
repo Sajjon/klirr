@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use crate::prelude::*;
 
 /// Represents exchange rates for a specific target currency in relation to other currencies.
@@ -65,7 +67,8 @@ impl ExchangeRates {
                 target: self.target_currency,
                 base: currency,
             })?;
-        Ok(UnitPrice::from(*unit_price * **rate))
+        let converted = rate.mul(unit_price);
+        Ok(converted)
     }
 }
 

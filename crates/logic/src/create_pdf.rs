@@ -19,10 +19,8 @@ fn save_pdf(pdf: Pdf, pdf_path: impl AsRef<Path>) -> Result<PathBuf> {
     info!("Saving PDF to: '{}'", pdf_path.as_ref().display());
     // now save the PDF to a file
     let output_path = PathBuf::from(pdf_path.as_ref());
-    std::fs::write(&output_path, pdf.as_ref()).map_err(|e| {
-        let msg = format!("Failed to write PDF to {}: {}", output_path.display(), e);
-        error!("{}", msg);
-        Error::SavePdf { underlying: msg }
+    std::fs::write(&output_path, pdf.as_ref()).map_err(|e| Error::SavePdf {
+        underlying: format!("Write PDF to {}: {}", output_path.display(), e),
     })?;
     info!("✅ Saved PDF to: '{}'", pdf_path.as_ref().display());
     Ok(output_path)

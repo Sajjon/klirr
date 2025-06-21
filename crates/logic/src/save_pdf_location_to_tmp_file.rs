@@ -14,23 +14,13 @@ fn get_tmp_file_for_path_to_pdf() -> Option<PathBuf> {
 /// Saves the path to the PDF file to a temporary file, if the environment variable
 /// `TMP_FILE_FOR_PATH_TO_PDF` is set.
 pub fn save_pdf_location_to_tmp_file(pdf_location: PathBuf) -> Result<()> {
-    let Some(path_to_tmp_file_where_we_write_dir_of_pdf) = get_tmp_file_for_path_to_pdf() else {
+    let Some(target) = get_tmp_file_for_path_to_pdf() else {
         return Ok(());
     };
-
-    trace!(
-        "Saving path to PDF to temp file '{}'",
-        path_to_tmp_file_where_we_write_dir_of_pdf.display()
-    );
-    if let Err(e) = std::fs::write(
-        &path_to_tmp_file_where_we_write_dir_of_pdf,
-        pdf_location.to_string_lossy().as_bytes(),
-    ) {
-        error!(
-            "⚠️ Failed to write output path to {}: {} (scripts e.g. makefile will not be able to open the PDF automatically)",
-            path_to_tmp_file_where_we_write_dir_of_pdf.display(),
-            e
-        );
+    let path = target.display().to_string();
+    trace!("Saving path to PDF to temp file '{}'", path);
+    if let Err(e) = std::fs::write(&target, pdf_location.to_string_lossy().as_bytes()) {
+        warn!("⚠️ Write to {path}: {e} (scripts won't find PDF.)",);
     };
     Ok(())
 }

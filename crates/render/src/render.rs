@@ -16,17 +16,13 @@ pub fn render(layout: impl AsRef<Path>, l18n: L18n, data: DataTypstCompat) -> Re
 
     debug!("☑️ Compiling: {:?} - #{} bytes", layout.as_ref(), bytecount);
     let compile_result = typst::compile::<PagedDocument>(&context);
-    let doc = compile_result.output.map_err(|e| {
-        let msg = format!("Failed to compile Typst source, because: {:?}", e);
-        error!("{}", msg);
-        Error::BuildPdf { underlying: msg }
+    let doc = compile_result.output.map_err(|e| Error::BuildPdf {
+        underlying: format!("{:?}", e),
     })?;
     debug!("✅ Compiled typst source: #{} pages", doc.pages.len());
     let export_pdf_options = &PdfOptions::default();
-    let pdf_bytes = pdf(&doc, export_pdf_options).map_err(|e| {
-        let msg = format!("Failed to export PDF, because: {:?}", e);
-        error!("{}", msg);
-        Error::ExportDocumentToPdf { underlying: msg }
+    let pdf_bytes = pdf(&doc, export_pdf_options).map_err(|e| Error::ExportDocumentToPdf {
+        underlying: format!("{:?}", e),
     })?;
     // Convert the exported PDF bytes into a Pdf type.
     let pdf = Pdf::from(pdf_bytes);
