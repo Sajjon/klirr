@@ -158,6 +158,23 @@ mod tests {
     }
 
     #[test]
+    fn test_from_str_all_reasons_invalid() {
+        let invalid_dates = [
+            "2025-05-32",    // Invalid day
+            "2025-13-01",    // Invalid month
+            "2025-00-01",    // Invalid month
+            "2025-05",       // Missing day
+            "2025",          // Missing month and day
+            "05-23",         // Missing year
+            "2025-05-23-01", // Too many parts
+        ];
+
+        for date in invalid_dates {
+            assert!(Date::from_str(date).is_err());
+        }
+    }
+
+    #[test]
     fn test_compare_year_and_month() {
         let date1 = YearAndMonth::from_str("2025-05").unwrap();
         let date2 = YearAndMonth::from_str("2025-06").unwrap();

@@ -232,18 +232,21 @@ mod tests {
     #[test]
     fn inequal() {
         let item1 = Item::sample_expense_coffee();
-        let item2 = Item::sample_expense_sandwich();
+        let item2 = Item::sample_consulting_service();
         assert_ne!(item1, item2);
+        assert_ne!(item1, Item::sample_expense_sandwich());
     }
 
     #[test]
     fn from_str_invalid() {
         let invalid_strings = [
             "Coffee,2.5, EUR,3.0",                          // Missing transaction_date
+            "Coffee,2.5, EUR,3.0, invalid_date",            // Invalid transaction_date
             "Coffee,2.5, EUR,3.0, 2025-05-31, extra",       // Too many parts
             "Coffee,invalid_price, EUR,3.0, 2025-05-31",    // Invalid unit_price
             "Coffee,2.5, invalid_currency,3.0, 2025-05-31", // Invalid currency
             "Coffee,2.5, EUR,-3.0, 2025-05-31",             // Negative quantity
+            "Coffee,2.5, EUR,a, 2025-05-31",                // Negative quantity
         ];
 
         for &s in &invalid_strings {

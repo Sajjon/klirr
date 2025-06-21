@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::{collections::HashMap, env};
+use std::collections::HashMap;
 
 /// The language used and the content of the localization file.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, TypedBuilder)]
@@ -22,9 +22,9 @@ impl L18n {
     /// Tries to load a preloaded localization file for the given language.
     /// If the language is not found in the preloaded map, it returns an error.
     pub fn new(language: Language) -> Result<Self> {
-        let Some(content) = L18N_MAP.get(&language) else {
-            return Err(Error::L18nNotFound { language });
-        };
+        let content = L18N_MAP
+            .get(&language)
+            .expect("Every language should be preloaded");
         Ok(content.clone())
     }
 
@@ -38,11 +38,10 @@ impl L18n {
     /// Returns an error if the file is not found or if it cannot be deserialized.
     ///
     fn load_from_file(language: Language) -> Result<Self> {
-        let dir = env::var("CARGO_MANIFEST_DIR").map_err(|_| Error::FileNotFound {
-            path: "CARGO_MANIFEST_DIR".to_owned(),
-        })?;
-        let path = format!("{}/../../input/l18n/{}.ron", dir, language);
-        deserialize_contents_of_ron(Path::new(&path))
+        deserialize_contents_of_ron(directory_relative_workspace_with_path_components(format!(
+            "input/l18n/{}.ron",
+            language
+        )))
     }
 }
 

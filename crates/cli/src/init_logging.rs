@@ -42,6 +42,7 @@ pub(crate) fn init_logging_with_level(log_level: log::LevelFilter) {
         .level(log_level)
         .chain(std::io::stdout())
         .apply()
+        .inspect_err(|e| println!("💥 Failed to initialize logging with level `{log_level}`: {e}"))
         .unwrap();
 
     println!(
