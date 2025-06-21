@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/Sajjon/invoice_typst/graph/badge.svg?token=HG6N5QPYPH)](https://codecov.io/gh/Sajjon/invoice_typst)
+
 # Usage
 
 Before you can use this software you need to install one font and modify a couple of config files with your information about your company ("the vendor"), customer ("client"), banking details ("payment"), pricing ("service fees"), invoice (invoice number offset).
