@@ -5,31 +5,23 @@ use typst_pdf::PdfOptions;
 use typst_pdf::pdf;
 
 /// Renders a PDF document using Typst with the provided layout, localization, and data.
-pub fn render(layout_path: impl AsRef<Path>, l18n: L18n, data: DataTypstCompat) -> Result<Pdf> {
+pub fn render(layout: impl AsRef<Path>, l18n: L18n, data: DataTypstCompat) -> Result<Pdf> {
     let l18n_typst_str = to_typst_let(&l18n.content());
     let data_typst_str = to_typst_let(&data);
-    let data_count = data_typst_str.len();
+    let bytecount = data_typst_str.len();
 
     debug!("☑️ Creating typst 'World' (environment/context), this usually takes ~2 seconds.");
-    let context = TypstContext::with_path(layout_path.as_ref(), l18n_typst_str, data_typst_str)?;
+    let context = TypstContext::with_path(layout.as_ref(), l18n_typst_str, data_typst_str)?;
     debug!("✅ Created typst 'World' (environment/context)");
 
-    debug!(
-        "☑️ Compiling typst source at: {:?} with data: #{} bytes",
-        layout_path.as_ref(),
-        data_count
-    );
+    debug!("☑️ Compiling: {:?} - #{} bytes", layout.as_ref(), bytecount);
     let compile_result = typst::compile::<PagedDocument>(&context);
     let doc = compile_result.output.map_err(|e| {
         let msg = format!("Failed to compile Typst source, because: {:?}", e);
         error!("{}", msg);
         Error::BuildPdf { underlying: msg }
     })?;
-    debug!(
-        "✅ Finished compiling typst source, output is #{} pages",
-        doc.pages.len()
-    );
-    // Export the PagedDocument to a PDF file.
+    debug!("✅ Compiled typst source: #{} pages", doc.pages.len());
     let export_pdf_options = &PdfOptions::default();
     let pdf_bytes = pdf(&doc, export_pdf_options).map_err(|e| {
         let msg = format!("Failed to export PDF, because: {:?}", e);

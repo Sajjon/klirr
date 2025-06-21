@@ -149,4 +149,20 @@ mod tests {
         let sut = sut();
         let _ = sut.source(FileId::new_fake(VirtualPath::new(Path::new("unknown.typ"))));
     }
+
+    #[test]
+    fn today_with_offset() {
+        let sut = sut();
+        let today = sut.today(Some(2));
+        assert!(today.is_some());
+        let today = sut.today(Some(-2));
+        assert!(today.is_some());
+    }
+
+    #[test]
+    #[should_panic]
+    fn file_access_not_implemented() {
+        let sut = sut();
+        let _ = sut.file(FileId::new_fake(VirtualPath::new(Path::new("unknown.typ"))));
+    }
 }

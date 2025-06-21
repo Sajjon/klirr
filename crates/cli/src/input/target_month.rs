@@ -17,3 +17,24 @@ impl TargetMonth {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use test_log::test;
+
+    #[test]
+    fn target_month_current() {
+        let target = TargetMonth::Current;
+        let year_and_month = target.year_and_month();
+        assert_eq!(year_and_month, YearAndMonth::current());
+    }
+
+    #[test]
+    fn target_month_last() {
+        let target = TargetMonth::Last;
+        let year_and_month = target.year_and_month();
+        assert_eq!(year_and_month, YearAndMonth::current().one_month_earlier());
+    }
+}

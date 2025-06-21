@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+/// Represents exchange rates for a specific target currency in relation to other currencies.
 #[derive(Clone, Debug, Serialize, TypedBuilder, Getters)]
 pub struct ExchangeRates {
     /// MUST Match the currency of the invoice, e.g. `"EUR"`.
@@ -7,10 +8,22 @@ pub struct ExchangeRates {
     #[getset(get = "pub")]
     target_currency: Currency,
 
+    /// Exchange rates for the `target_currency` in relation to other currencies.
+    /// The keys are the base currencies, and the values are the exchange rates.
+    ///
+    /// For example, if the `target_currency` is `"EUR"` and the rates are:
+    /// ```text
+    /// "USD": 1.2,
+    /// "GBP": 0.85,
+    /// "SEK": 11.0
+    /// ```
+    /// then 1 USD is 1.2 EUR, 1 GBP is 0.85 EUR, and 1 SEK is 11.0 EUR.
+    ///
     #[builder(setter(into))]
     #[getset(get = "pub")]
     rates: HashMap<Currency, UnitPrice>,
 }
+
 impl ExchangeRates {
     /// Converts a given `unit_price` from the `currency` to the `target_currency`.
     /// If the `currency` is the same as the `target_currency`, it returns the `unit_price
@@ -80,5 +93,22 @@ mod tests {
     fn test_hard_coded() {
         let exchange_rates = ExchangeRates::hard_coded();
         assert_eq!(exchange_rates.rates().is_empty(), false);
+    }
+
+    #[test]
+    fn test_convert() {
+        let exchange_rates = ExchangeRates::hard_coded();
+        let converted = exchange_rates.convert(100.0, Currency::USD).unwrap();
+        assert_eq!(*converted, 120.0);
+    }
+
+    #[test]
+    fn test_convert_not_found() {
+        let exchange_rates = ExchangeRates::builder()
+            .target_currency(Currency::EUR)
+            .rates(HashMap::new())
+            .build();
+        let result = exchange_rates.convert(100.0, Currency::JPY);
+        assert!(result.is_err());
     }
 }
