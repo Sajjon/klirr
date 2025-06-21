@@ -308,6 +308,10 @@ mod tests {
     /// 2025 is not a leap year
     const SEPT_2025: YearAndMonth = YearAndMonth::september(2025);
     /// 2025 is not a leap year
+    const OCT_2025: YearAndMonth = YearAndMonth::october(2025);
+    /// 2025 is not a leap year
+    const NOV_2025: YearAndMonth = YearAndMonth::november(2025);
+    /// 2025 is not a leap year
     const DEC_2025: YearAndMonth = YearAndMonth::december(2025);
 
     /// 2026 is not a leap year
@@ -599,5 +603,77 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_last_day_of_month() {
+        assert_eq!(JAN_2025.last_day_of_month(), Day::try_from(31).unwrap());
+        assert_eq!(FEB_2028.last_day_of_month(), Day::try_from(29).unwrap());
+        assert_eq!(MAR_2028.last_day_of_month(), Day::try_from(31).unwrap());
+        assert_eq!(APR_2025.last_day_of_month(), Day::try_from(30).unwrap());
+        assert_eq!(MAY_2025.last_day_of_month(), Day::try_from(31).unwrap());
+        assert_eq!(JUNE_2025.last_day_of_month(), Day::try_from(30).unwrap());
+        assert_eq!(JULY_2025.last_day_of_month(), Day::try_from(31).unwrap());
+        assert_eq!(AUG_2025.last_day_of_month(), Day::try_from(31).unwrap());
+        assert_eq!(SEPT_2025.last_day_of_month(), Day::try_from(30).unwrap());
+        assert_eq!(OCT_2025.last_day_of_month(), Day::try_from(31).unwrap());
+        assert_eq!(NOV_2025.last_day_of_month(), Day::try_from(30).unwrap());
+        assert_eq!(DEC_2025.last_day_of_month(), Day::try_from(31).unwrap());
+    }
+
+    #[test]
+    fn test_one_month_earlier_of_january() {
+        let january_2025 = YearAndMonth::january(2025);
+        let december_2024 = YearAndMonth::december(2024);
+        assert_eq!(january_2025.one_month_earlier(), december_2024);
+    }
+
+    #[test]
+    #[should_panic(expected = "Start month must be before or equal to end month")]
+    fn test_elapsed_months_since_panic() {
+        let start = YearAndMonth::april(2025);
+        let end = YearAndMonth::march(2025);
+        end.elapsed_months_since(start);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Should have validated ProtoInvoiceInfo before calling this function"
+    )]
+    fn test_calculate_invoice_number_panics_for_invalid_input() {
+        let month = YearAndMonth::may(2025);
+        let invoice_info = ProtoInvoiceInfo::builder()
+            .offset(
+                TimestampedInvoiceNumber::builder()
+                    .month(month.clone())
+                    .offset(237)
+                    .build(),
+            )
+            .months_off_record(MonthsOffRecord::new([month]))
+            .purchase_order(PurchaseOrder::sample())
+            .build();
+
+        let _ = calculate_invoice_number(
+            invoice_info.offset(),
+            &YearAndMonth::december(2025),
+            true,
+            invoice_info.months_off_record(),
+        );
+    }
+
+    #[test]
+    fn test_working_days_in_month_target_month_is_in_record_of_months_off() {
+        let target_month = YearAndMonth::january(2024);
+        let months_off_record = MonthsOffRecord::new([target_month]);
+        let result = working_days_in_month(&target_month, &months_off_record);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_working_days_in_month_target_month_december() {
+        let target_month = YearAndMonth::december(2025);
+        let months_off_record = MonthsOffRecord::new([]);
+        let result = working_days_in_month(&target_month, &months_off_record);
+        assert!(result.is_ok());
     }
 }

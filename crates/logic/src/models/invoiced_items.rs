@@ -35,7 +35,9 @@ mod tests {
 
     #[test]
     fn is_expenses() {
-        assert!(!InvoicedItems::Service { days_off: None }.is_expenses());
-        assert!(InvoicedItems::Expenses.is_expenses());
+        assert!(MaybeIsExpenses::is_expenses(&InvoicedItems::Expenses));
+        assert!(!MaybeIsExpenses::is_expenses(&InvoicedItems::Service {
+            days_off: None
+        }));
     }
 }

@@ -64,3 +64,31 @@ impl FromStr for HexColor {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn test_hex_color_from_str() {
+        let color: HexColor = "#e6007a".parse().unwrap();
+        assert_eq!(*color.red(), 230);
+        assert_eq!(*color.green(), 0);
+        assert_eq!(*color.blue(), 122);
+    }
+
+    #[test]
+    fn test_from_str_invalid_all_reasons() {
+        let invalid_strings = [
+            "#e6007",   // too short
+            "#e6007a1", // too long
+            "e6007a",   // missing '#'
+            "#e6007g",  // invalid hex digit
+            "#e6007a ", // trailing space
+        ];
+        for &s in &invalid_strings {
+            assert!(HexColor::from_str(s).is_err(), "Expected error for '{}'", s);
+        }
+    }
+}

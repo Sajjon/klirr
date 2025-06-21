@@ -80,4 +80,27 @@ mod tests {
         let advanced = date.advance(&PaymentTerms::net30());
         assert_eq!(advanced, Date::from_str("2025-06-30").unwrap());
     }
+
+    #[test]
+    fn test_proto_invoice_info_validate_valid() {
+        let invoice_info = ProtoInvoiceInfo::sample();
+        assert!(invoice_info.validate().is_ok());
+    }
+
+    #[test]
+    fn test_proto_invoice_info_validate_invalid() {
+        let month = YearAndMonth::may(2025);
+        let invoice_info = ProtoInvoiceInfo::builder()
+            .offset(
+                TimestampedInvoiceNumber::builder()
+                    .month(month.clone())
+                    .offset(237)
+                    .build(),
+            )
+            .months_off_record(MonthsOffRecord::new([month]))
+            .purchase_order(PurchaseOrder::sample())
+            .build();
+        let result = invoice_info.validate();
+        assert!(result.is_err());
+    }
 }

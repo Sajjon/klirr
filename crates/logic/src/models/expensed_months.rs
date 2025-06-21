@@ -32,3 +32,19 @@ impl ExpensedMonths {
         self.expenses_for_months.contains_key(month)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_expensed_months_contains() {
+        let month = YearAndMonth::january(2024);
+        let expenses = ExpensedMonths::new(IndexMap::from_iter([(
+            month.clone(),
+            vec![Item::sample_expense_coffee()],
+        )]));
+        assert!(expenses.contains(&month));
+        assert!(!expenses.contains(&YearAndMonth::february(2024)));
+    }
+}

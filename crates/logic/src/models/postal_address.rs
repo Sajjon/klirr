@@ -56,3 +56,25 @@ impl PostalAddress {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use insta::assert_debug_snapshot;
+    use test_log::test;
+
+    #[test]
+    fn test_debug() {
+        assert_debug_snapshot!(PostalAddress::sample(), @r###"
+        PostalAddress {
+            street_address: StreetAddress {
+                line_1: "221B Baker Street",
+                line_2: "",
+            },
+            zip: "NW1 6XE",
+            country: "England",
+            city: "London",
+        }
+        "###);
+    }
+}
