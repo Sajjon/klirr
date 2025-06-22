@@ -5,7 +5,7 @@ use crate::prelude::*;
 pub(super) fn run(input: InvoiceInput) -> Result<()> {
     let input = input.parsed()?;
     info!("🔮 Starting PDF creation, input: {}...", input);
-    let pdf_location = create_pdf(input, |l18n, data| render(l18n, data))?;
+    let pdf_location = create_pdf(input, render)?;
     save_pdf_location_to_tmp_file(pdf_location)
 }
 

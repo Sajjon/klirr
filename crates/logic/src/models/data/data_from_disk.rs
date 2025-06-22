@@ -100,7 +100,12 @@ impl DataFromDisk {
         let full_info = InvoiceInfoFull::builder()
             .due_date(due_date)
             .invoice_date(invoice_date)
-            .emphasize_color_hex(self.information().emphasize_color_hex().clone().unwrap_or_default())
+            .emphasize_color_hex(
+                self.information()
+                    .emphasize_color_hex()
+                    .clone()
+                    .unwrap_or_default(),
+            )
             .footer_text(self.information().footer_text().clone())
             .number(number)
             .purchase_order(self.information().purchase_order().clone())

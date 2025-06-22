@@ -38,7 +38,7 @@ impl From<Date> for YearAndMonth {
     /// ```
     /// extern crate invoice_typst_logic;
     /// use invoice_typst_logic::prelude::*;
-    /// let date = Date::new(2025, Month::May, Day::try_from(23).unwrap());
+    /// let date = Date::builder().year(2025).month(Month::May).day(Day::try_from(23).unwrap()).build();
     /// let year_and_month: YearAndMonth = date.into();
     /// assert_eq!(year_and_month.year(), &Year::new(2025));
     /// assert_eq!(year_and_month.month(), &Month::May);

@@ -1,3 +1,4 @@
+#![allow(unused)]
 mod init_logging;
 mod input;
 mod run_invoice;

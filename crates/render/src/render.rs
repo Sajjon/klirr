@@ -26,7 +26,8 @@ pub fn render(l18n: L18n, data: DataTypstCompat) -> Result<Pdf> {
     );
 
     debug!("☑️ Creating typst 'World' (environment/context), this usually takes ~2 seconds.");
-    let context = TypstContext::with_inline(main, INVOICE_TYP.to_owned(), l18n_typst_str, data_typst_str)?;
+    let context =
+        TypstContext::with_inline(main, INVOICE_TYP.to_owned(), l18n_typst_str, data_typst_str)?;
     debug!("✅ Created typst 'World' (environment/context)");
 
     debug!("☑️ Compiling typst...");
@@ -46,28 +47,9 @@ pub fn render(l18n: L18n, data: DataTypstCompat) -> Result<Pdf> {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
-    use crate::render_test_helpers::*;
-
     use super::*;
+    use crate::render_test_helpers::*;
     use test_log::test;
-
-    // #[test]
-    // fn test_render() {
-    //     let mut tempfile = tempfile::NamedTempFile::new().expect("Failed to create temp file");
-    //     let inline_layout = r#"=Test Pdf"#;
-    //     // save inline layout to the temp file
-    //     tempfile
-    //         .write_all(inline_layout.as_bytes())
-    //         .expect("Failed to write to temp file");
-    //     let layout_path = tempfile.path();
-    //     let l18n = L18n::new(Language::EN).unwrap();
-    //     let data = DataTypstCompat::sample();
-
-    //     let pdf_result = render(layout_path, l18n, data).unwrap();
-    //     assert!(!pdf_result.as_ref().is_empty());
-    // }
 
     #[test]
     fn sample_expenses() {

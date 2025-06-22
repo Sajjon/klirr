@@ -12,9 +12,9 @@ DataFromDisk(
       "2020-12",
       "2021-03",
     ]),
-    purchase_order: "PO-12345",
-    footer_text: "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation.",
-    emphasize_color_hex: "#e6007a",
+    purchase_order: Some("PO-12345"),
+    footer_text: Some("Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."),
+    emphasize_color_hex: Some("#e6007a"),
   ),
   vendor: CompanyInformation(
     contact_person: Some("Ture Sventon"),

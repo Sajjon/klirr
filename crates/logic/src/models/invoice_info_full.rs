@@ -35,7 +35,7 @@ pub struct InvoiceInfoFull {
     /// Hex color code for the color emphasis of the invoice, e.g. `"#e6007a"`.
     #[builder(setter(into), default)]
     #[getset(get = "pub")]
-    emphasize_color_hex: HexColor
+    emphasize_color_hex: HexColor,
 }
 
 impl InvoiceInfoFull {
