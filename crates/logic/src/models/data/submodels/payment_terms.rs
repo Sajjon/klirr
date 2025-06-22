@@ -3,11 +3,31 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 use crate::prelude::*;
 
 /// The payment terms of this invoice, e.g. `Net { due_in: 30 }`
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Display, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum PaymentTerms {
     /// Net payment due in a specific number of days, e.g. `Net(30)`
     Net(NetDays),
+}
+
+impl FromStr for PaymentTerms {
+    type Err = crate::prelude::Error;
+
+    /// Parses a string into `PaymentTerms`, e.g. "Net 30" into `PaymentTerms::Net(NetDays { due_in: 30 })`.
+    /// # Errors
+    /// Returns an error if the string is not in the correct format or if
+    /// the number of days is invalid.
+    /// # Examples
+    /// ```
+    /// extern crate invoice_typst_logic;
+    /// use invoice_typst_logic::prelude::*;
+    /// let payment_terms: PaymentTerms = "Net 30".parse().unwrap();
+    /// assert!(matches!(payment_terms, PaymentTerms::Net(_)));
+    /// ```
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let net_days = NetDays::from_str(s)?;
+        Ok(PaymentTerms::Net(net_days))
+    }
 }
 
 impl Default for PaymentTerms {

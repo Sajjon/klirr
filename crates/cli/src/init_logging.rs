@@ -19,7 +19,7 @@
 
 use chrono::Local;
 use colored::{ColoredString, Colorize};
-use log::Level;
+use log::{Level, debug};
 use std::str::FromStr;
 
 const RUST_LOG_ENV: &str = "RUST_LOG";
@@ -50,12 +50,8 @@ pub(crate) fn init_logging_with_level(log_level: log::LevelFilter) {
         .inspect_err(|e| println!("💥 Failed to initialize logging with level `{log_level}`: {e}"))
         .unwrap();
 
-    println!(
-        "🪵 Logging initialized with level: {log_level} (if you see this message once, logging is not properly setup)"
-    );
     if let Some(log_level) = log_level.to_level() {
-        log::log!(
-            log_level,
+        debug!(
             "🪵 Logging initialized with level: {log_level} (if you see this message once, logging is not properly setup)"
         );
     }

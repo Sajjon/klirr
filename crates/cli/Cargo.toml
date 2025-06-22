@@ -10,13 +10,14 @@ invoice-typst-render.workspace = true
 
 # External dependencies
 chrono.workspace = true
+clap = { version = "4.5.39", features = ["derive"] }
 colored = "3.0.0"
 derive_more.workspace = true
 dirs-next.workspace = true
 fern = "0.7.1"
 inquire = { version = "0.7.5", features = ["date"] }
-clap = { version = "4.5.39", features = ["derive"] }
 log.workspace = true
+ron.workspace = true
 thiserror.workspace = true
 typed-builder.workspace = true
 

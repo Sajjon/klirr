@@ -1,8 +1,20 @@
+use derive_more::FromStr;
+
 use crate::prelude::*;
 
 /// The cost of a single item, e.g. the cost of one day of consulting service.
 #[derive(
-    Clone, Copy, Display, PartialEq, Debug, Serialize, Deserialize, From, Deref, derive_more::Mul,
+    Clone,
+    Copy,
+    Display,
+    PartialEq,
+    Debug,
+    Serialize,
+    Deserialize,
+    From,
+    FromStr,
+    Deref,
+    derive_more::Mul,
 )]
 #[mul(forward)]
 pub struct UnitPrice(f64);

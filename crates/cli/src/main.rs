@@ -12,6 +12,7 @@ pub mod prelude {
 }
 
 use core::str;
+use std::any::type_name;
 
 use inquire::{CustomType, DateSelect, Text, error::InquireResult};
 use prelude::*;
@@ -21,6 +22,18 @@ const HOW_TO_SKIP_INSTRUCTION: &str = "Skip with ESC";
 fn build_postal_address(owner: impl AsRef<str>) -> InquireResult<PostalAddress> {
     let sample = PostalAddress::sample();
     let text = |part: &str| format!("{}'s {part} [postal address]?", owner.as_ref());
+
+    let zip = Text::new(&text("ZIP code"))
+        .with_default(sample.zip())
+        .prompt()?;
+
+    let city = Text::new(&text("City"))
+        .with_default(sample.city())
+        .prompt()?;
+
+    let country = Text::new(&text("Country"))
+        .with_default(sample.country())
+        .prompt()?;
 
     let street_line1 = Text::new(&text("Street Line 1"))
         .with_default(sample.street_address().line_1())
@@ -34,18 +47,6 @@ fn build_postal_address(owner: impl AsRef<str>) -> InquireResult<PostalAddress> 
         .line_1(street_line1)
         .line_2(street_line2)
         .build();
-
-    let zip = Text::new(&text("ZIP code"))
-        .with_default(sample.zip())
-        .prompt()?;
-
-    let city = Text::new(&text("City"))
-        .with_default(sample.city())
-        .prompt()?;
-
-    let country = Text::new(&text("Country"))
-        .with_default(sample.country())
-        .prompt()?;
 
     let address = sample
         .with_street_address(street_address)
@@ -79,6 +80,13 @@ fn build_company(owner: impl AsRef<str>) -> Result<CompanyInformation> {
                     .as_ref()
                     .expect("Expected contact person to be set"),
             )
+            .with_help_message(&format_help_skippable(
+                if owner.to_lowercase().contains("client") {
+                    "Your reference".to_owned()
+                } else {
+                    "Our reference".to_owned()
+                },
+            ))
             .prompt_skippable()?;
 
         let postal_address = build_postal_address(&owner)?;
@@ -211,17 +219,141 @@ fn build_invoice_info() -> Result<ProtoInvoiceInfo> {
     })
 }
 
+fn build_payment_info() -> Result<PaymentInformation> {
+    fn inner() -> InquireResult<PaymentInformation> {
+        let sample = PaymentInformation::sample();
+        let text = |part: &str| format!("Payment {part}?");
+        let bank_name = Text::new(&text("Bank Name"))
+            .with_default(sample.bank_name())
+            .prompt()?;
+        let iban = Text::new(&text("IBAN"))
+            .with_default(sample.iban())
+            .prompt()?;
+
+        let bic = Text::new(&text("BIC"))
+            .with_default(sample.bic())
+            .prompt()?;
+
+        let currency = CustomType::<Currency>::new("Currency?")
+            .with_help_message("The currency you want to use for the invoice, e.g. 'EUR'")
+            .with_default(*sample.currency())
+            .prompt()?;
+
+        let payment_terms = CustomType::<PaymentTerms>::new("Payment terms?")
+            .with_help_message("The payment terms for this invoice, e.g. 'Net 30'")
+            .with_default(PaymentTerms::net30())
+            .prompt()?;
+
+        let payment_info = sample
+            .with_bank_name(bank_name)
+            .with_iban(iban)
+            .with_bic(bic)
+            .with_currency(currency)
+            .with_terms(payment_terms);
+
+        Ok(payment_info)
+    }
+    inner().map_err(|e| Error::InvalidPaymentInfo {
+        reason: format!("{:?}", e),
+    })
+}
+
+fn build_service_fees() -> Result<ServiceFees> {
+    fn inner() -> InquireResult<ServiceFees> {
+        let sample = ServiceFees::sample();
+        let text = |part: &str| format!("Service {part}?");
+        let name = Text::new(&text("Name"))
+            .with_default(sample.name())
+            .prompt()?;
+
+        let unit_price = CustomType::<UnitPrice>::new("Unit price?")
+            .with_help_message("The price per day, e.g. '1000'")
+            .with_default(*sample.unit_price())
+            .prompt()?;
+
+        let service_fees = sample.with_name(name).with_unit_price(unit_price);
+
+        Ok(service_fees)
+    }
+    inner().map_err(|e| Error::InvalidServiceFees {
+        reason: format!("{:?}", e),
+    })
+}
+
+fn ask_for_data() -> Result<DataFromDisk> {
+    let vendor = build_company("Your company")?;
+    let client = build_company("Your client")?;
+    let invoice_info = build_invoice_info()?;
+    let payment_info = build_payment_info()?;
+    let service_fees = build_service_fees()?;
+
+    let data = DataFromDisk::builder()
+        .client(client)
+        .vendor(vendor)
+        .payment_info(payment_info)
+        .service_fees(service_fees)
+        .information(invoice_info)
+        .expensed_months(ExpensedMonths::default())
+        .build();
+
+    Ok(data)
+}
+
+fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<()> {
+    let ron_config = ron::ser::PrettyConfig::new().struct_names(true);
+    let serialized = ron::ser::to_string_pretty(model, ron_config).map_err(|e| {
+        Error::FailedToRonSerializeData {
+            type_name: type_name::<T>().to_owned(),
+            underlying: format!("{:?}", e),
+        }
+    })?;
+    std::fs::write(path.as_ref(), serialized).map_err(|e| Error::FailedToWriteDataToDisk {
+        underlying: format!("{:?}", e),
+    })?;
+    info!("✅ Successfully saved file at: {}", path.as_ref().display());
+    Ok(())
+}
+
 fn init_data_directory(input: &DataInitInput) -> Result<()> {
     info!(
         "Initializing data directory at: {}",
         input.data_dir().display()
     );
-    let vendor = build_company("Your company")?;
-    info!("Vendor information: {:#?}", vendor);
-    let client = build_company("Your client")?;
-    info!("Client information: {:#?}", client);
-    let invoice_info = build_invoice_info()?;
-    info!("Invoice info: {:#?}", invoice_info);
+    let data = ask_for_data()?;
+    info!(
+        "Data initialized successfully, saving to disk in folder: {}",
+        input.data_dir().display()
+    );
+
+    save_to_disk(
+        data.vendor(),
+        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_VENDOR),
+    )?;
+    save_to_disk(
+        data.client(),
+        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_CLIENT),
+    )?;
+    save_to_disk(
+        data.information(),
+        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_PROTO_INVOICE_INFO),
+    )?;
+    save_to_disk(
+        data.payment_info(),
+        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_PAYMENT),
+    )?;
+    save_to_disk(
+        data.service_fees(),
+        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_SERVICE_FEES),
+    )?;
+    save_to_disk(
+        data.expensed_months(),
+        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_EXPENSES),
+    )?;
+
+    info!(
+        "✅ Data directory initialized successfully. You are now ready to create invoices! Try `inrost invoice` to get started. Or 'inrost --help' for more information."
+    );
+
     Ok(())
 }
 
@@ -230,9 +362,13 @@ fn validate_data_directory(input: &DataValidateInput) -> Result<()> {
         "Validating data directory at: {}",
         input.data_dir().display()
     );
-    // Here you would implement the logic to validate the data directory.
-    // For now, we just log the action.
-    Ok(())
+    read_data_from_disk_base_dir(input.data_dir())
+        .map(|_| {
+            info!("✅ Data directory is valid");
+        })
+        .inspect_err(|e| {
+            error!("❌ Data directory is invalid: {}", e);
+        })
 }
 
 fn record_month_off(input: &MonthOffInput) -> Result<()> {
@@ -258,15 +394,22 @@ fn run_data_admin(input: input::DataAdminInput) -> Result<()> {
     }
 }
 
-fn run(input: input::CliArgs) -> Result<()> {
+fn run(input: input::CliArgs) {
     match input.command {
-        input::Commands::Invoice(invoice_input) => run_invoice::run(invoice_input),
-        input::Commands::Data(data_admin_input) => run_data_admin(data_admin_input),
+        input::Commands::Invoice(invoice_input) => {
+            let _ = run_invoice::run(invoice_input)
+                .inspect_err(|e| error!("Error creating PDF: {}", e));
+        }
+        input::Commands::Data(data_admin_input) => {
+            let _ = run_data_admin(data_admin_input).inspect_err(|e| {
+                error!("Error running data admin command: {}", e);
+            });
+        }
     }
 }
 
 fn main() {
     init_logging::init_logging();
     let input = input::CliArgs::parse();
-    let _ = run(input).inspect_err(|e| error!("Error creating PDF: {}", e));
+    run(input)
 }

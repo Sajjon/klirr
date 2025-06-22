@@ -2058,6 +2058,7 @@ dependencies = [
  "invoice-typst-logic",
  "invoice-typst-render",
  "log",
+ "ron 0.10.1",
  "tempfile",
  "test-log",
  "thiserror 2.0.12",

@@ -7,6 +7,12 @@ pub struct ExpensedMonths {
     expenses_for_months: IndexMap<YearAndMonth, Vec<Item>>,
 }
 
+impl Default for ExpensedMonths {
+    fn default() -> Self {
+        Self::new(IndexMap::default())
+    }
+}
+
 impl ExpensedMonths {
     pub fn new(expenses_for_months: IndexMap<YearAndMonth, Vec<Item>>) -> Self {
         Self {

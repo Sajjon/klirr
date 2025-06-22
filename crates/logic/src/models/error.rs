@@ -6,6 +6,17 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError)]
 pub enum Error {
+    /// Failed to write data to disk, e.g. when the file system is not accessible.
+    #[error("Failed to write data to disk, because: {underlying}")]
+    FailedToWriteDataToDisk { underlying: String },
+
+    /// Failed to serialize data to RON format.
+    #[error("Failed to RON serialize data, because: {underlying}")]
+    FailedToRonSerializeData {
+        type_name: String,
+        underlying: String,
+    },
+
     /// Error while building CompanyInformation from Terminal UI input.
     #[error("Failed to build CompanyInformation from Terminal UI input, because: {reason}")]
     InvalidCompanyInformation { reason: String },
@@ -17,6 +28,14 @@ pub enum Error {
     /// Error while building InvoiceInfo from Terminal UI input.
     #[error("Failed to build InvoiceInfo from Terminal UI input, because: {reason}")]
     InvalidInvoiceInfo { reason: String },
+
+    /// Error while building PaymentInfo from Terminal UI input.
+    #[error("Failed to build PaymentInfo from Terminal UI input, because: {reason}")]
+    InvalidPaymentInfo { reason: String },
+
+    /// Error while building ServiceFees from Terminal UI input.
+    #[error("Failed to build ServiceFees from Terminal UI input, because: {reason}")]
+    InvalidServiceFees { reason: String },
 
     /// The offset month must not be in the record of months off.
     #[error("Offset month must not be in the record of months off: {offset_month}")]
