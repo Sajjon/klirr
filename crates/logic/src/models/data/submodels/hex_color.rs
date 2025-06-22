@@ -15,7 +15,7 @@ pub struct HexColor {
 
 impl Default for HexColor {
     fn default() -> Self {
-        Self::from_str("#3ed6c0").expect("Failed to create default HexColor")
+        Self::from_str("#000000").expect("Failed to create default HexColor")
     }
 }
 

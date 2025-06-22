@@ -2033,6 +2033,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fddf93031af70e75410a2511ec04d49e758ed2f26dad3404a934e0fb45cc12a"
 dependencies = [
  "bitflags 2.9.1",
+ "chrono",
  "crossterm",
  "dyn-clone",
  "fuzzy-matcher",
@@ -2082,6 +2083,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "derive_more",
+ "dirs-next",
  "getset",
  "httpmock",
  "indexmap 2.9.0",

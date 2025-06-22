@@ -10,6 +10,7 @@ edition = "2024"
 # External dependencies
 chrono.workspace = true
 derive_more.workspace = true
+dirs-next.workspace = true
 getset.workspace = true
 indexmap = { version = "2.9.0", features = ["serde"] }
 indoc = "2.0.6"

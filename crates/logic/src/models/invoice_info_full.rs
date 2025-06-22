@@ -23,19 +23,19 @@ pub struct InvoiceInfoFull {
     /// A purchase order number associated with this invoice, e.g. `"PO-12345"`
     /// Typically agreed upon between the vendor and client before the
     /// invoice is issued.
-    #[builder(setter(into))]
+    #[builder(setter(into), default)]
     #[getset(get = "pub")]
-    purchase_order: PurchaseOrder,
+    purchase_order: Option<PurchaseOrder>,
 
     /// E.g. "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."
     #[builder(setter(into))]
     #[getset(get = "pub")]
-    footer_text: String,
+    footer_text: Option<String>,
 
     /// Hex color code for the color emphasis of the invoice, e.g. `"#e6007a"`.
-    #[builder(setter(into))]
+    #[builder(setter(into), default)]
     #[getset(get = "pub")]
-    emphasize_color_hex: HexColor,
+    emphasize_color_hex: HexColor
 }
 
 impl InvoiceInfoFull {
@@ -62,6 +62,6 @@ mod tests {
     #[test]
     fn test_invoice_info_full_sample() {
         let sample = InvoiceInfoFull::sample();
-        assert!(!sample.footer_text().is_empty());
+        assert!(sample.footer_text().is_some());
     }
 }

@@ -65,18 +65,23 @@ impl std::str::FromStr for Date {
     }
 }
 
+fn from_ymd_parts(year: i32, month: u32, day: u32) -> Date {
+    Date::builder()
+        .year(year)
+        .month(Month::try_from(month).expect("Invalid month"))
+        .day(Day::try_from(day).expect("Invalid day"))
+        .build()
+}
+
+impl From<NaiveDate> for Date {
+    fn from(value: NaiveDate) -> Self {
+        from_ymd_parts(value.year(), value.month(), value.day())
+    }
+}
+
 impl From<NaiveDateTime> for Date {
     fn from(value: NaiveDateTime) -> Self {
-        Self::builder()
-            .year(value.year())
-            .month(
-                Month::try_from(value.month())
-                    .expect("NativeDateTime should always return valid month."),
-            )
-            .day(
-                Day::try_from(value.day()).expect("NativeDateTime should always return valid day."),
-            )
-            .build()
+        from_ymd_parts(value.year(), value.month(), value.day())
     }
 }
 

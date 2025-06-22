@@ -15,7 +15,7 @@ pub mod prelude {
     pub use crate::models::*;
     pub use crate::pdf::*;
     pub use crate::prepare_data::*;
-    pub(crate) use crate::read_data::*;
+    pub use crate::read_data::*;
     pub use crate::save_pdf_location_to_tmp_file::*;
     pub use crate::serde_to_typst::*;
 

@@ -32,6 +32,25 @@ pub struct YearAndMonth {
     month: Month,
 }
 
+impl From<Date> for YearAndMonth {
+    /// Converts a `Date` to a `YearAndMonth`.
+    /// # Examples
+    /// ```
+    /// extern crate invoice_typst_logic;
+    /// use invoice_typst_logic::prelude::*;
+    /// let date = Date::new(2025, Month::May, Day::try_from(23).unwrap());
+    /// let year_and_month: YearAndMonth = date.into();
+    /// assert_eq!(year_and_month.year(), &Year::new(2025));
+    /// assert_eq!(year_and_month.month(), &Month::May);
+    /// ```
+    fn from(date: Date) -> Self {
+        Self::builder()
+            .year(*date.year())
+            .month(*date.month())
+            .build()
+    }
+}
+
 impl YearAndMonth {
     /// Creates a new `YearAndMonth` with the given year and month.
     /// # Examples

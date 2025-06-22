@@ -1,4 +1,0 @@
-ServiceFees(
-    name: "Agreed Consulting Service",
-	unit_price: UnitPrice(350.0)
-)

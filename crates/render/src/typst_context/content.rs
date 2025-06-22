@@ -4,6 +4,10 @@ use typst::syntax::Source;
 /// The typst source files used to render the invoices layout and data.
 #[derive(Debug, Getters, TypedBuilder)]
 pub struct Content {
+    /// The main typst file that contains calls the render function of layout, with the data and l18n files.
+    #[getset(get = "pub")]
+    main: Source,
+
     /// The static invoice typst file with the layout
     #[getset(get = "pub")]
     layout: Source,

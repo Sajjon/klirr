@@ -38,10 +38,7 @@ impl L18n {
     /// Returns an error if the file is not found or if it cannot be deserialized.
     ///
     fn load_from_file(language: Language) -> Result<Self> {
-        deserialize_contents_of_ron(directory_relative_workspace_with_path_components(format!(
-            "input/l18n/{}.ron",
-            language
-        )))
+        deserialize_contents_of_ron(l18n_dir().join(format!("{}.ron", language)))
     }
 }
 

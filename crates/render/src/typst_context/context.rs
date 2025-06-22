@@ -23,10 +23,11 @@ pub struct TypstContext {
 }
 
 impl TypstContext {
-    fn new(layout: Source, l18n: Source, data: Source) -> Self {
+    fn new(main: Source, layout: Source, l18n: Source, data: Source) -> Self {
         let content = Content::builder()
-            .data(data)
+            .main(main)
             .layout(layout)
+            .data(data)
             .l18n(l18n)
             .build();
         let environment = Environment::default();
@@ -37,17 +38,17 @@ impl TypstContext {
         }
     }
 
-    pub fn with_path(
-        layout_path: impl AsRef<Path>,
+    pub fn with_inline(
+        main_inline: String,
+        layout_inline: String,
         l18n_inline: String,
         data_inline: String,
     ) -> Result<Self> {
         Ok(Self::new(
-            Source::load_source_at(layout_path)?,
-            // Virtual path MUST match the first lines inside `invoice.typ` file.
-            Source::inline(l18n_inline, "/crates/render/src/l18n.typ")?,
-            // Virtual path MUST match the first lines inside `invoice.typ` file.
-            Source::inline(data_inline, "/crates/render/src/input.typ")?,
+            Source::inline(main_inline, Path::new(TYPST_VIRTUAL_NAME_MAIN))?,
+            Source::inline(layout_inline, Path::new(TYPST_VIRTUAL_NAME_LAYOUT))?,
+            Source::inline(l18n_inline, Path::new(TYPST_VIRTUAL_NAME_L18N))?,
+            Source::inline(data_inline, Path::new(TYPST_VIRTUAL_NAME_DATA))?,
         ))
     }
 }
@@ -62,11 +63,14 @@ impl World for TypstContext {
     }
 
     fn main(&self) -> FileId {
-        self.content().layout().id()
+        self.content().main().id()
     }
 
     fn source(&self, id: FileId) -> typst::diag::FileResult<Source> {
-        if id == self.content().layout().id() {
+        if id == self.content().main().id() {
+            let source = self.content().main().clone();
+            Ok(source)
+        } else if id == self.content().layout().id() {
             let source = self.content().layout().clone();
             Ok(source)
         } else if id == self.content.l18n().id() {
@@ -123,6 +127,7 @@ mod tests {
 
     fn sut() -> TypstContext {
         TypstContext::new(
+            Source::detached("main"),
             Source::detached("layout"),
             Source::detached("l18n"),
             Source::detached("data"),

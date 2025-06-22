@@ -56,12 +56,7 @@ pub fn compare_image_against_expected(
         is_imagemagick_installed(),
         "Imagemagick not installed, but required to run. `brew install imagemagick`"
     );
-    let new_image = generate_pdf_into_png_image(
-        path_to_resource("src/invoice.typ"),
-        L18n::new(Language::EN).unwrap(),
-        sample,
-        input,
-    );
+    let new_image = generate_pdf_into_png_image(L18n::new(Language::EN).unwrap(), sample, input);
 
     let save_new_image_as_expected = |new_image: Vec<u8>| {
         if !running_in_ci() {
@@ -119,15 +114,10 @@ pub fn compare_image_against_expected(
 }
 
 /// Generates a PNG image from a PDF rendered from the given layout path and input data.
-fn generate_pdf_into_png_image(
-    layout_path: impl AsRef<Path>,
-    l18n: L18n,
-    sample: DataFromDisk,
-    input: ValidInput,
-) -> Vec<u8> {
+fn generate_pdf_into_png_image(l18n: L18n, sample: DataFromDisk, input: ValidInput) -> Vec<u8> {
     let data =
         prepare_invoice_input_data(sample, input, Some(ExchangeRates::hard_coded())).unwrap();
-    let pdf = render(layout_path, l18n, data).unwrap();
+    let pdf = render(l18n, data).unwrap();
     convert_pdf_to_pngs(pdf.as_ref(), 85.0).expect("Should be able to convert")
 }
 

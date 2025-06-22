@@ -7,30 +7,30 @@ pub struct ProtoInvoiceInfo {
     /// This is enables us to calculate the next invoice number based on the current
     /// date and this offset.
     #[builder(setter(into))]
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set_with = "pub")]
     offset: TimestampedInvoiceNumber,
 
     /// Record of months when we were 100% off, i.e. did not invoice for, e.g. `["2025-01", "2025-02"]`.
     #[builder(setter(into), default)]
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set_with = "pub")]
     months_off_record: MonthsOffRecord,
 
     /// A purchase order number associated with this invoice, e.g. `"PO-12345"`
     /// Typically agreed upon between the vendor and client before the
     /// invoice is issued.
-    #[builder(setter(into))]
-    #[getset(get = "pub")]
-    purchase_order: PurchaseOrder,
+    #[builder(setter(into, strip_option), default)]
+    #[getset(get = "pub", set_with = "pub")]
+    purchase_order: Option<PurchaseOrder>,
 
     /// E.g. "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."
-    #[builder(setter(into), default = String::new())]
-    #[getset(get = "pub")]
-    footer_text: String,
+    #[builder(setter(into, strip_option), default)]
+    #[getset(get = "pub", set_with = "pub")]
+    footer_text: Option<String>,
 
     /// Hex color code for the color emphasis of the invoice, e.g. `"#e6007a"`.
-    #[builder(setter(into), default)]
-    #[getset(get = "pub")]
-    emphasize_color_hex: HexColor,
+    #[builder(setter(into, strip_option), default)]
+    #[getset(get = "pub", set_with = "pub")]
+    emphasize_color_hex: Option<HexColor>,
 }
 
 impl HasSample for ProtoInvoiceInfo {

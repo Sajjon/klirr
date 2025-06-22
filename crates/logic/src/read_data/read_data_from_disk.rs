@@ -1,39 +1,51 @@
+use serde::de::DeserializeOwned;
+
 use crate::prelude::*;
 
+pub fn input_dir() -> PathBuf {
+    dirs_next::data_dir()
+        .expect("Should have a data directory")
+        .join("inrost/input")
+}
+
+pub fn data_dir() -> PathBuf {
+    input_dir().join("data")
+}
+
+pub fn l18n_dir() -> PathBuf {
+    input_dir().join("l18n")
+}
+
+fn data_path_ron_file(name: &str) -> PathBuf {
+    data_dir().join(format!("{}.ron", name))
+}
+
+pub fn load_data<T: DeserializeOwned>(name: &str) -> Result<T> {
+    deserialize_contents_of_ron(data_path_ron_file(name))
+}
+
 fn client() -> Result<CompanyInformation> {
-    deserialize_contents_of_ron(directory_relative_workspace_with_path_components(
-        "./input/data/client.ron",
-    ))
+    load_data("client")
 }
 
 fn vendor() -> Result<CompanyInformation> {
-    deserialize_contents_of_ron(directory_relative_workspace_with_path_components(
-        "./input/data/vendor.ron",
-    ))
+    load_data("vendor")
 }
 
 fn payment_info() -> Result<PaymentInformation> {
-    deserialize_contents_of_ron(directory_relative_workspace_with_path_components(
-        "./input/data/payment.ron",
-    ))
+    load_data("payment")
 }
 
 fn service_fees() -> Result<ServiceFees> {
-    deserialize_contents_of_ron(directory_relative_workspace_with_path_components(
-        "./input/data/service_fees.ron",
-    ))
+    load_data("service_fees")
 }
 
 fn proto_invoice_info() -> Result<ProtoInvoiceInfo> {
-    deserialize_contents_of_ron(directory_relative_workspace_with_path_components(
-        "./input/data/invoice_info.ron",
-    ))
+    load_data("invoice_info")
 }
 
 fn expensed_months() -> Result<ExpensedMonths> {
-    deserialize_contents_of_ron(directory_relative_workspace_with_path_components(
-        "./input/data/expenses.ron",
-    ))
+    load_data("expenses")
 }
 
 pub fn read_data_from_disk() -> Result<DataFromDisk> {

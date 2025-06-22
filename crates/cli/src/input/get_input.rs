@@ -29,6 +29,36 @@ pub struct DataAdminInput {
 pub enum DataAdminInputCommands {
     Init(DataInitInput),
     Validate(DataValidateInput),
+    MonthOff(MonthOffInput),
+    Expenses(ExpensesInput),
+}
+
+#[derive(Debug, Args, Getters)]
+pub struct MonthOffInput {
+    #[arg(
+        long,
+        short = 'm',
+        default_value = None,
+        help = "The month and year for which you wanna record a month off, e.g. `2025-05`."
+    )]
+    #[getset(get = "pub")]
+    month: YearAndMonth,
+}
+
+#[derive(Debug, Args, Getters)]
+pub struct ExpensesInput {
+    #[arg(
+        long,
+        short = 'm',
+        default_value = None,
+        help = "The month and year for which you wanna record expenses, e.g. `2025-05`. Note that we might expense for month of May even thought we had an expense in beginning of June, so this is not a strict month, but rather a month in which we want to record the expenses."
+    )]
+    #[getset(get = "pub")]
+    month: YearAndMonth,
+
+    #[arg(long, short = 'e', help = "The expenses to record for the month.")]
+    #[getset(get = "pub")]
+    expenses: Vec<Item>,
 }
 
 pub trait DataAdminInputExt {
@@ -36,12 +66,7 @@ pub trait DataAdminInputExt {
     fn path(&self) -> Option<PathBuf>;
     fn data_dir(&self) -> PathBuf {
         self.path()
-            .unwrap_or(
-                dirs_next::data_dir()
-                    .expect("No local data directory found")
-                    .to_path_buf(),
-            )
-            .join("inrost/input/data")
+            .unwrap_or(invoice_typst_logic::prelude::data_dir())
     }
 }
 impl DataAdminInputExt for DataInitInput {

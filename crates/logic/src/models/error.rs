@@ -10,6 +10,14 @@ pub enum Error {
     #[error("Failed to build CompanyInformation from Terminal UI input, because: {reason}")]
     InvalidCompanyInformation { reason: String },
 
+    /// Failed to parse invoice number from a string, e.g. when the format is incorrect.
+    #[error("Failed to parse invoice number from string: {invalid_string}")]
+    InvalidInvoiceNumberString { invalid_string: String },
+
+    /// Error while building InvoiceInfo from Terminal UI input.
+    #[error("Failed to build InvoiceInfo from Terminal UI input, because: {reason}")]
+    InvalidInvoiceInfo { reason: String },
+
     /// The offset month must not be in the record of months off.
     #[error("Offset month must not be in the record of months off: {offset_month}")]
     OffsetMonthMustNotBeInRecordOfMonthsOff { offset_month: YearAndMonth },
@@ -47,6 +55,14 @@ pub enum Error {
         invalid_string: String,
         reason: String,
     },
+
+    /// Invalid YearAndMonth
+    #[error("Invalid YearAndMonth, underlying: {underlying}")]
+    InvalidYearAndMonth { underlying: String },
+
+    /// Invalid date
+    #[error("Invalid date, underlying: {underlying}")]
+    InvalidDate { underlying: String },
 
     /// Invalid day of the month, e.g. when the day is not between 1 and 31.
     #[error("Invalid day: {day}, reason: {reason}")]
