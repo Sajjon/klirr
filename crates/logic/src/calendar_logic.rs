@@ -319,7 +319,7 @@ mod tests {
             })
             .build();
         let information = ProtoInvoiceInfo::builder()
-            .purchase_order("PO")
+            .purchase_order(Some(PurchaseOrder::from("PO")))
             .months_off_record(MonthsOffRecord::new(months_off))
             .offset(
                 TimestampedInvoiceNumber::builder()

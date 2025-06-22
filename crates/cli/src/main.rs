@@ -113,18 +113,17 @@ fn build_date(prompt: Option<String>) -> Result<Date> {
     })
 }
 
-fn format_help_message(help: Option<String>) -> String {
-    help.map_or_else(
+fn format_help_skippable(help: impl Into<Option<String>>) -> String {
+    help.into().map_or_else(
         || HOW_TO_SKIP_INSTRUCTION.to_owned(),
         |h| format!("{HOW_TO_SKIP_INSTRUCTION}: {h}"),
     )
 }
 
 fn build_year_month_inner(help: impl Into<Option<String>>) -> InquireResult<Option<YearAndMonth>> {
-    let help = help.into();
     let current = YearAndMonth::current();
 
-    let help_message = format_help_message(help);
+    let help_message = format_help_skippable(help);
 
     let Some(year) = CustomType::<Year>::new("Year?")
         .with_help_message(&help_message)
@@ -156,10 +155,15 @@ fn build_year_month(help: impl Into<Option<String>>) -> Result<Option<YearAndMon
 fn build_invoice_info() -> Result<ProtoInvoiceInfo> {
     fn inner() -> InquireResult<ProtoInvoiceInfo> {
         let sample = ProtoInvoiceInfo::sample();
-        let invoice_number_offset = CustomType::<InvoiceNumber>::new("What is the last invoice number you issued? We call this the 'offset'")
-        .with_help_message("Next you will be asked about which year and month that last invoice was issued, together, these two values will be used to calculate all future invoice numbers, by calculating the number of elapsed months since that offset month and adding it to the offset number. Skip if you don't have an offset number yet.")
+        let invoice_number_offset = CustomType::<InvoiceNumber>::new(
+            "What is the last invoice number you issued? We call this the 'offset'",
+        )
+        .with_help_message(&format_help_skippable(
+            "Used with the date of that invoice to calculate future invoice numbers.".to_owned(),
+        ))
         .with_default(InvoiceNumber::default())
-        .prompt_skippable()?.unwrap_or_default();
+        .prompt_skippable()?
+        .unwrap_or_default();
 
         let invoice_number_offset_month = build_year_month_inner(
             "When was that invoice issued? (Used to calculate future invoice numbers)".to_owned(),
@@ -172,7 +176,35 @@ fn build_invoice_info() -> Result<ProtoInvoiceInfo> {
             .month(invoice_number_offset_month)
             .build();
 
-        todo!()
+        let purchase_order = CustomType::<PurchaseOrder>::new("Purchase order number (optional)")
+            .with_help_message(&format_help_skippable(
+                "If you have a purchase order number, enter it here".to_owned(),
+            ))
+            .prompt_skippable()?;
+
+        let footer_text = CustomType::<FooterText>::new("Footer text (optional)")
+            .with_help_message(&format_help_skippable(
+                "This is shown in the bottom of the invoice, it can e.g. be 'Reverse Charge'"
+                    .to_owned(),
+            ))
+            .with_default(FooterText::default())
+            .prompt_skippable()?;
+
+        let emphasize_color_hex = CustomType::<HexColor>::new("Emphasize color (optional)")
+            .with_help_message(&format_help_skippable(
+                "This is used to emphasize certain parts of the invoice, e.g. '#e6007a'".to_owned(),
+            ))
+            .prompt_skippable()?;
+
+        let info = ProtoInvoiceInfo::builder()
+            .offset(offset)
+            .purchase_order(purchase_order)
+            .footer_text(footer_text)
+            .emphasize_color_hex(emphasize_color_hex)
+            .months_off_record(MonthsOffRecord::default())
+            .build();
+
+        Ok(info)
     }
     inner().map_err(|e| Error::InvalidInvoiceInfo {
         reason: format!("{:?}", e),
@@ -184,8 +216,6 @@ fn init_data_directory(input: &DataInitInput) -> Result<()> {
         "Initializing data directory at: {}",
         input.data_dir().display()
     );
-    // Here you would implement the logic to initialize the data directory.
-    // For now, we just log the action.
     let vendor = build_company("Your company")?;
     info!("Vendor information: {:#?}", vendor);
     let client = build_company("Your client")?;
@@ -237,15 +267,6 @@ fn run(input: input::CliArgs) -> Result<()> {
 
 fn main() {
     init_logging::init_logging();
-    // let invoice_number_offset_month = build_year_month_inner(
-    //     // "When was that invoice issued? (Used to calculate future invoice numbers)".to_owned(),
-    //     None,
-    // )
-    // .unwrap();
-    // info!(
-    //     "Selected year and month: {:#?}",
-    //     invoice_number_offset_month
-    // );
     let input = input::CliArgs::parse();
     let _ = run(input).inspect_err(|e| error!("Error creating PDF: {}", e));
 }

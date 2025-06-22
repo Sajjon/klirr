@@ -30,7 +30,7 @@ pub struct InvoiceInfoFull {
     /// E.g. "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."
     #[builder(setter(into))]
     #[getset(get = "pub")]
-    footer_text: Option<String>,
+    footer_text: Option<FooterText>,
 
     /// Hex color code for the color emphasis of the invoice, e.g. `"#e6007a"`.
     #[builder(setter(into), default)]
@@ -45,10 +45,7 @@ impl InvoiceInfoFull {
             .invoice_date(Date::sample())
             .due_date(Date::sample())
             .purchase_order(PurchaseOrder::sample())
-            .footer_text(
-                "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."
-                    .to_string(),
-            )
+            .footer_text(FooterText::sample())
             .emphasize_color_hex(HexColor::sample())
             .build()
     }

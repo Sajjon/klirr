@@ -18,17 +18,17 @@ pub struct ProtoInvoiceInfo {
     /// A purchase order number associated with this invoice, e.g. `"PO-12345"`
     /// Typically agreed upon between the vendor and client before the
     /// invoice is issued.
-    #[builder(setter(into, strip_option), default)]
+    #[builder(setter(into), default)]
     #[getset(get = "pub", set_with = "pub")]
     purchase_order: Option<PurchaseOrder>,
 
     /// E.g. "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."
-    #[builder(setter(into, strip_option), default)]
+    #[builder(setter(into), default)]
     #[getset(get = "pub", set_with = "pub")]
-    footer_text: Option<String>,
+    footer_text: Option<FooterText>,
 
     /// Hex color code for the color emphasis of the invoice, e.g. `"#e6007a"`.
-    #[builder(setter(into, strip_option), default)]
+    #[builder(setter(into), default)]
     #[getset(get = "pub", set_with = "pub")]
     emphasize_color_hex: Option<HexColor>,
 }
@@ -37,9 +37,7 @@ impl HasSample for ProtoInvoiceInfo {
     fn sample() -> Self {
         Self::builder()
             .purchase_order(PurchaseOrder::sample())
-            .footer_text(
-                "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation.",
-            )
+            .footer_text(FooterText::sample())
             .emphasize_color_hex(HexColor::sample())
             .offset(TimestampedInvoiceNumber::sample())
             .months_off_record(MonthsOffRecord::sample())
