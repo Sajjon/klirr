@@ -39,3 +39,17 @@ pub struct L18nInvoiceInfo {
     #[getset(get = "pub")]
     terms: String,
 }
+
+impl L18nInvoiceInfo {
+    pub fn english() -> Self {
+        Self::builder()
+            .purchase_order("Purchase order:".to_string())
+            .invoice_identifier("Invoice no:".to_string())
+            .invoice_date("Invoice date:".to_string())
+            .due_date("Due date:".to_string())
+            .client_contact("For the attention of:".to_string())
+            .vendor_contact("Our reference:".to_string())
+            .terms("Terms".to_string())
+            .build()
+    }
+}

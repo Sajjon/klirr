@@ -4,6 +4,7 @@ mod invoice_info;
 mod language;
 mod line_items;
 mod localization;
+mod swedish;
 mod vendor_info;
 
 pub use client_info::*;

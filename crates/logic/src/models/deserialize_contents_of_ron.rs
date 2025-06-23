@@ -20,18 +20,21 @@ pub fn type_name<T>() -> String {
 /// - `Error::FileNotFound` if the file does not exist or cannot be read
 /// - `Error::Deserialize` if the contents cannot be deserialized into the specified type
 pub fn deserialize_contents_of_ron<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T> {
-    use ron::de::from_str;
     use std::fs;
     let path = path.as_ref();
-    let path_display = path.display().to_string();
-    let type_name = type_name::<T>();
-    debug!("☑️ Deserializing {} from {}", type_name, path_display);
     let ron_str = fs::read_to_string(path).map_err(|e| Error::FileNotFound {
         path: path.display().to_string(),
         underlying: format!("{:?}", e),
     })?;
-    let result = from_str(&ron_str)
-        .inspect(|_| debug!("✅ Deserialized {} from {}", type_name, path_display))
+    deserialize_ron_str(&ron_str)
+}
+
+pub fn deserialize_ron_str<T: DeserializeOwned>(ron_str: &str) -> Result<T> {
+    use ron::de::from_str;
+    let type_name = type_name::<T>();
+    debug!("☑️ Deserializing {} from RON str", type_name);
+    let result = from_str(ron_str)
+        .inspect(|_| debug!("✅ Deserialized {} from RON str", type_name))
         .map_err(|e| Error::Deserialize {
             type_name,
             error: e.to_string(),

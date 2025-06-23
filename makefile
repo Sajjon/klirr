@@ -1,13 +1,13 @@
 .PHONY: help, _make_and_open, ooo, service, expense
 
 service:
-	@CMD="cargo run --bin inrost invoice" $(MAKE) _make_and_open
+	@CMD="cargo run --bin klirr invoice" $(MAKE) _make_and_open
 
 help:
 	cargo run --bin invoice -- --help
 
 expense:
-	@CMD="cargo run --bin inrost invoice expenses" $(MAKE) _make_and_open
+	@CMD="cargo run --bin klirr invoice expenses" $(MAKE) _make_and_open
 	
 _make_and_open:
 	@TMP_OUTPUT=$$(mktemp); \
@@ -31,4 +31,4 @@ ooo:
 		echo "Error: DAYS_OFF is required"; \
 		exit 1; \
 	fi; \
-	CMD="cargo run --bin inrost invoice ooo $(DAYS_OFF)" $(MAKE) _make_and_open
+	CMD="cargo run --bin klirr invoice ooo $(DAYS_OFF)" $(MAKE) _make_and_open

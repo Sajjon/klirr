@@ -3,7 +3,7 @@ use crate::prelude::*;
 use clap::{Args, Parser};
 
 #[derive(Debug, Parser)]
-#[command(name = "inrost", about = "Generate and manage invoices")]
+#[command(name = "klirr", about = "Generate and manage invoices")]
 pub struct CliArgs {
     #[command(subcommand)]
     pub command: Commands,
@@ -27,8 +27,8 @@ pub struct DataAdminInput {
 
 #[derive(Debug, Subcommand)]
 pub enum DataAdminInputCommands {
-    Init(DataInitInput),
-    Validate(DataValidateInput),
+    Init,
+    Validate,
     MonthOff(MonthOffInput),
     Expenses(ExpensesInput),
 }
@@ -59,49 +59,6 @@ pub struct ExpensesInput {
     #[arg(long, short = 'e', help = "The expenses to record for the month.")]
     #[getset(get = "pub")]
     expenses: Vec<Item>,
-}
-
-pub trait DataAdminInputExt {
-    /// Returns the path to the data directory to initialize or validate.
-    fn path(&self) -> Option<PathBuf>;
-    fn data_dir(&self) -> PathBuf {
-        self.path()
-            .unwrap_or(invoice_typst_logic::prelude::data_dir())
-    }
-}
-impl DataAdminInputExt for DataInitInput {
-    fn path(&self) -> Option<PathBuf> {
-        self.data_dir.clone()
-    }
-}
-impl DataAdminInputExt for DataValidateInput {
-    fn path(&self) -> Option<PathBuf> {
-        self.data_dir.clone()
-    }
-}
-
-#[derive(Debug, Args)]
-pub struct DataInitInput {
-    /// The path to the data directory to initialize.
-    #[arg(
-        long,
-        short = 'p',
-        default_value = None,
-        help = "If not specified, defaults `$HOME/Library/Application Support/inrost/input/data` on macOS"
-    )]
-    data_dir: Option<PathBuf>,
-}
-
-#[derive(Debug, Args)]
-pub struct DataValidateInput {
-    /// The path to the data directory to initialize.
-    #[arg(
-        long,
-        short = 'p',
-        default_value = None,
-        help = "If not specified, defaults `$HOME/Library/Application Support/inrost/input/data` on macOS"
-    )]
-    data_dir: Option<PathBuf>,
 }
 
 /// The CLI arguments for generating an invoice PDF.

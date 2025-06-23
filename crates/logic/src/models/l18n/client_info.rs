@@ -12,3 +12,12 @@ pub struct L18nClientInfo {
     #[getset(get = "pub")]
     vat_number: String,
 }
+
+impl L18nClientInfo {
+    pub fn english() -> Self {
+        Self::builder()
+            .to_company("To:".to_string())
+            .vat_number("VAT:".to_string())
+            .build()
+    }
+}

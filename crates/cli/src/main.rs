@@ -314,55 +314,45 @@ fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<()> {
     Ok(())
 }
 
-fn init_data_directory(input: &DataInitInput) -> Result<()> {
-    info!(
-        "Initializing data directory at: {}",
-        input.data_dir().display()
-    );
+fn init_data_directory() -> Result<()> {
+    let data_dir = data_dir();
+    info!("Initializing data directory at: {}", data_dir.display());
     let data = ask_for_data()?;
     info!(
         "Data initialized successfully, saving to disk in folder: {}",
-        input.data_dir().display()
+        data_dir.display()
     );
 
-    save_to_disk(
-        data.vendor(),
-        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_VENDOR),
-    )?;
-    save_to_disk(
-        data.client(),
-        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_CLIENT),
-    )?;
+    save_to_disk(data.vendor(), data_path_ron_file(DATA_FILE_NAME_VENDOR))?;
+    save_to_disk(data.client(), data_path_ron_file(DATA_FILE_NAME_CLIENT))?;
     save_to_disk(
         data.information(),
-        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_PROTO_INVOICE_INFO),
+        data_path_ron_file(DATA_FILE_NAME_PROTO_INVOICE_INFO),
     )?;
     save_to_disk(
         data.payment_info(),
-        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_PAYMENT),
+        data_path_ron_file(DATA_FILE_NAME_PAYMENT),
     )?;
     save_to_disk(
         data.service_fees(),
-        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_SERVICE_FEES),
+        data_path_ron_file(DATA_FILE_NAME_SERVICE_FEES),
     )?;
     save_to_disk(
         data.expensed_months(),
-        data_path_ron_file(input.data_dir(), DATA_FILE_NAME_EXPENSES),
+        data_path_ron_file(DATA_FILE_NAME_EXPENSES),
     )?;
 
     info!(
-        "✅ Data directory initialized successfully. You are now ready to create invoices! Try `inrost invoice` to get started. Or 'inrost --help' for more information."
+        "✅ Data directory initialized successfully. You are now ready to create invoices! Try `klirr invoice` to get started. Or 'klirr --help' for more information."
     );
 
     Ok(())
 }
 
-fn validate_data_directory(input: &DataValidateInput) -> Result<()> {
-    info!(
-        "Validating data directory at: {}",
-        input.data_dir().display()
-    );
-    read_data_from_disk_base_dir(input.data_dir())
+fn validate_data_directory() -> Result<()> {
+    let data_dir = data_dir();
+    info!("Validating data directory at: {}", data_dir.display());
+    read_data_from_disk()
         .map(|_| {
             info!("✅ Data directory is valid");
         })
@@ -383,10 +373,8 @@ fn record_expenses(input: &ExpensesInput) -> Result<()> {
 
 fn run_data_admin(input: input::DataAdminInput) -> Result<()> {
     match input.command() {
-        input::DataAdminInputCommands::Init(init_input) => init_data_directory(init_input),
-        input::DataAdminInputCommands::Validate(validate_input) => {
-            validate_data_directory(validate_input)
-        }
+        input::DataAdminInputCommands::Init => init_data_directory(),
+        input::DataAdminInputCommands::Validate => validate_data_directory(),
         input::DataAdminInputCommands::MonthOff(month_off_input) => {
             record_month_off(month_off_input)
         }

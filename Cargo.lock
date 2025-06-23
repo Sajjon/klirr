@@ -2045,27 +2045,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inrost"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "colored",
- "derive_more",
- "dirs-next",
- "fern",
- "inquire",
- "invoice-typst-logic",
- "invoice-typst-render",
- "log",
- "ron 0.10.1",
- "tempfile",
- "test-log",
- "thiserror 2.0.12",
- "typed-builder",
-]
-
-[[package]]
 name = "insta"
 version = "1.43.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2187,6 +2166,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1130d80c7374efad55a117d715a3af9368f0fa7a2c54573afc15a188cd984837"
 dependencies = [
  "mutate_once",
+]
+
+[[package]]
+name = "klirr"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "colored",
+ "derive_more",
+ "dirs-next",
+ "fern",
+ "inquire",
+ "invoice-typst-logic",
+ "invoice-typst-render",
+ "log",
+ "ron 0.10.1",
+ "tempfile",
+ "test-log",
+ "thiserror 2.0.12",
+ "typed-builder",
 ]
 
 [[package]]

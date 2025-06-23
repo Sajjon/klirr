@@ -19,6 +19,15 @@ pub struct L18n {
 }
 
 impl L18n {
+    pub fn english() -> Self {
+        Self::builder()
+            .language(Language::EN)
+            .content(L18nContent::english())
+            .build()
+    }
+}
+
+impl L18n {
     /// Tries to load a preloaded localization file for the given language.
     /// If the language is not found in the preloaded map, it returns an error.
     pub fn new(language: Language) -> Result<Self> {
@@ -27,27 +36,24 @@ impl L18n {
             .expect("Every language should be preloaded");
         Ok(content.clone())
     }
-
-    /// Tries to load the localization file for the given language.
-    /// If the file is not found, it returns an error.
-    /// The file is expected to be in the `input/l18n` directory
-    /// relative to the `CARGO_MANIFEST_DIR`.
-    /// If the file cannot be deserialized, it returns an error.
-    ///
-    /// # Errors
-    /// Returns an error if the file is not found or if it cannot be deserialized.
-    ///
-    fn load_from_file(language: Language) -> Result<Self> {
-        deserialize_contents_of_ron(l18n_dir().join(format!("{}.ron", language)))
-    }
 }
 
 lazy_static::lazy_static! {
     static ref L18N_MAP: HashMap<Language, L18n> = {
         let mut m = HashMap::new();
-        Language::all().for_each(|language| {
-            m.insert(language, L18n::load_from_file(language).expect("Failed to load L18n"));
-        });
+        let mut add = |localization: L18n| {
+            m.contains_key(localization.language())
+                .then(|| panic!("Localization for {:?} already exists", localization.language()));
+            m.insert(localization.language, localization);
+        };
+        add(L18n::english());
+        add(L18n::swedish());
+        Language::all()
+            .for_each(|lang| {
+                if !m.contains_key(&lang) {
+                    panic!("No localization found for {:?}", lang);
+                }
+            });
         m
     };
 }
@@ -62,5 +68,10 @@ mod tests {
     #[test]
     fn test_l18n_english() {
         assert_ron_snapshot!(&L18n::new(Language::EN).unwrap());
+    }
+
+    #[test]
+    fn test_l18n_swedish() {
+        assert_ron_snapshot!(&L18n::new(Language::SV).unwrap());
     }
 }

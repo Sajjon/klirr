@@ -230,10 +230,15 @@
             #ovalbox(48%, [#strong[#l18n.invoice_info.due_date] #data.information.due_date])
           ],
         )
-        #display_if_non_empty([
-          #strong[#l18n.invoice_info.client_contact]\
-          #data.client.contact_person
-        ]) \
+        #if (
+          "contact_person" in data.client and data.client.contact_person != none and data.client.contact_person != ""
+        ) {
+          block[
+            #strong[#l18n.invoice_info.client_contact]
+            #data.client.contact_person
+            #v(-2mm)
+          ]
+        }
         #strong[#l18n.invoice_info.vendor_contact] #data.vendor.contact_person \
         #strong[#l18n.invoice_info.terms] #data.payment_info.terms
       ],

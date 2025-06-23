@@ -34,3 +34,16 @@ pub struct L18nLineItems {
     #[getset(get = "pub")]
     grand_total: String,
 }
+
+impl L18nLineItems {
+    pub fn english() -> Self {
+        Self::builder()
+            .description("Item".to_string())
+            .when("When".to_string())
+            .quantity("Quantity".to_string())
+            .unit_price("Unit price".to_string())
+            .total_cost("Total cost".to_string())
+            .grand_total("Grand Total:".to_string())
+            .build()
+    }
+}
