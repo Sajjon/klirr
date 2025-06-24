@@ -1,10 +1,8 @@
-use getset::WithSetters;
-
 use crate::prelude::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters, WithSetters)]
 pub struct ServiceFees {
-    /// Description of the consulting service, e.g. `"App development"`
+    /// Description of the consulting service, e.g. `"Agreed Consulting Fees"`
     #[builder(setter(into))]
     #[getset(get = "pub", set_with = "pub")]
     name: String,
@@ -17,7 +15,7 @@ pub struct ServiceFees {
 impl ServiceFees {
     pub fn sample() -> Self {
         Self::builder()
-            .name("App development".to_string())
+            .name("Agreed Consulting Fees".to_string())
             .unit_price(UnitPrice::from(350.0))
             .build()
     }

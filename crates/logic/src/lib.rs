@@ -29,7 +29,7 @@ pub mod prelude {
     pub use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveDateTime, Weekday};
     pub use derive_more::{AsRef, Deref, Display, From};
     pub use derive_more::{IsVariant, TryUnwrap};
-    pub use getset::Getters;
+    pub use getset::{Getters, Setters, WithSetters};
     pub use indexmap::{IndexMap, IndexSet};
     pub use log::{debug, error, info, trace, warn};
     pub use serde::{Deserialize, Serialize};

@@ -2,11 +2,26 @@ use crate::prelude::*;
 
 /// The quantity of items, e.g. the number of days of consulting service.
 #[derive(
-    Clone, Copy, Display, Debug, PartialEq, Serialize, Deserialize, From, Deref, PartialOrd,
+    Clone,
+    Copy,
+    Display,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    From,
+    Deref,
+    PartialOrd,
+    derive_more::Add,
+    derive_more::AddAssign,
 )]
-pub struct Quantity(f64);
+#[from(forward)]
+#[deref(forward)]
+pub struct Quantity(F64);
 impl Quantity {
-    pub const ZERO: Self = Self(0.0);
+    pub const ZERO: Self = Self(F64::ZERO);
 }
 
 impl HasSample for Quantity {

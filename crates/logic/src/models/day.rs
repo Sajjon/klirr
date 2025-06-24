@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 /// The day of the month, e.g. 1 for the first day, 31 for the last day of a month.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, Serialize, Deserialize, Deref)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Display, Serialize, Deserialize, Deref)]
 pub struct Day(u8);
 
 impl HasSample for Day {

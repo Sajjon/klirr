@@ -2,18 +2,11 @@ use serde::de::DeserializeOwned;
 
 use crate::prelude::*;
 
-pub fn input_dir() -> PathBuf {
+pub fn data_dir() -> PathBuf {
     dirs_next::data_dir()
         .expect("Should have a data directory")
-        .join("klirr/input")
-}
-
-pub fn data_dir() -> PathBuf {
-    input_dir().join("data")
-}
-
-pub fn l18n_dir() -> PathBuf {
-    input_dir().join("l18n")
+        .join("klirr")
+        .join("data")
 }
 
 pub fn data_path_ron_file(name: &str) -> PathBuf {
@@ -55,7 +48,7 @@ fn expensed_months() -> Result<ExpensedMonths> {
     load_data(DATA_FILE_NAME_EXPENSES)
 }
 
-pub fn read_data_from_disk() -> Result<DataFromDisk> {
+pub fn read_data_from_disk() -> Result<Data> {
     // Read the input data from a file or other source.
     // This is a placeholder function, you can add your own logic here.
     debug!("☑️ Reading data from disk...");
@@ -66,7 +59,7 @@ pub fn read_data_from_disk() -> Result<DataFromDisk> {
     let proto_invoice_info = proto_invoice_info()?;
     let expensed_months = expensed_months()?;
 
-    let input_data = DataFromDisk::builder()
+    let input_data = Data::builder()
         .client(client)
         .vendor(vendor)
         .payment_info(payment_info)

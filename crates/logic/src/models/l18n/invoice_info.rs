@@ -49,7 +49,7 @@ impl L18nInvoiceInfo {
             .due_date("Due date:".to_string())
             .client_contact("For the attention of:".to_string())
             .vendor_contact("Our reference:".to_string())
-            .terms("Terms".to_string())
+            .terms("Terms:".to_string())
             .build()
     }
 }

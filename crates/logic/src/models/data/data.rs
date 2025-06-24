@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
 #[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters)]
-pub struct DataFromDisk {
+pub struct Data {
     /// Information about this specific invoice.
     #[builder(setter(into))]
     #[getset(get = "pub")]
@@ -37,7 +37,7 @@ pub struct DataFromDisk {
     expensed_months: ExpensedMonths,
 }
 
-impl DataFromDisk {
+impl Data {
     /// Validates the invoice information and returns a `Result<Self>`.
     /// If the information is valid, it returns `Ok(self)`.
     /// If the information is invalid
@@ -48,7 +48,7 @@ impl DataFromDisk {
     /// ```
     /// extern crate invoice_typst_logic;
     /// use invoice_typst_logic::prelude::*;
-    /// let data = DataFromDisk::sample();
+    /// let data = Data::sample();
     /// let result = data.validate();
     /// assert!(result.is_ok(), "Expected validation to succeed, got: {:?}", result);
     /// ```
@@ -57,7 +57,7 @@ impl DataFromDisk {
         Ok(self)
     }
 
-    /// Converts the `DataFromDisk` into a `DataWithItemsPricedInSourceCurrency`
+    /// Converts the `Data` into a `DataWithItemsPricedInSourceCurrency`
     /// using the provided `ValidInput`.
     /// This method prepares the invoice data for rendering by creating an
     /// `InvoiceInfoFull` and populating it with the necessary information.
@@ -69,7 +69,7 @@ impl DataFromDisk {
     /// ```
     /// extern crate invoice_typst_logic;
     /// use invoice_typst_logic::prelude::*;
-    /// let data = DataFromDisk::sample();
+    /// let data = Data::sample();
     /// let input = ValidInput::sample();
     /// let result = data.to_partial(input);
     /// assert!(result.is_ok(), "Expected conversion to succeed, got: {:?}", result);
@@ -145,9 +145,9 @@ impl DataFromDisk {
     }
 }
 
-impl HasSample for DataFromDisk {
+impl HasSample for Data {
     fn sample() -> Self {
-        DataFromDisk::builder()
+        Data::builder()
             .information(ProtoInvoiceInfo::sample())
             .client(CompanyInformation::sample_client())
             .vendor(CompanyInformation::sample_vendor())
@@ -174,12 +174,12 @@ mod tests {
 
     #[test]
     fn test_serialization_sample() {
-        assert_ron_snapshot!(DataFromDisk::sample())
+        assert_ron_snapshot!(Data::sample())
     }
 
     #[test]
     fn test_worked_days_when_ooo_is_greater_than_0() {
-        let sut = DataFromDisk::sample();
+        let sut = Data::sample();
         let partial = sut
             .to_partial(
                 ValidInput::builder()

@@ -5,9 +5,9 @@ pub fn create_pdf(
     input: ValidInput,
     render: impl Fn(L18n, DataTypstCompat) -> Result<Pdf>,
 ) -> Result<PathBuf> {
-    let data_from_disk = read_data_from_disk()?;
+    let data = read_data_from_disk()?;
     let l18n = get_localization(input.language())?;
-    let data = prepare_invoice_input_data(data_from_disk, input, None)?;
+    let data = prepare_invoice_input_data(data, input, None)?;
     let output_path = data.absolute_path()?;
     let pdf = render(l18n, data)?;
     save_pdf(pdf, &output_path)?;

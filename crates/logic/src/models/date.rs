@@ -9,6 +9,7 @@ use crate::prelude::*;
     Display,
     PartialEq,
     Eq,
+    Hash,
     SerializeDisplay,
     DeserializeFromStr,
     TypedBuilder,

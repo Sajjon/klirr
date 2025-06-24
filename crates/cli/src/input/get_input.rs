@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 use clap::{Args, Parser};
+use derive_more::{Debug, Unwrap};
 
 #[derive(Debug, Parser)]
 #[command(name = "klirr", about = "Generate and manage invoices")]
@@ -9,7 +10,7 @@ pub struct CliArgs {
     pub command: Commands,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Subcommand, Unwrap)]
 pub enum Commands {
     /// The CLI arguments for generating an invoice PDF.
     Invoice(InvoiceInput),
@@ -18,14 +19,14 @@ pub enum Commands {
     Data(DataAdminInput),
 }
 
-#[derive(Debug, Args, Getters)]
+#[derive(Debug, Args, Getters, PartialEq)]
 pub struct DataAdminInput {
     #[command(subcommand)]
     #[getset(get = "pub")]
     command: DataAdminInputCommands,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Subcommand, Unwrap, PartialEq)]
 pub enum DataAdminInputCommands {
     Init,
     Validate,
@@ -33,7 +34,7 @@ pub enum DataAdminInputCommands {
     Expenses(ExpensesInput),
 }
 
-#[derive(Debug, Args, Getters)]
+#[derive(Debug, Args, Getters, PartialEq)]
 pub struct MonthOffInput {
     #[arg(
         long,
@@ -45,7 +46,7 @@ pub struct MonthOffInput {
     month: YearAndMonth,
 }
 
-#[derive(Debug, Args, Getters)]
+#[derive(Debug, Args, Getters, PartialEq)]
 pub struct ExpensesInput {
     #[arg(
         long,
@@ -136,100 +137,170 @@ impl InvoiceInput {
     }
 }
 
-// #[cfg(test)]
-// mod tests_input {
-//     use super::*;
-//     use test_log::test;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const BINARY_NAME: &str = "klirr";
 
-//     #[test]
-//     fn test_input_parsing_month() {
-//         let input = Input::parse_from(["invoice", "--month", "last"]);
-//         assert_eq!(input.month, TargetMonth::Last);
-//     }
+    mod data_admin_input {
+        use super::*;
 
-//     #[test]
-//     fn test_input_parsing_language_specified() {
-//         let input = Input::parse_from(["invoice", "--language", "swedish"]);
-//         assert_eq!(input.language, Language::SV);
-//     }
+        #[test]
+        fn test_data_admin_init() {
+            let input = CliArgs::parse_from([BINARY_NAME, "data", "init"]);
+            assert!(matches!(
+                input.command,
+                Commands::Data(DataAdminInput {
+                    command: DataAdminInputCommands::Init
+                })
+            ));
+        }
 
-//     #[test]
-//     fn test_input_parsing_language_default() {
-//         let input = Input::parse_from(["invoice"]);
-//         assert_eq!(input.language, Language::EN);
-//     }
+        #[test]
+        fn test_data_admin_validate() {
+            let input = CliArgs::parse_from([BINARY_NAME, "data", "validate"]);
+            assert!(matches!(
+                input.command,
+                Commands::Data(DataAdminInput {
+                    command: DataAdminInputCommands::Validate
+                })
+            ));
+        }
 
-//     #[test]
-//     fn test_input_parsing_items_specified_ooo() {
-//         let input = Input::parse_from(["invoice", "ooo", "3"]);
-//         assert_eq!(input.items, Some(TargetItems::Ooo { days: 3 }));
-//     }
+        #[test]
+        fn test_data_admin_expense() {
+            let item_1_str = "Coffee,2.5,EUR,3.0,2025-05-31";
+            let item_1 = Item::from_str(item_1_str).unwrap();
+            let item_2_str = "Lunch,10.0,USD,1.0,2025-05-31";
+            let item_2 = Item::from_str(item_2_str).unwrap();
+            let input = CliArgs::parse_from([
+                BINARY_NAME,
+                "data",
+                "expenses",
+                "--month",
+                "2025-05",
+                "-e",
+                item_1_str,
+                "-e",
+                item_2_str,
+            ]);
+            assert_eq!(
+                *input.command.unwrap_data().command(),
+                DataAdminInputCommands::Expenses(ExpensesInput {
+                    month: YearAndMonth::from_str("2025-05").unwrap(),
+                    expenses: vec![item_1, item_2]
+                })
+            );
+        }
+    }
 
-//     #[test]
-//     fn test_input_parsing_items_specified_expenses() {
-//         let input = Input::parse_from(["invoice", "expenses"]);
-//         assert_eq!(input.items, Some(TargetItems::Expenses));
-//     }
+    mod invoice_input {
+        use super::*;
 
-//     #[test]
-//     fn test_input_parsing_items_default() {
-//         let input = Input::parse_from(["invoice"]);
-//         assert_eq!(input.items, None);
-//     }
+        mod tests_input {
+            use super::*;
+            use test_log::test;
 
-//     #[test]
-//     fn test_input_parsing_out_specified() {
-//         let input = Input::parse_from(["invoice", "--out", "/tmp/invoice.pdf"]);
-//         assert_eq!(input.out, Some(PathBuf::from("/tmp/invoice.pdf")));
-//     }
+            #[test]
+            fn test_input_parsing_month() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "--month", "last"]);
+                assert_eq!(input.command.unwrap_invoice().month, TargetMonth::Last);
+            }
 
-//     #[test]
-//     fn test_input_parsing_out_default() {
-//         let input = Input::parse_from(["invoice"]);
-//         assert_eq!(input.out, None);
-//     }
-// }
+            #[test]
+            fn test_input_parsing_language_specified() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "--language", "swedish"]);
+                assert_eq!(input.command.unwrap_invoice().language, Language::SV);
+            }
 
-// #[cfg(test)]
-// mod tests_parsed_input {
-//     use super::*;
-//     use test_log::test;
+            #[test]
+            fn test_input_parsing_language_default() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice"]);
+                assert_eq!(input.command.unwrap_invoice().language, Language::EN);
+            }
 
-//     #[test]
-//     fn test_input_parsing_items_services() {
-//         let input = Input::builder()
-//             .items(TargetItems::Ooo { days: 25 })
-//             .build();
-//         let input = input.parsed().unwrap();
-//         assert_eq!(
-//             *input.items(),
-//             InvoicedItems::Service {
-//                 days_off: Some(Day::try_from(25).unwrap())
-//             }
-//         );
-//     }
+            #[test]
+            fn test_input_parsing_items_specified_ooo() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "ooo", "3"]);
+                assert_eq!(
+                    input.command.unwrap_invoice().items,
+                    Some(TargetItems::Ooo { days: 3 })
+                );
+            }
 
-//     #[test]
-//     fn test_input_parsing_items_expenses() {
-//         let input = Input::builder().items(TargetItems::Expenses).build();
-//         let input = input.parsed().unwrap();
-//         assert_eq!(*input.items(), InvoicedItems::Expenses);
-//     }
+            #[test]
+            fn test_input_parsing_items_specified_expenses() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "expenses"]);
+                assert_eq!(
+                    input.command.unwrap_invoice().items,
+                    Some(TargetItems::Expenses)
+                );
+            }
 
-//     #[test]
-//     fn test_input_parsing_out() {
-//         let input = Input::builder().out("/tmp/invoice.pdf").build();
-//         let input = input.parsed().unwrap();
-//         assert_eq!(
-//             *input.maybe_output_path(),
-//             Some(PathBuf::from("/tmp/invoice.pdf"))
-//         );
-//     }
+            #[test]
+            fn test_input_parsing_items_default() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice"]);
+                assert_eq!(input.command.unwrap_invoice().items, None);
+            }
 
-//     #[test]
-//     #[should_panic]
-//     fn test_input_parsing_out_at_root_crashes() {
-//         let input = Input::builder().out("/").build();
-//         let _ = input.parsed();
-//     }
-// }
+            #[test]
+            fn test_input_parsing_out_specified() {
+                let input =
+                    CliArgs::parse_from([BINARY_NAME, "invoice", "--out", "/tmp/invoice.pdf"]);
+                assert_eq!(
+                    input.command.unwrap_invoice().out,
+                    Some(PathBuf::from("/tmp/invoice.pdf"))
+                );
+            }
+
+            #[test]
+            fn test_input_parsing_out_default() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice"]);
+                assert_eq!(input.command.unwrap_invoice().out, None);
+            }
+        }
+
+        mod tests_parsed_input {
+            use super::*;
+            use test_log::test;
+
+            #[test]
+            fn test_input_parsing_items_services() {
+                let input = InvoiceInput::builder()
+                    .items(TargetItems::Ooo { days: 25 })
+                    .build();
+                let input = input.parsed().unwrap();
+                assert_eq!(
+                    *input.items(),
+                    InvoicedItems::Service {
+                        days_off: Some(Day::try_from(25).unwrap())
+                    }
+                );
+            }
+
+            #[test]
+            fn test_input_parsing_items_expenses() {
+                let input = InvoiceInput::builder().items(TargetItems::Expenses).build();
+                let input = input.parsed().unwrap();
+                assert_eq!(*input.items(), InvoicedItems::Expenses);
+            }
+
+            #[test]
+            fn test_input_parsing_out() {
+                let input = InvoiceInput::builder().out("/tmp/invoice.pdf").build();
+                let input = input.parsed().unwrap();
+                assert_eq!(
+                    *input.maybe_output_path(),
+                    Some(PathBuf::from("/tmp/invoice.pdf"))
+                );
+            }
+
+            #[test]
+            #[should_panic]
+            fn test_input_parsing_out_at_root_crashes() {
+                let input = InvoiceInput::builder().out("/").build();
+                let _ = input.parsed();
+            }
+        }
+    }
+}

@@ -67,7 +67,7 @@ impl ExchangeRates {
                 target: self.target_currency,
                 base: currency,
             })?;
-        let converted = rate.mul(unit_price);
+        let converted = rate.mul(*unit_price);
         Ok(converted)
     }
 }

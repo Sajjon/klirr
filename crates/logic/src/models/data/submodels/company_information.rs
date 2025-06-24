@@ -1,5 +1,3 @@
-use getset::WithSetters;
-
 use crate::prelude::*;
 
 /// Information about a company

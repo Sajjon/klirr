@@ -1,5 +1,3 @@
-use getset::WithSetters;
-
 use crate::prelude::*;
 
 /// The postal address of a company

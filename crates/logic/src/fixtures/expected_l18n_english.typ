@@ -10,7 +10,7 @@
     invoice_date: "Invoice date:",
     invoice_identifier: "Invoice no:",
     purchase_order: "Purchase order:",
-    terms: "Terms",
+    terms: "Terms:",
     vendor_contact: "Our reference:",
   ),
   line_items: (

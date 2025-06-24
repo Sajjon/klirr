@@ -1,6 +1,6 @@
 ---
 source: crates/logic/src/models/invoice_input_data.rs
-expression: "DataFromDisk::sample_expenses()"
+expression: "Data::sample_expenses()"
 ---
 InvoiceInputDataAbstract(
   information: ProtoInvoiceInfo(

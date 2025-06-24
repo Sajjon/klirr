@@ -1,8 +1,8 @@
 ---
-source: crates/logic/src/models/data/data_from_disk.rs
-expression: "DataFromDisk::sample()"
+source: crates/logic/src/models/data/data.rs
+expression: "Data::sample()"
 ---
-DataFromDisk(
+Data(
   information: ProtoInvoiceInfo(
     offset: TimestampedInvoiceNumber(
       offset: 237,
@@ -54,7 +54,7 @@ DataFromDisk(
     terms: "Net 30",
   ),
   service_fees: ServiceFees(
-    name: "App development",
+    name: "Agreed Consulting Fees",
     unit_price: UnitPrice(350.0),
   ),
   expensed_months: ExpensedMonths(

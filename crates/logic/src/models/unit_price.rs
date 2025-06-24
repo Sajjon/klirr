@@ -8,6 +8,8 @@ use crate::prelude::*;
     Copy,
     Display,
     PartialEq,
+    Eq,
+    Hash,
     Debug,
     Serialize,
     Deserialize,
@@ -16,8 +18,9 @@ use crate::prelude::*;
     Deref,
     derive_more::Mul,
 )]
-#[mul(forward)]
-pub struct UnitPrice(f64);
+#[from(forward)]
+#[deref(forward)]
+pub struct UnitPrice(F64);
 
 impl HasSample for UnitPrice {
     fn sample() -> Self {

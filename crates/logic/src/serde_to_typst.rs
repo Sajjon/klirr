@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn sample_expenses_to_typst() {
         test_data_to_typst!(
-            DataFromDisk::sample(),
+            Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
                 .month(YearAndMonth::sample())
@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn sample_services_to_typst() {
         test_data_to_typst!(
-            DataFromDisk::sample(),
+            Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Service { days_off: None })
                 .month(YearAndMonth::sample())

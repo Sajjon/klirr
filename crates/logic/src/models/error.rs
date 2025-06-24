@@ -96,7 +96,7 @@ pub enum Error {
     FailedToParseMonth { invalid_string: String },
 
     /// Failed to parse expense item from a string, e.g. when the format is incorrect.
-    #[error("Failed to parse expense item from string: {invalid_string}, reason: {reason}")]
+    #[error("Failed to parse expense item from: '{invalid_string}': {reason}")]
     InvalidExpenseItem {
         invalid_string: String,
         reason: String,

@@ -16,7 +16,7 @@ impl MaybeIsExpenses for LineItemsPricedInSourceCurrency {
 #[derive(Clone, Debug, Serialize, Deserialize, From, TryUnwrap, IsVariant)]
 #[from(Vec<Item>, Item)]
 pub enum LineItemsPricedInSourceCurrency {
-    /// Service sold by the vendor to the client, e.g. `"App development"`
+    /// Service sold by the vendor to the client, e.g. `"Agreed Consulting Fees"`
     Service(Item),
     /// Expense incurred by the vendor, travel expenses for a conference/summit/
     /// retreat

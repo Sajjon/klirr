@@ -48,7 +48,7 @@ pub fn running_in_ci() -> bool {
 /// Compares a generated image against an expected image, saving the new image if it differs.
 /// If the expected image does not exist, it will save the new image as the expected one.
 pub fn compare_image_against_expected(
-    sample: DataFromDisk,
+    sample: Data,
     input: ValidInput,
     path_to_expected_image: impl AsRef<Path>,
 ) {
@@ -114,7 +114,7 @@ pub fn compare_image_against_expected(
 }
 
 /// Generates a PNG image from a PDF rendered from the given layout path and input data.
-fn generate_pdf_into_png_image(l18n: L18n, sample: DataFromDisk, input: ValidInput) -> Vec<u8> {
+fn generate_pdf_into_png_image(l18n: L18n, sample: Data, input: ValidInput) -> Vec<u8> {
     let data =
         prepare_invoice_input_data(sample, input, Some(ExchangeRates::hard_coded())).unwrap();
     let pdf = render(l18n, data).unwrap();

@@ -58,7 +58,7 @@ mod tests {
             return;
         }
         compare_image_against_expected(
-            DataFromDisk::sample(),
+            Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
                 .month(YearAndMonth::sample())
@@ -75,7 +75,7 @@ mod tests {
             return;
         }
         compare_image_against_expected(
-            DataFromDisk::sample(),
+            Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Service { days_off: None })
                 .month(YearAndMonth::sample())

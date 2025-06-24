@@ -1,5 +1,3 @@
-use getset::WithSetters;
-
 use crate::prelude::*;
 
 /// Bank account details for the vendor, used for international transfers.

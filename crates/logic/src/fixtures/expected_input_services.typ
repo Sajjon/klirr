@@ -28,7 +28,7 @@
     items: (
       (
         currency: "EUR",
-        name: "App development",
+        name: "Agreed Consulting Fees",
         quantity: 22.0,
         total_cost: 7700.0,
         transaction_date: "2025-05-31",

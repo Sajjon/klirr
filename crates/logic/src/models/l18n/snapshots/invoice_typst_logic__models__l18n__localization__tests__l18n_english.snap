@@ -16,7 +16,7 @@ L18n(
       due_date: "Due date:",
       client_contact: "For the attention of:",
       vendor_contact: "Our reference:",
-      terms: "Terms",
+      terms: "Terms:",
     ),
     vendor_info: L18nVendorInfo(
       address: "Address",

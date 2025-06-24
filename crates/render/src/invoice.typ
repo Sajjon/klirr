@@ -17,10 +17,7 @@
   color: black,
 ) = {
   block[
-    #line(
-      length: length,
-      stroke: (thickness: thickness, paint: color),
-    )
+    #line(length: length, stroke: (thickness: thickness, paint: color))
   ]
 }
 
@@ -95,16 +92,6 @@
   content
 }
 
-#let huge(content) = {
-  set text(size: 25pt)
-  content
-}
-
-#let Huge(content) = {
-  set text(size: 30pt)
-  content
-}
-
 // Wraps content in a rounded box with a stroke and fill.
 #let ovalbox(width, content) = {
   box(
@@ -136,113 +123,91 @@
 
 
   // Page setup: A4 paper, custom margins, and footer for contact details
-  set page(
-    margin: (top: 2cm, bottom: 11cm, left: 2.5cm, right: 2.5cm),
-    footer: [
-      // Wrap both items in a vertical block
-      #block[
-        #hline()
-        #table(
-          columns: (1fr, auto, auto),
-          align: (left, left, left),
-          stroke: none,
-          [#strong(l18n.vendor_info.address)],
-          [#strong(l18n.vendor_info.iban)],
-          [#strong(l18n.vendor_info.organisation_number)],
+  set page(margin: (top: 2cm, bottom: 11cm, left: 1.5cm, right: 1.5cm), footer: [
+    // Wrap both items in a vertical block
+    #block[
+      #hline()
+      #table(
+        columns: (1fr, auto, auto),
+        align: (left, left, left),
+        stroke: none,
+        [#strong(l18n.vendor_info.address)],
+        [#strong(l18n.vendor_info.iban)],
+        [#strong(l18n.vendor_info.organisation_number)],
 
-          [#data.vendor.company_name], [#data.payment_info.iban], [#data.vendor.organisation_number],
-          [#data.vendor.postal_address.street_address.line_1],
-          [#strong(l18n.vendor_info.bank)],
-          [#strong(l18n.vendor_info.vat_number)],
+        [#data.vendor.company_name], [#data.payment_info.iban], [#data.vendor.organisation_number],
+        [#data.vendor.postal_address.street_address.line_1],
+        [#strong(l18n.vendor_info.bank)],
+        [#strong(l18n.vendor_info.vat_number)],
 
-          [#data.vendor.postal_address.street_address.line_2],
-          [#data.payment_info.bank_name],
-          [#data.vendor.vat_number],
+        [#data.vendor.postal_address.street_address.line_2], [#data.payment_info.bank_name], [#data.vendor.vat_number],
 
-          [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(l18n.vendor_info.bic)], [],
-          [#data.vendor.postal_address.country], [#data.payment_info.bic], [],
-        )
-        #hline()
-        // Conditionally display footer text if it exists
-        #if "footer_text" in data.information {
-          v(25pt)
-          align(center)[
-            #Large[#strong(data.information.footer_text)]
-          ]
-        }
-      ]
-    ],
-  )
+        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(l18n.vendor_info.bic)], [],
+        [#data.vendor.postal_address.country], [#data.payment_info.bic], [],
+      )
+      #hline()
+      // Conditionally display footer text if it exists
+      #if "footer_text" in data.information {
+        v(25pt)
+        align(center)[
+          #Large[#strong(data.information.footer_text)]
+        ]
+      }
+    ]
+  ])
   set text(font: "CMU Serif", size: 11pt)
 
   grid(
-    columns: (1fr, 1fr), // Two columns of equal width
-    gutter: 10pt, // Space between blocks
+    columns: (58%, 42%),
+    // Two columns of equal width
+    gutter: 0pt,
+    // Space between blocks
     // Recipient address block
-    block(
-      fill: none,
-      inset: 10pt,
-      stroke: none,
-      width: 100%,
-      [
-        // ** Invoice Header Section **
-        #huge[
-          #data.vendor.company_name
-        ]
+    block(fill: none, inset: 0pt, stroke: none, width: 100%, [
+      #v(2mm)
 
-        #text(l18n.client_info.to_company, weight: "bold")\
-        #data.client.company_name (#data.client.organisation_number)\
-        #data.client.postal_address.street_address.line_1\
-        #display_if_non_empty(data.client.postal_address.street_address.line_2)
-        #data.client.postal_address.city, #data.client.postal_address.country\
-        #data.client.postal_address.zip\
-        \
-        #text(l18n.client_info.vat_number, weight: "bold")\
-        #data.client.vat_number
-      ],
-    ),
-    block(
-      fill: none,
-      inset: 10pt,
-      stroke: none,
-      width: 100%,
-      [
-        // align the following block to the right margin
-        #ovalbox(
-          100%,
-          [#Large(strong[#l18n.invoice_info.invoice_identifier]) #text(fill: emphasize_color)[#strong(
-                str(data.information.number),
-              )]],
-        )
-        // Conditionally display purchase order if it exists
-        #if "purchase_order" in data.information {
-          ovalbox(
-            100%,
-            [#strong[#l18n.invoice_info.purchase_order] #text(fill: emphasize_color)[#strong(
-                  data.information.purchase_order,
-                )]],
-          )
-        }
-        #block(
-          fill: none,
-          [
-            #ovalbox(48%, [#strong[#l18n.invoice_info.invoice_date] #data.information.invoice_date])
-            #ovalbox(48%, [#strong[#l18n.invoice_info.due_date] #data.information.due_date])
-          ],
-        )
-        #if (
-          "contact_person" in data.client and data.client.contact_person != none and data.client.contact_person != ""
-        ) {
-          block[
-            #strong[#l18n.invoice_info.client_contact]
-            #data.client.contact_person
-            #v(-2mm)
-          ]
-        }
-        #strong[#l18n.invoice_info.vendor_contact] #data.vendor.contact_person \
-        #strong[#l18n.invoice_info.terms] #data.payment_info.terms
-      ],
-    )
+      // ** Invoice Header Section **
+      #LARGE[
+        #data.vendor.company_name
+      ]
+
+      #text(l18n.client_info.to_company, weight: "bold")\
+      #data.client.company_name (#data.client.organisation_number)\
+      #data.client.postal_address.street_address.line_1\
+      #display_if_non_empty(data.client.postal_address.street_address.line_2)
+      #data.client.postal_address.city, #data.client.postal_address.country\
+      #data.client.postal_address.zip\
+      #v(7mm)
+      #text(l18n.client_info.vat_number, weight: "bold")\
+      #data.client.vat_number
+    ]),
+    block(fill: none, inset: 0pt, stroke: none, width: 100%, [
+      // align the following block to the right margin
+      #ovalbox(100%, [#Large(strong[#l18n.invoice_info.invoice_identifier]) #text(fill: emphasize_color)[#strong(str(
+            data.information.number,
+          ))]])
+      // Conditionally display purchase order if it exists
+      #if "purchase_order" in data.information {
+        ovalbox(100%, [#strong[#l18n.invoice_info.purchase_order] #text(fill: emphasize_color)[#strong(
+              data.information.purchase_order,
+            )]])
+      }
+      #block(fill: none, [
+        #ovalbox(49%, [#strong[#l18n.invoice_info.invoice_date] #data.information.invoice_date])
+        #ovalbox(49%, [#strong[#l18n.invoice_info.due_date] #data.information.due_date])
+      ])
+      #if (
+        "contact_person" in data.client and data.client.contact_person != none and data.client.contact_person != ""
+      ) {
+        block[
+          #strong[#l18n.invoice_info.client_contact]
+          #data.client.contact_person
+          #v(-2mm)
+        ]
+      }
+      #strong[#l18n.invoice_info.vendor_contact] #data.vendor.contact_person \
+      #strong[#l18n.invoice_info.terms] #data.payment_info.terms
+    ]),
   )
 
   v(1cm)
@@ -277,7 +242,7 @@
         format_amount(row.unit_price, row.currency),
         table.hline(stroke: (thickness: 0.2pt, dash: "dashed")),
       )
-    }
+    },
   )
   // Grand Total Row
   align(right)[
@@ -293,13 +258,10 @@
 
   // Conditionally display the purchase order if it exists
   if "purchase_order" in data.information {
-    ovalbox(
-      100%,
-      [
-        #Large([#strong(l18n.invoice_info.purchase_order) #text(fill: emphasize_color)[#strong(
-              data.information.purchase_order,
-            )]])
-      ],
-    )
+    ovalbox(100%, [
+      #Large([#strong(l18n.invoice_info.purchase_order) #text(fill: emphasize_color)[#strong(
+            data.information.purchase_order,
+          )]])
+    ])
   }
 }

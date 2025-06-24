@@ -2,39 +2,58 @@ use std::str::FromStr;
 
 use crate::prelude::*;
 
-#[derive(Clone, Debug, Display, PartialEq, Serialize, Deserialize, Getters, TypedBuilder)]
-#[display(
-    "{}: {}{} #{} @{}",
-    name,
-    unit_price,
-    currency,
-    quantity,
-    transaction_date
-)]
-pub struct Item {
-    /// The short name of the expense, e.g. `"Coffee"`
-    #[builder(setter(into))]
-    #[getset(get = "pub")]
-    name: String,
-    /// The cost per item
-    #[builder(setter(into))]
-    #[getset(get = "pub")]
-    unit_price: UnitPrice,
-    /// The currency of the expense, e.g. `"EUR"`, this
-    /// is the currency in which the expense was paid,
-    /// and not necessarily the currency of the invoice.
-    #[builder(setter(into))]
-    #[getset(get = "pub")]
-    currency: Currency,
-    /// The quantity of the expense, e.g. `2.0` for two items
-    #[builder(setter(into))]
-    #[getset(get = "pub")]
-    quantity: Quantity,
-    /// The date of the expense, e.g. `2025-05-31`
-    #[builder(setter(into))]
-    #[getset(get = "pub")]
-    transaction_date: Date,
+#[macro_export]
+macro_rules! define_item_struct {
+    ($vis:vis, $name:ident, $quantity_ty:ty) => {
+        #[derive(
+            Clone,
+            Debug,
+            Display,
+            PartialEq,
+            Eq,
+            Hash,
+            Serialize,
+            Deserialize,
+            Getters,
+            Setters,
+            TypedBuilder,
+        )]
+        #[display(
+            "{}: {}{} #{} @{}",
+            name,
+            unit_price,
+            currency,
+            quantity,
+            transaction_date
+        )]
+        $vis struct $name {
+            /// The short name of the expense, e.g. `"Coffee"`
+            #[builder(setter(into))]
+            #[getset(get = "pub")]
+            name: String,
+            /// The cost per item
+            #[builder(setter(into))]
+            #[getset(get = "pub")]
+            unit_price: UnitPrice,
+            /// The currency of the expense, e.g. `"EUR"`, this
+            /// is the currency in which the expense was paid,
+            /// and not necessarily the currency of the invoice.
+            #[builder(setter(into))]
+            #[getset(get = "pub")]
+            currency: Currency,
+            /// The quantity of the expense, e.g. `2.0` for two items
+            #[builder(setter(into))]
+            #[getset(get = "pub", set)]
+            quantity: $quantity_ty,
+            /// The date of the expense, e.g. `2025-05-31`
+            #[builder(setter(into))]
+            #[getset(get = "pub")]
+            transaction_date: Date,
+        }
+    };
 }
+
+define_item_struct!(pub, Item, Quantity);
 
 impl HasSample for Item {
     fn sample() -> Self {
@@ -162,7 +181,7 @@ impl FromStr for Item {
         if parts.len() != 5 {
             return Err(Error::InvalidExpenseItem {
                 invalid_string: s.to_string(),
-                reason: "Expected 5 comma-separated values".to_string(),
+                reason: "Expected 5 comma-separated values, on format: \"Coffee, 2.5, EUR, 3.0, 2025-05-31\"".to_string(),
             });
         }
 

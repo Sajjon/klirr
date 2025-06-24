@@ -1,8 +1,8 @@
 ---
 source: crates/logic/src/models/invoice_input_data.rs
-expression: "DataFromDisk::sample()"
+expression: "Data::sample()"
 ---
-DataFromDisk(
+Data(
   information: InvoiceInformation(
     number: 237,
     purchase_order: "PO-12345",
