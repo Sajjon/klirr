@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 /// An invoice number timestamp with year and month, e.g. `(237, 2025-05)`.
-#[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters)]
 pub struct TimestampedInvoiceNumber {
     /// A base offset for the invoice number, e.g. `237`.
     #[builder(setter(into))]

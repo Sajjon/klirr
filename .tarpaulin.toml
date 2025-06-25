@@ -6,6 +6,7 @@ exclude-files = [
     "crates/cli/src/init_logging.rs",
     "crates/cli/src/input/tui.rs",
     "crates/cli/src/main.rs",
+    "crates/cli/src/run.rs",
     "crates/cli/src/dispatch_command.rs",
 ]
 verbose = false

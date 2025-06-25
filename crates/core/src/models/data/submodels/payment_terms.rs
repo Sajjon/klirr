@@ -3,7 +3,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 use crate::prelude::*;
 
 /// The payment terms of this invoice, e.g. `Net { due_in: 30 }`
-#[derive(Clone, Debug, Display, Serialize, Deserialize)]
+#[derive(Clone, Debug, Display, Serialize, PartialEq, Deserialize)]
 #[serde(untagged)]
 pub enum PaymentTerms {
     /// Net payment due in a specific number of days, e.g. `Net(30)`
@@ -50,7 +50,15 @@ impl HasSample for PaymentTerms {
 }
 
 #[derive(
-    Clone, Copy, Debug, SerializeDisplay, DeserializeFromStr, TypedBuilder, Getters, Display,
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    SerializeDisplay,
+    DeserializeFromStr,
+    TypedBuilder,
+    Getters,
+    Display,
 )]
 #[display("Net {}", due_in)]
 pub struct NetDays {

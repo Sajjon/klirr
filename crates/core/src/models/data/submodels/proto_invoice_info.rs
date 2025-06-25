@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 /// Partial information about the invoice which can be used to derive a [`InvoiceInfoFull`]
-#[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters, Setters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters, Setters)]
 pub struct ProtoInvoiceInfo {
     /// An offset which is used to calculate the invoice number, e.g. `(237, 2025-05)`.
     /// This is enables us to calculate the next invoice number based on the current

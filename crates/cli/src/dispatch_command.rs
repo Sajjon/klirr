@@ -6,7 +6,7 @@ fn init_data_directory(provide_data: impl FnOnce() -> Result<Data>) -> Result<()
 }
 
 fn validate_data_directory() -> Result<()> {
-    validate_data_directory_with_base_path(data_dir())
+    validate_data_directory_with_base_path(data_dir()).map(|_| ())
 }
 
 fn record_expenses(month: &YearAndMonth, expenses: &[Item]) -> Result<()> {

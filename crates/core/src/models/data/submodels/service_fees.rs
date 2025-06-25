@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters, WithSetters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters, WithSetters)]
 pub struct ServiceFees {
     /// Description of the consulting service, e.g. `"Agreed Consulting Fees"`
     #[builder(setter(into))]

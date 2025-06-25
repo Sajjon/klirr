@@ -2,7 +2,9 @@ use serde_with::DeserializeFromStr;
 
 use crate::prelude::*;
 
-#[derive(Clone, Debug, SerializeDisplay, DeserializeFromStr, derive_more::Display, Getters)]
+#[derive(
+    Clone, Debug, SerializeDisplay, DeserializeFromStr, PartialEq, derive_more::Display, Getters,
+)]
 #[display("#{:02x}{:02x}{:02x}", red, green, blue)]
 pub struct HexColor {
     #[getset(get = "pub")]

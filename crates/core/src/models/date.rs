@@ -173,4 +173,13 @@ mod tests {
         assert!(date1 > date3);
         assert!(date3 < date1);
     }
+
+    #[test]
+    fn test_from_naive_date() {
+        let naive_date = NaiveDate::from_ymd_opt(2025, 5, 23).unwrap();
+        let date: Date = naive_date.into();
+        assert_eq!(date.year(), &Year::from(2025));
+        assert_eq!(date.month(), &Month::May);
+        assert_eq!(date.day(), &Day::try_from(23).unwrap());
+    }
 }

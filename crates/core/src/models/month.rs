@@ -142,6 +142,7 @@ mod tests {
         assert_eq!(Month::try_from(2).unwrap(), Month::February);
         assert_eq!(Month::try_from(7).unwrap(), Month::July);
         assert_eq!(Month::try_from(8).unwrap(), Month::August);
+        assert_eq!(Month::try_from(9).unwrap(), Month::September);
         assert_eq!(Month::try_from(10).unwrap(), Month::October);
         assert_eq!(Month::try_from(11).unwrap(), Month::November);
         assert_eq!(Month::try_from(12).unwrap(), Month::December);

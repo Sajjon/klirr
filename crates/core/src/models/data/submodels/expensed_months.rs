@@ -1,6 +1,6 @@
 use crate::{define_item_struct, prelude::*};
 
-#[derive(Clone, Debug, Serialize, Deserialize, Getters)]
+#[derive(Clone, Debug, Serialize, PartialEq, Deserialize, Getters)]
 pub struct ExpensedMonths {
     explanation: String,
     #[getset(get = "pub")]
@@ -25,7 +25,7 @@ impl ExpensedMonths {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, PartialEq, Deserialize, Default)]
 #[serde(transparent)]
 struct ExpensesForMonth(Vec<Item>);
 

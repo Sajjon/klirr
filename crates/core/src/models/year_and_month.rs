@@ -356,4 +356,16 @@ mod tests {
     fn test_debug() {
         assert_debug_snapshot!(YearAndMonth::new(Year::new(2025), Month::May), @"2025-05");
     }
+
+    #[test]
+    fn test_from_date() {
+        let date = Date::builder()
+            .year(2025)
+            .month(Month::May)
+            .day(Day::try_from(23).unwrap())
+            .build();
+        let year_and_month: YearAndMonth = date.into();
+        assert_eq!(year_and_month.year(), &Year::new(2025));
+        assert_eq!(year_and_month.month(), &Month::May);
+    }
 }

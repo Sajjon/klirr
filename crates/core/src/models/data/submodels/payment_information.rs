@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// Bank account details for the vendor, used for international transfers.
 /// This includes the IBAN, bank name, and BIC.
 /// This is used to ensure that the client can pay the invoice correctly.
-#[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters, WithSetters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters, WithSetters)]
 pub struct PaymentInformation {
     /// The IBAN (International Bank Account Number) of the vendor's bank account,
     #[builder(setter(into))]

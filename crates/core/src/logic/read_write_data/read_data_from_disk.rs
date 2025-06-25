@@ -55,20 +55,16 @@ pub fn save_data_with_base_path(data: Data, base_path: impl AsRef<Path>) -> Resu
     Ok(())
 }
 
-pub fn validate_data_directory_with_base_path(base_path: impl AsRef<Path>) -> Result<()> {
+pub fn validate_data_directory_with_base_path(base_path: impl AsRef<Path>) -> Result<Data> {
     let base_path = base_path.as_ref();
     info!("Validating data directory at: {}", base_path.display());
     read_data_from_disk_with_base_path(base_path)
-        .map(|_| {
+        .inspect(|_| {
             info!("✅ Data directory is valid");
         })
         .inspect_err(|e| {
             error!("❌ Data directory is invalid: {}", e);
         })
-}
-
-pub fn data_path_ron_file(name: &str) -> PathBuf {
-    path_to_ron_file_with_base(data_dir(), name)
 }
 
 pub fn path_to_ron_file_with_base(base_path: impl AsRef<Path>, name: &str) -> PathBuf {
@@ -110,9 +106,6 @@ pub fn expensed_months(base_path: impl AsRef<Path>) -> Result<ExpensedMonths> {
     load_data(base_path, DATA_FILE_NAME_EXPENSES)
 }
 
-pub fn read_data_from_disk() -> Result<Data> {
-    read_data_from_disk_with_base_path(data_dir())
-}
 pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result<Data> {
     let base_path = base_path.as_ref();
     // Read the input data from a file or other source.
@@ -145,12 +138,9 @@ mod tests {
     #[test]
     fn write_read_validate_data() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
-        let result = validate_data_directory_with_base_path(tempdir.path());
-        assert!(
-            result.is_ok(),
-            "Expected validation to succeed, got: {:?}",
-            result
-        );
+        let data = Data::sample();
+        save_data_with_base_path(data.clone(), tempdir.path()).unwrap();
+        let loaded_data = read_data_from_disk_with_base_path(tempdir.path()).unwrap();
+        assert_eq!(loaded_data, data, "Loaded data should match saved data");
     }
 }
