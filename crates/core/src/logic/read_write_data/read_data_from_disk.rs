@@ -102,11 +102,11 @@ fn service_fees(base_path: impl AsRef<Path>) -> Result<ServiceFees> {
     load_data(base_path, DATA_FILE_NAME_SERVICE_FEES)
 }
 
-fn proto_invoice_info(base_path: impl AsRef<Path>) -> Result<ProtoInvoiceInfo> {
+pub fn proto_invoice_info(base_path: impl AsRef<Path>) -> Result<ProtoInvoiceInfo> {
     load_data(base_path, DATA_FILE_NAME_PROTO_INVOICE_INFO)
 }
 
-fn expensed_months(base_path: impl AsRef<Path>) -> Result<ExpensedMonths> {
+pub fn expensed_months(base_path: impl AsRef<Path>) -> Result<ExpensedMonths> {
     load_data(base_path, DATA_FILE_NAME_EXPENSES)
 }
 

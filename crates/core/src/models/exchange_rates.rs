@@ -60,15 +60,19 @@ impl ExchangeRates {
         if self.target_currency == currency {
             return Ok(unit_price);
         }
-        let rate = self
-            .rates
+        let rate = self.get_rate(currency)?;
+        let converted = rate.mul(*unit_price);
+        Ok(converted)
+    }
+
+    fn get_rate(&self, currency: Currency) -> Result<UnitPrice> {
+        self.rates
             .get(&currency)
+            .cloned()
             .ok_or(Error::FoundNoExchangeRate {
                 target: self.target_currency,
                 base: currency,
-            })?;
-        let converted = rate.mul(*unit_price);
-        Ok(converted)
+            })
     }
 }
 
@@ -112,6 +116,16 @@ mod tests {
             .rates(HashMap::new())
             .build();
         let result = exchange_rates.convert(100.0, Currency::JPY);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_get_rate_not_found() {
+        let exchange_rates = ExchangeRates::builder()
+            .target_currency(Currency::EUR)
+            .rates(HashMap::new())
+            .build();
+        let result = exchange_rates.get_rate(Currency::JPY);
         assert!(result.is_err());
     }
 }

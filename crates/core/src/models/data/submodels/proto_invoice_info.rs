@@ -34,6 +34,17 @@ pub struct ProtoInvoiceInfo {
 }
 
 impl ProtoInvoiceInfo {
+    /// Inserts a new month into the months off record.
+    /// This is used to keep track of months when no invoices were issued.
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core;
+    /// use klirr_core::prelude::*;
+    /// let mut invoice_info = ProtoInvoiceInfo::sample();
+    /// let month = YearAndMonth::may(2025);
+    /// invoice_info.insert_month_off(month);
+    /// assert!(invoice_info.months_off_record().contains(&month));
+    /// ```
     pub fn insert_month_off(&mut self, month: YearAndMonth) {
         let mut months_off = self.months_off_record.clone();
         months_off.insert(month);
@@ -107,5 +118,13 @@ mod tests {
             .build();
         let result = invoice_info.validate();
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_insert_month_off() {
+        let mut invoice_info = ProtoInvoiceInfo::sample();
+        let month = YearAndMonth::may(2025);
+        invoice_info.insert_month_off(month);
+        assert!(invoice_info.months_off_record.contains(&month));
     }
 }

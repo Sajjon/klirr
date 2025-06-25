@@ -7,6 +7,24 @@ pub struct ExpensedMonths {
     expenses_for_months: IndexMap<YearAndMonth, ExpensesForMonth>,
 }
 
+impl ExpensedMonths {
+    pub fn sample() -> Self {
+        Self::new(IndexMap::from_iter([
+            (
+                YearAndMonth::january(2024),
+                vec![
+                    Item::sample_expense_coffee(),
+                    Item::sample_expense_sandwich(),
+                ],
+            ),
+            (
+                YearAndMonth::february(2024),
+                vec![Item::sample_expense_breakfast()],
+            ),
+        ]))
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 #[serde(transparent)]
 struct ExpensesForMonth(Vec<Item>);
@@ -170,8 +188,8 @@ mod tests {
 
     #[test]
     fn test_get_not_found() {
-        let expenses = ExpensedMonths::new(IndexMap::new());
-        let target_month = YearAndMonth::january(2024);
+        let expenses = ExpensedMonths::sample();
+        let target_month = YearAndMonth::january(1970);
         let result = expenses.get(&target_month);
         assert!(result.is_err());
     }
@@ -248,5 +266,11 @@ mod tests {
         let retrieved_items = expensed_months.get(&month).unwrap();
         assert_eq!(retrieved_items.len(), 1);
         assert_eq!(*retrieved_items[0].quantity(), Quantity::from(7.0)); // 3.0 + 4.0
+    }
+
+    #[test]
+    fn default_is_empty() {
+        let expensed_months = ExpensedMonths::default();
+        assert!(expensed_months.expenses_for_months.is_empty());
     }
 }

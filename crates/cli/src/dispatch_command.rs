@@ -1,6 +1,22 @@
 use crate::prelude::*;
 use klirr_render::prelude::render;
 
+fn init_data_directory(provide_data: impl FnOnce() -> Result<Data>) -> Result<()> {
+    init_data_directory_at(data_dir(), provide_data)
+}
+
+fn validate_data_directory() -> Result<()> {
+    validate_data_directory_with_base_path(data_dir())
+}
+
+fn record_expenses(month: &YearAndMonth, expenses: &[Item]) -> Result<()> {
+    record_expenses_with_base_path(month, expenses, data_dir())
+}
+
+fn record_month_off(month: &YearAndMonth) -> Result<()> {
+    record_month_off_with_base_path(month, data_dir())
+}
+
 pub fn run_data_command(command: &DataAdminInputCommands) -> Result<()> {
     match command {
         DataAdminInputCommands::Init => init_data_directory(ask_for_data),

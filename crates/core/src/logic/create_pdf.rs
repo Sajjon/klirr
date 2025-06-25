@@ -82,4 +82,14 @@ mod tests {
         assert!(tmp_file_path.exists());
         assert_eq!(std::fs::read(tmp_file_path).unwrap(), dummy_pdf_bytes);
     }
+
+    #[test]
+    fn test_save_pdf_invalid_path() {
+        let invalid_path = PathBuf::from("/invalid/path/to/save.pdf");
+        let dummy_pdf = Pdf::from(Vec::from(
+            b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n",
+        ));
+        let result = save_pdf(dummy_pdf, &invalid_path);
+        assert!(result.is_err(), "Expected save to fail, got: {:?}", result);
+    }
 }

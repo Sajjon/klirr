@@ -1,10 +1,6 @@
 use crate::prelude::*;
 
-pub fn init_data_directory(provide_data: impl FnOnce() -> Result<Data>) -> Result<()> {
-    init_data_directory_at(data_dir(), provide_data)
-}
-
-fn init_data_directory_at(
+pub fn init_data_directory_at(
     write_path: impl AsRef<Path>,
     provide_data: impl FnOnce() -> Result<Data>,
 ) -> Result<()> {
@@ -17,28 +13,14 @@ fn init_data_directory_at(
     Ok(())
 }
 
-pub fn validate_data_directory() -> Result<()> {
-    validate_data_directory_with_base_path(data_dir())
-}
-
-pub fn record_expenses(month: &YearAndMonth, expenses: &[Item]) -> Result<()> {
-    record_expenses_with_base_path(month, expenses, data_dir())
-}
-
-pub fn record_month_off(month: &YearAndMonth) -> Result<()> {
-    record_month_off_with_base_path(month, data_dir())
-}
-
-fn record_expenses_with_base_path(
+pub fn record_expenses_with_base_path(
     month: &YearAndMonth,
     expenses: &[Item],
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
     info!("Recording #{} expenses for: {}", expenses.len(), month);
     let data_path = data_path.as_ref();
-    let mut current = read_data_from_disk_with_base_path(data_path)?
-        .expensed_months()
-        .clone();
+    let mut current = expensed_months(data_path)?.clone();
     current.insert_expenses(month, expenses.to_vec());
     save_to_disk(
         &current,
@@ -48,15 +30,13 @@ fn record_expenses_with_base_path(
     Ok(())
 }
 
-fn record_month_off_with_base_path(
+pub fn record_month_off_with_base_path(
     month: &YearAndMonth,
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
     info!("Recording month off for: {}", month);
     let data_path = data_path.as_ref();
-    let mut current = read_data_from_disk_with_base_path(data_path)?
-        .information()
-        .clone();
+    let mut current = proto_invoice_info(data_path)?.clone();
 
     current.insert_month_off(*month);
 
@@ -64,7 +44,7 @@ fn record_month_off_with_base_path(
         &current,
         path_to_ron_file_with_base(data_path, DATA_FILE_NAME_PROTO_INVOICE_INFO),
     )?;
-    info!("✅ Expenses recorded successfully");
+    info!("✅ Month off recorded successfully");
     Ok(())
 }
 
@@ -124,5 +104,39 @@ mod tests {
             "Expected data directory initialization to succeed, got: {:?}",
             result
         );
+    }
+
+    #[test]
+    fn test_record_month_off_with_base_path() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let month = YearAndMonth::may(2025);
+        save_to_disk(
+            &ProtoInvoiceInfo::sample(),
+            path_to_ron_file_with_base(tempdir.path(), DATA_FILE_NAME_PROTO_INVOICE_INFO),
+        )
+        .unwrap();
+        record_month_off_with_base_path(&month, tempdir.path()).unwrap();
+
+        // Verify that the month was recorded correctly
+        let data = proto_invoice_info(tempdir.path()).unwrap();
+        assert!(data.months_off_record().contains(&month));
+    }
+
+    #[test]
+    fn test_record_expenses_with_base_path() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        save_to_disk(
+            &ExpensedMonths::sample(),
+            path_to_ron_file_with_base(tempdir.path(), DATA_FILE_NAME_EXPENSES),
+        )
+        .unwrap();
+        let month = YearAndMonth::may(2025);
+        let expenses = vec![Item::sample_expense_breakfast()];
+
+        record_expenses_with_base_path(&month, &expenses, tempdir.path()).unwrap();
+
+        // Verify that the month was recorded correctly
+        let data = expensed_months(tempdir.path()).unwrap();
+        assert!(data.contains(&month));
     }
 }

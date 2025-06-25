@@ -14,6 +14,7 @@ pub struct HexColor {
 }
 
 impl Default for HexColor {
+    /// Black
     fn default() -> Self {
         Self::from_str("#000000").expect("Failed to create default HexColor")
     }
@@ -90,5 +91,13 @@ mod tests {
         for &s in &invalid_strings {
             assert!(HexColor::from_str(s).is_err(), "Expected error for '{}'", s);
         }
+    }
+
+    #[test]
+    fn test_hex_color_default_is_black() {
+        let default_color = HexColor::default();
+        assert_eq!(*default_color.red(), 0);
+        assert_eq!(*default_color.green(), 0);
+        assert_eq!(*default_color.blue(), 0);
     }
 }

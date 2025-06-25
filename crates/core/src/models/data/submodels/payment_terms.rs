@@ -130,4 +130,10 @@ mod tests {
             assert!(result.is_err(), "Expected error for '{}'", invalid);
         }
     }
+
+    #[test]
+    fn test_payment_terms_from_str() {
+        let payment_terms: PaymentTerms = "Net 30".parse().unwrap();
+        assert!(matches!(payment_terms, PaymentTerms::Net(_)));
+    }
 }
