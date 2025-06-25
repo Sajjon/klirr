@@ -131,4 +131,34 @@ mod tests {
             result
         );
     }
+
+    #[test]
+    fn save_to_disk_err_serialize() {
+        use serde::{self, Serialize, Serializer, ser};
+        struct FailModel;
+
+        impl Serialize for FailModel {
+            fn serialize<S>(&self, _serializer: S) -> std::result::Result<S::Ok, S::Error>
+            where
+                S: Serializer,
+            {
+                Err(serde::ser::Error::custom(
+                    "manual failure during serialization",
+                ))
+            }
+        }
+
+        let fail_model = FailModel;
+        let result = save_to_disk(&fail_model, PathBuf::from("irrelevant"));
+        assert!(result.is_err(), "Expected save to fail, got: {:?}", result);
+    }
+
+    #[test]
+    fn save_to_disk_err_invalid_path() {
+        let result = save_to_disk(
+            &CompanyInformation::sample_client(),
+            PathBuf::from("/invalid/path"),
+        );
+        assert!(result.is_err(), "Expected save to fail, got: {:?}", result);
+    }
 }

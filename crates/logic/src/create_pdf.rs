@@ -1,11 +1,22 @@
 use crate::prelude::*;
 
-/// Compile the Typst source into a PDF and save it at the specified path.
+/// Compile the Typst source into a PDF and save it at the specified path, by
+/// reading data from disk and using the provided `ValidInput`.
 pub fn create_pdf(
     input: ValidInput,
     render: impl Fn(L18n, DataTypstCompat) -> Result<Pdf>,
 ) -> Result<PathBuf> {
     let data = read_data_from_disk()?;
+    create_pdf_with_data(data, input, render)
+}
+
+/// Compile the Typst source into a PDF and save it at the specified path, using
+/// the provided `Data` and `ValidInput`.
+pub fn create_pdf_with_data(
+    data: Data,
+    input: ValidInput,
+    render: impl Fn(L18n, DataTypstCompat) -> Result<Pdf>,
+) -> Result<PathBuf> {
     let l18n = get_localization(input.language())?;
     let data = prepare_invoice_input_data(data, input, None)?;
     let output_path = data.absolute_path()?;
@@ -40,7 +51,7 @@ mod tests {
             .month(YearAndMonth::sample())
             .build();
         let dummy_pdf_data = Vec::from(b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n");
-        let path = create_pdf(input, |_, _| {
+        let path = create_pdf_with_data(Data::sample(), input, |_, _| {
             // Simulate PDF rendering
             Ok(Pdf::from(dummy_pdf_data.clone()))
         })
