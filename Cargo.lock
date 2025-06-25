@@ -2058,52 +2058,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "invoice-typst-logic"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "derive_more",
- "dirs-next",
- "getset",
- "httpmock",
- "indexmap 2.9.0",
- "indoc",
- "insta",
- "lazy_static",
- "log",
- "pretty_assertions",
- "reqwest",
- "ron 0.10.1",
- "serde",
- "serde_json",
- "serde_with",
- "strum 0.27.1",
- "tempfile",
- "test-log",
- "thiserror 2.0.12",
- "typed-builder",
-]
-
-[[package]]
-name = "invoice-typst-render"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "getset",
- "image",
- "image-compare",
- "invoice-typst-logic",
- "log",
- "serde_json",
- "tempfile",
- "test-log",
- "typed-builder",
- "typst",
- "typst-kit",
- "typst-pdf",
-]
-
-[[package]]
 name = "ipnet"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2179,8 +2133,8 @@ dependencies = [
  "dirs-next",
  "fern",
  "inquire",
- "invoice-typst-logic",
- "invoice-typst-render",
+ "klirr-core",
+ "klirr-render",
  "log",
  "ron 0.10.1",
  "serde",
@@ -2189,6 +2143,52 @@ dependencies = [
  "test-log",
  "thiserror 2.0.12",
  "typed-builder",
+]
+
+[[package]]
+name = "klirr-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "derive_more",
+ "dirs-next",
+ "getset",
+ "httpmock",
+ "indexmap 2.9.0",
+ "indoc",
+ "insta",
+ "lazy_static",
+ "log",
+ "pretty_assertions",
+ "reqwest",
+ "ron 0.10.1",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "strum 0.27.1",
+ "tempfile",
+ "test-log",
+ "thiserror 2.0.12",
+ "typed-builder",
+]
+
+[[package]]
+name = "klirr-render"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "getset",
+ "image",
+ "image-compare",
+ "klirr-core",
+ "log",
+ "serde_json",
+ "tempfile",
+ "test-log",
+ "typed-builder",
+ "typst",
+ "typst-kit",
+ "typst-pdf",
 ]
 
 [[package]]

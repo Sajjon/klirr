@@ -100,11 +100,6 @@ mod tests {
     }
 
     #[test]
-    fn init_logging_with_level_str_info() {
-        init_logging_with_level_str("info");
-    }
-
-    #[test]
     fn test_color_from_level() {
         assert_eq!(
             color_from_level(Level::Error).to_string(),

@@ -9,6 +9,6 @@ pub mod prelude {
     pub(crate) use crate::typst_context::*;
 
     pub use getset::Getters;
-    pub use invoice_typst_logic::prelude::*;
+    pub use klirr_core::prelude::*;
     pub use typed_builder::TypedBuilder;
 }

@@ -1,0 +1,39 @@
+---
+source: crates/core/src/models/l18n/localization.rs
+expression: "&L18n::new(Language::EN).unwrap()"
+---
+L18n(
+  language: "english",
+  content: L18nContent(
+    client_info: L18nClientInfo(
+      to_company: "To:",
+      vat_number: "VAT:",
+    ),
+    invoice_info: L18nInvoiceInfo(
+      purchase_order: "Purchase order:",
+      invoice_identifier: "Invoice no:",
+      invoice_date: "Invoice date:",
+      due_date: "Due date:",
+      client_contact: "For the attention of:",
+      vendor_contact: "Our reference:",
+      terms: "Terms:",
+    ),
+    vendor_info: L18nVendorInfo(
+      address: "Address",
+      bank: "Bank",
+      iban: "IBAN",
+      bic: "BIC",
+      organisation_number: "Org. No.",
+      vat_number: "VAT No.",
+    ),
+    line_items: L18nLineItems(
+      description: "Item",
+      when: "When",
+      quantity: "Quantity",
+      unit_price: "Unit price",
+      total_cost: "Total cost",
+      grand_total: "Grand Total:",
+    ),
+    month_names: ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"),
+  ),
+)

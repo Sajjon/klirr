@@ -1,0 +1,88 @@
+---
+source: crates/core/src/models/data/data.rs
+expression: "Data::sample()"
+---
+Data(
+  information: ProtoInvoiceInfo(
+    offset: TimestampedInvoiceNumber(
+      offset: 237,
+      month: "2017-03",
+    ),
+    months_off_record: MonthsOffRecord([
+      "2020-12",
+      "2021-03",
+    ]),
+    purchase_order: Some("PO-12345"),
+    footer_text: Some("Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."),
+    emphasize_color_hex: Some("#e6007a"),
+  ),
+  vendor: CompanyInformation(
+    contact_person: Some("Ture Sventon"),
+    organisation_number: "556123-4567",
+    company_name: "Bra Detektiv AB",
+    postal_address: PostalAddress(
+      street_address: StreetAddress(
+        line_1: "Storgatan 45",
+        line_2: "4 tr",
+      ),
+      zip: "114 32",
+      country: "Sweden",
+      city: "Stockholm",
+    ),
+    vat_number: "SE556123456701",
+  ),
+  client: CompanyInformation(
+    contact_person: Some("Sherlock Holmes"),
+    organisation_number: "9876543-2101",
+    company_name: "Holmes Ltd",
+    postal_address: PostalAddress(
+      street_address: StreetAddress(
+        line_1: "221B Baker Street",
+        line_2: "",
+      ),
+      zip: "NW1 6XE",
+      country: "England",
+      city: "London",
+    ),
+    vat_number: "GB987654321",
+  ),
+  payment_info: PaymentInformation(
+    iban: "SE21 9000 0123 9876 5432 1009",
+    bank_name: "SEB",
+    bic: "ESSESESS",
+    currency: "EUR",
+    terms: "Net 30",
+  ),
+  service_fees: ServiceFees(
+    name: "Agreed Consulting Fees",
+    unit_price: UnitPrice(350.0),
+  ),
+  expensed_months: ExpensedMonths(
+    explanation: "Expenses for months",
+    expenses_for_months: {
+      "2025-05": [
+        Item(
+          name: "Breakfast",
+          unit_price: UnitPrice(145.0),
+          currency: "SEK",
+          quantity: Quantity(1.0),
+          transaction_date: "2025-05-20",
+        ),
+        Item(
+          name: "Coffee",
+          unit_price: UnitPrice(4.0),
+          currency: "GBP",
+          quantity: Quantity(2.0),
+          transaction_date: "2025-05-31",
+        ),
+        Item(
+          name: "Sandwich",
+          unit_price: UnitPrice(7.0),
+          currency: "GBP",
+          quantity: Quantity(1.0),
+          transaction_date: "2025-05-31",
+        ),
+      ],
+    },
+  ),
+)

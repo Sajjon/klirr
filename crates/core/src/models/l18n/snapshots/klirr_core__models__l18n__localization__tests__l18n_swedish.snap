@@ -1,0 +1,39 @@
+---
+source: crates/core/src/models/l18n/localization.rs
+expression: "&L18n::new(Language::SV).unwrap()"
+---
+L18n(
+  language: "swedish",
+  content: L18nContent(
+    client_info: L18nClientInfo(
+      to_company: "Till:",
+      vat_number: "Moms:",
+    ),
+    invoice_info: L18nInvoiceInfo(
+      purchase_order: "Inköpsorder:",
+      invoice_identifier: "Fakturanr:",
+      invoice_date: "Fakturadatum:",
+      due_date: "Förfallodatum:",
+      client_contact: "Er referens:",
+      vendor_contact: "Vår referens:",
+      terms: "Villkor",
+    ),
+    vendor_info: L18nVendorInfo(
+      address: "Address",
+      bank: "Bank",
+      iban: "IBAN",
+      bic: "BIC",
+      organisation_number: "Org. Nr.",
+      vat_number: "Momsreg. Nr.",
+    ),
+    line_items: L18nLineItems(
+      description: "Artikel",
+      when: "När",
+      quantity: "Antal",
+      unit_price: "Enhetspris",
+      total_cost: "Kostnad",
+      grand_total: "Totalt:",
+    ),
+    month_names: ("Januari", "Februari", "Mars", "April", "Maj", "June", "July", "Augusti", "September", "October", "November", "December"),
+  ),
+)

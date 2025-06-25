@@ -92,6 +92,7 @@ fn build_company(owner: impl AsRef<str>) -> Result<CompanyInformation> {
     })
 }
 
+#[allow(unused)]
 fn build_date(prompt: Option<String>) -> Result<Date> {
     fn inner(prompt: Option<String>) -> InquireResult<Date> {
         let date = DateSelect::new(&prompt.unwrap_or("Date?".to_owned()))
@@ -141,6 +142,7 @@ fn build_year_month_inner(help: impl Into<Option<String>>) -> InquireResult<Opti
     ))
 }
 
+#[allow(unused)]
 fn build_year_month(help: impl Into<Option<String>>) -> Result<Option<YearAndMonth>> {
     build_year_month_inner(help).map_err(|e| Error::InvalidYearAndMonth {
         underlying: e.to_string(),
@@ -149,7 +151,6 @@ fn build_year_month(help: impl Into<Option<String>>) -> Result<Option<YearAndMon
 
 fn build_invoice_info() -> Result<ProtoInvoiceInfo> {
     fn inner() -> InquireResult<ProtoInvoiceInfo> {
-        let sample = ProtoInvoiceInfo::sample();
         let invoice_number_offset = CustomType::<InvoiceNumber>::new(
             "What is the last invoice number you issued? We call this the 'offset'",
         )

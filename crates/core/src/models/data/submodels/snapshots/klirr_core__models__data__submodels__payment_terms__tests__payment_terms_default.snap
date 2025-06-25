@@ -1,0 +1,5 @@
+---
+source: crates/core/src/models/data/submodels/payment_terms.rs
+expression: payment_terms
+---
+"Net 30"

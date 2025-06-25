@@ -1,12 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["crates/cli", "crates/render", "crates/logic"]
+members = ["crates/cli", "crates/render", "crates/core"]
 
 [workspace.dependencies]
 # Internal dependencies
-invoice = { path = "crates/cli" }
-invoice-typst-render = { path = "crates/render" }
-invoice-typst-logic = { path = "crates/logic" }
+klirr = { path = "crates/cli" }
+klirr-render = { path = "crates/render" }
+klirr-core = { path = "crates/core" }
 
 # External dependencies
 chrono = "0.4.41"

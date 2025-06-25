@@ -3,15 +3,20 @@ use crate::prelude::*;
 use clap::{Args, Parser};
 use derive_more::{Debug, Unwrap};
 
+/// The root argument for the CLI, which contains the subcommands for
+/// generating invoices and managing data.
 #[derive(Debug, Parser)]
-#[command(name = "klirr", about = "Generate and manage invoices")]
+#[command(name = BINARY_NAME, about = "Generate and manage invoices")]
 pub struct CliArgs {
+    /// The command to run, either for generating an invoice or for data management.
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Command,
 }
 
+/// The commands available in the CLI, which include generating invoices
+/// and performing data management tasks.
 #[derive(Debug, Subcommand, Unwrap)]
-pub enum Commands {
+pub enum Command {
     /// The CLI arguments for generating an invoice PDF.
     Invoice(InvoiceInput),
 
@@ -19,23 +24,39 @@ pub enum Commands {
     Data(DataAdminInput),
 }
 
+/// The CLI arguments for data management, such as initializing the data directory,
+/// validating the data, or recording expenses or month off.
 #[derive(Debug, Args, Getters, PartialEq)]
 pub struct DataAdminInput {
+    /// The command to run for data management, such as initializing the data directory,
+    /// validating the data, or recording expenses or month off.
     #[command(subcommand)]
     #[getset(get = "pub")]
     command: DataAdminInputCommands,
 }
 
+/// The commands available for data management, such as initializing the data directory,
+/// validating the data, or recording expenses or month off.
 #[derive(Debug, Subcommand, Unwrap, PartialEq)]
 pub enum DataAdminInputCommands {
+    /// Initializes the data in the data directory, creating it if it does not exist.
+    /// Such as information about you as a vendor and your client, payment information
+    /// pricing etc
     Init,
+    /// Validates the data in the data directory, checking if it is correctly formatted
+    /// and if all required fields are present.
     Validate,
+    /// Records a month off for the specified month, which is used to calculate the invoice.
     MonthOff(MonthOffInput),
+    /// Records expenses for the specified month, used to create expenses invoices
+    /// and affects invoice number calculation.
     Expenses(ExpensesInput),
 }
 
+/// Record a new month off for the specified month.
 #[derive(Debug, Args, Getters, PartialEq)]
 pub struct MonthOffInput {
+    /// The month to be added if not already present in the data directory.
     #[arg(
         long,
         short = 'm',
@@ -46,8 +67,11 @@ pub struct MonthOffInput {
     month: YearAndMonth,
 }
 
+/// Record expenses for the specified month, which will be used to create expenses invoices
+/// and affects invoice number calculation.
 #[derive(Debug, Args, Getters, PartialEq)]
 pub struct ExpensesInput {
+    /// The month for which the expenses are recorded.
     #[arg(
         long,
         short = 'm',
@@ -57,6 +81,11 @@ pub struct ExpensesInput {
     #[getset(get = "pub")]
     month: YearAndMonth,
 
+    /// The expenses to record for the month, which are specified as a list of items.
+    /// Please note that the transaction date might be different from the month specified,
+    /// so you can record expenses for a month even if the transaction date is in the next
+    /// month, e.g. you can record expenses for May even if the transaction date is in June.
+    /// Format for each item is: `name,amount,currency,quantity,date`, e.g. `Coffee,2.5,EUR,3.0,2025-05-31`.
     #[arg(long, short = 'e', help = "The expenses to record for the month.")]
     #[getset(get = "pub")]
     expenses: Vec<Item>,
@@ -140,7 +169,6 @@ impl InvoiceInput {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const BINARY_NAME: &str = "klirr";
 
     mod data_admin_input {
         use super::*;
@@ -150,7 +178,7 @@ mod tests {
             let input = CliArgs::parse_from([BINARY_NAME, "data", "init"]);
             assert!(matches!(
                 input.command,
-                Commands::Data(DataAdminInput {
+                Command::Data(DataAdminInput {
                     command: DataAdminInputCommands::Init
                 })
             ));
@@ -161,7 +189,7 @@ mod tests {
             let input = CliArgs::parse_from([BINARY_NAME, "data", "validate"]);
             assert!(matches!(
                 input.command,
-                Commands::Data(DataAdminInput {
+                Command::Data(DataAdminInput {
                     command: DataAdminInputCommands::Validate
                 })
             ));

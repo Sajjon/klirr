@@ -1,11 +1,11 @@
 [package]
-name = "invoice-typst-render"
+name = "klirr-render"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 # Internal dependencies
-invoice-typst-logic.workspace = true
+klirr-core.workspace = true
 
 # External dependencies
 chrono.workspace = true

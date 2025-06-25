@@ -1,7 +1,7 @@
 [files]
 extend-exclude = [
-    "crates/logic/src/models/l18n/swedish.rs",
-    "crates/logic/src/models/l18n/snapshots/invoice_typst_logic__models__l18n__localization__tests__l18n_swedish.snap",
+    "crates/core/src/models/l18n/swedish.rs",
+    "crates/core/src/models/l18n/snapshots/klirr_core__models__l18n__localization__tests__l18n_swedish.snap",
 ]
 
 [default.extend-words]

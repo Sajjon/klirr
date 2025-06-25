@@ -5,8 +5,8 @@ edition = "2024"
 
 [dependencies]
 # Internal dependencies
-invoice-typst-logic.workspace = true
-invoice-typst-render.workspace = true
+klirr-core.workspace = true
+klirr-render.workspace = true
 
 # External dependencies
 chrono.workspace = true

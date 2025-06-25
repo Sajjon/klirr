@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use invoice_typst_logic::prelude::to_typst_let;
+use klirr_core::prelude::to_typst_let;
 use typst::layout::PagedDocument;
 use typst_pdf::PdfOptions;
 use typst_pdf::pdf;
