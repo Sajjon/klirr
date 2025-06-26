@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/Sajjon/invoice_typst/graph/badge.svg?token=HG6N5QPYPH)](https://codecov.io/gh/Sajjon/invoice_typst)
+[![codecov](https://codecov.io/gh/Sajjon/klirr/graph/badge.svg?token=HG6N5QPYPH)](https://codecov.io/gh/Sajjon/klirr)
 
 # Klirr
 

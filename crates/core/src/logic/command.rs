@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use serde::de::DeserializeOwned;
 
 pub fn init_data_directory_at(
     write_path: impl AsRef<Path>,
@@ -13,21 +14,35 @@ pub fn init_data_directory_at(
     Ok(())
 }
 
+fn mutate<D: Serialize + DeserializeOwned + Clone>(
+    data_path: impl AsRef<Path>,
+    data_file_name: &str,
+    mutate: impl FnOnce(&mut D),
+) -> Result<()> {
+    let data_path = data_path.as_ref();
+    let mut data = load_data::<D>(data_path, data_file_name)?.clone();
+    mutate(&mut data);
+    let path = path_to_ron_file_with_base(data_path, data_file_name);
+    save_to_disk(&data, path)?;
+    Ok(())
+}
+
 pub fn record_expenses_with_base_path(
     month: &YearAndMonth,
     expenses: &[Item],
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
     info!("Recording #{} expenses for: {}", expenses.len(), month);
-    let data_path = data_path.as_ref();
-    let mut current = expensed_months(data_path)?.clone();
-    current.insert_expenses(month, expenses.to_vec());
-    save_to_disk(
-        &current,
-        path_to_ron_file_with_base(data_path, DATA_FILE_NAME_EXPENSES),
-    )?;
-    info!("✅ Expenses recorded successfully");
-    Ok(())
+    mutate(
+        data_path,
+        DATA_FILE_NAME_EXPENSES,
+        |data: &mut ExpensedMonths| {
+            data.insert_expenses(month, expenses.to_vec());
+        },
+    )
+    .inspect(|_| {
+        info!("✅ Expenses recorded successfully");
+    })
 }
 
 pub fn record_month_off_with_base_path(
@@ -35,17 +50,16 @@ pub fn record_month_off_with_base_path(
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
     info!("Recording month off for: {}", month);
-    let data_path = data_path.as_ref();
-    let mut current = proto_invoice_info(data_path)?.clone();
-
-    current.insert_month_off(*month);
-
-    save_to_disk(
-        &current,
-        path_to_ron_file_with_base(data_path, DATA_FILE_NAME_PROTO_INVOICE_INFO),
-    )?;
-    info!("✅ Month off recorded successfully");
-    Ok(())
+    mutate(
+        data_path,
+        DATA_FILE_NAME_PROTO_INVOICE_INFO,
+        |data: &mut ProtoInvoiceInfo| {
+            data.insert_month_off(*month);
+        },
+    )
+    .inspect(|_| {
+        info!("✅ Month off recorded successfully");
+    })
 }
 
 #[cfg(test)]
