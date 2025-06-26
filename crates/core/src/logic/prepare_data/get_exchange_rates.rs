@@ -266,4 +266,33 @@ mod tests {
         assert!(rate.is_ok());
         assert_eq!(rate.unwrap(), UnitPrice::from(1.0));
     }
+
+    #[test]
+    fn test_get_exchange_rates_if_needed_with_duplicate_currency() {
+        let date = Date::from_str("2025-05-01").unwrap();
+        let currency_twice = Currency::GBP;
+        let items = LineItemsPricedInSourceCurrency::Expenses(vec![
+            Item::builder()
+                .name("Coffee")
+                .transaction_date(date)
+                .quantity(1.0)
+                .unit_price(4.0)
+                .currency(currency_twice)
+                .build(),
+            Item::builder()
+                .name("Lunch")
+                .transaction_date(date)
+                .quantity(1.0)
+                .unit_price(10.0)
+                .currency(currency_twice)
+                .build(),
+        ]);
+        let target_currency = Currency::EUR;
+        let rates =
+            get_exchange_rates_if_needed_with_fetcher(target_currency, &items, |_d, _f, _t| {
+                Ok(UnitPrice::from(1.1))
+            });
+        let rates = rates.unwrap();
+        assert_eq!(rates.rates().len(), 1); // Only one GBP entry
+    }
 }

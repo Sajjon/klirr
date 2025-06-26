@@ -125,12 +125,12 @@ impl Item {
     ///         (Currency::GBP, UnitPrice::from(1.5)),
     ///     ]))
     ///     .build();
-    /// let converted_item = item.converting_currency_and_calculating_total_cost(&exchange_rates).expect("Failed to convert item");
+    /// let converted_item = item.total_cost_in_target_currency(&exchange_rates).expect("Failed to convert item");
     /// assert_eq!(converted_item.name(), "Coffee");
     /// assert_eq!(**converted_item.unit_price(), 3.0); // EUR to USD conversion
     /// assert_eq!(converted_item.currency(), &Currency::USD);
     /// ```
-    pub fn converting_currency_and_calculating_total_cost(
+    pub fn total_cost_in_target_currency(
         self,
         exchange_rates: &ExchangeRates,
     ) -> Result<ItemConvertedIntoTargetCurrency> {

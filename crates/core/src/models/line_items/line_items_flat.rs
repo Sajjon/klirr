@@ -26,9 +26,8 @@ impl TryFrom<(LineItemsPricedInSourceCurrency, ExchangeRates)> for LineItemsFlat
         (line_items, exchange_rates): (LineItemsPricedInSourceCurrency, ExchangeRates),
     ) -> Result<Self> {
         match line_items {
-            LineItemsPricedInSourceCurrency::Service(service) => {
-                let service =
-                    service.converting_currency_and_calculating_total_cost(&exchange_rates)?;
+            LineItemsPricedInSourceCurrency::Service(item) => {
+                let service = item.total_cost_in_target_currency(&exchange_rates)?;
                 let flat = LineItemsFlat::builder()
                     .items(vec![service])
                     .is_expenses(false)
@@ -38,9 +37,7 @@ impl TryFrom<(LineItemsPricedInSourceCurrency, ExchangeRates)> for LineItemsFlat
             LineItemsPricedInSourceCurrency::Expenses(expenses) => {
                 let expenses = expenses
                     .into_iter()
-                    .map(|expense| {
-                        expense.converting_currency_and_calculating_total_cost(&exchange_rates)
-                    })
+                    .map(|expense| expense.total_cost_in_target_currency(&exchange_rates))
                     .collect::<Result<Vec<_>>>()?;
                 let flat = LineItemsFlat::builder()
                     .items(expenses)
