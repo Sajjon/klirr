@@ -79,8 +79,8 @@ impl<Items: Serialize + MaybeIsExpenses> DataFromDiskWithItemsOfKind<Items> {
             OutputPath::AbsolutePath(path) => Ok(path.clone()),
             OutputPath::Name(name) => {
                 let mut path =
-                    dirs_next::document_dir().ok_or(Error::FailedToCreateOutputDirectory {
-                        underlying: "Failed to find output dir (documents dir)".to_owned(),
+                    dirs_next::home_dir().ok_or(Error::FailedToCreateOutputDirectory {
+                        underlying: "Failed to find output dir (home dir)".to_owned(),
                     })?;
                 path.push(INVOICES_FOLDER_NAME);
                 path.push(name);

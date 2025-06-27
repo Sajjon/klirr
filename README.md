@@ -93,7 +93,7 @@ klirr invoice -- --output $HOME/my/custom/path/my_custom_name_of_file.pdf
 
 > [!NOTE]
 > If you don't specify `output` path the invoice will be saved in
-> `$DOCUMENTS/invoices` - [`$DOCUMENTS` depends on OS](https://docs.rs/dirs-next/latest/dirs_next/fn.document_dir.html) (`~/Documents` on macOS)
+> `$HOME/invoices`.
 
 ### Out of office for some days?
 

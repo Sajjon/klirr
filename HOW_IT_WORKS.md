@@ -31,7 +31,7 @@ When you create an invoice, high level this is what Klirr does:
 1. Create a `main.typ` file which imports helper Typst files created from `L18nContent` and `PreparedData`. Convert Rust values to Typst dictionaries. Call Typst function called `render_invoice` declared in `Layout`: `layout.render_invoice(data, l18n)` which outputs the final Typst content.
 1. Compile the Typst content from the last step in Rust using `typst::compile` creating a `PagedDocument`
 1. Convert the `PagedDocument` into `Pdf` bytes
-1. Depending on `output` path from input we name it and place it at a user provided absolute path, or we name it `"<INVOICE_DATE>_<VENDOR_NAME>_<INVOICE_NUMBER>.pdf"` (or including "_expense_`if expense), and save it in`$HOME/Documents/invoices/` (will be created if does not exist).
+1. Depending on `output` path from input we name it and place it at a user provided absolute path, or we name it `"<INVOICE_DATE>_<VENDOR_NAME>_<INVOICE_NUMBER>.pdf"` (or including "_expense_`if expense), and save it in`$HOME/invoices/` (will be created if does not exist).
 1. If the `TMP_FILE_FOR_PATH_TO_PDF` ENV variable is set, the absolute path to the Pdf is saved to a file in at that path (useful for scripts, used by `makefile` of klirr during development).
 
 # Detailed explanation
