@@ -25,7 +25,7 @@ pub struct L18nContent {
     #[getset(get = "pub")]
     month_names: [String; 12],
 }
-
+impl ToTypst for L18nContent {}
 impl L18nContent {
     pub fn english() -> Self {
         Self::builder()

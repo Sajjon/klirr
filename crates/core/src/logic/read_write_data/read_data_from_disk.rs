@@ -4,8 +4,19 @@ use crate::prelude::*;
 
 pub const BINARY_NAME: &str = "klirr";
 
+/// Returns the path to the data directory, which is typically located at
+/// ```text
+/// macOS: `~/Library/Application Support/klirr/data`
+/// Linux: `~/.local/share/klirr/data`
+/// Windows: `C:\Users\Alice\AppData\Local\klirr\data`
+/// ```
+///
+/// For more information
+/// see [dirs_next][ref]
+///
+/// [ref]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html
 pub fn data_dir() -> PathBuf {
-    dirs_next::data_dir()
+    dirs_next::data_local_dir()
         .expect("Should have a data directory")
         .join(BINARY_NAME)
         .join("data")

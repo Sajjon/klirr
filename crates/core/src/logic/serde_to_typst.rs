@@ -1,17 +1,27 @@
 use crate::prelude::*;
 use indoc::indoc;
 
-/// Converts any `Serialize`able Rust struct into Typst syntax.
-pub fn to_typst_let<T: Serialize>(input: &T) -> String {
-    let value = serde_json::to_value(input).expect("Serialization failed");
-    format!(
-        indoc! {r#"
+/// Empty Marker trait
+pub trait ToTypst {}
+
+pub trait ToTypstFn: ToTypst {
+    /// Converts the implementing type into a Typst function returning a dictionary.
+    fn to_typst_fn(&self) -> String;
+}
+
+impl<T: ToTypst + Serialize> ToTypstFn for T {
+    /// Converts this  `Serialize`able Rust struct into Typst syntax.
+    fn to_typst_fn(&self) -> String {
+        let value = serde_json::to_value(self).expect("Serialization failed");
+        format!(
+            indoc! {r#"
         #let provide() = {{
           {}
         }}
         "#},
-        to_typst_value(&value, 0)
-    )
+            to_typst_value(&value, 0)
+        )
+    }
 }
 
 /// Recursively converts a serde_json::Value into pretty-printed Typst syntax.
@@ -90,14 +100,14 @@ mod tests {
                         .build(),
                 )
                 .unwrap();
-            let typst = to_typst_let(&input);
+            let typst = input.to_typst_fn();
             pretty_assertions::assert_eq!(typst, $expected);
         }};
     }
 
     macro_rules! test_l18n_to_typst {
         ($input:expr, $expected:expr) => {{
-            let typst = to_typst_let($input.content());
+            let typst = $input.content().to_typst_fn();
             pretty_assertions::assert_eq!(typst, $expected);
         }};
     }

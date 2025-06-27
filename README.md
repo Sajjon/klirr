@@ -51,7 +51,8 @@ klirr data init
 
 You will be promptd
 
-After setup is complete, you should have the following files in `$HOME/Library/Application Support/klirr/data`:
+After setup is complete, you should have the following files in `$DATA_PATH/klirr/data` (
+`$DATA_PATH` depends [on OS][data_path], so full path is `$HOME/Library/Application Support/klirr/data` on macOS):
 
 1. `vendor.ron`
 1. `client.ron`
@@ -87,22 +88,70 @@ klirr invoice -- --month current
 or if you want to configure output:
 
 ```bash
-klirr invoice -- --output
+klirr invoice -- --output $HOME/my/custom/path/my_custom_name_of_file.pdf
 ```
+
+> [!NOTE]
+> If you don't specify `output` path the invoice will be saved in
+> `$DOCUMENTS/invoices` - [`$DOCUMENTS` depends on OS](https://docs.rs/dirs-next/latest/dirs_next/fn.document_dir.html) (`~/Documents` on macOS)
 
 ### Out of office for some days?
 
+If you did not work for some days, and you need to not invoice for those days, e.g. `6` days off, use:
+
 ```bash
-klirr invoice -- ooo 5
+klirr invoice ooo 6
 ```
 
+### Took vacation a whole month or parental leave?
+
+You can ensure klirr uses correct invoice number calculations if you need to skip invoicing completely some months by marking said month(s) as "months off". You do it by:
+
+```bash
+klirr data month-off --month "2025-06"
+```
+
+Which will write to `$DATA_PATH/klirr/data/invoice_info.ron`
+
+> [!TIP]
+> There is currently no support for subtracting/removing expenses using Cli, if you made a mistake
+> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/invoice_info.ron` > $DATA_PATH depends [on OS][data_path], but
+> typically `$HOME/Library/Application Support` on macOS
+> using your favourite text editor. After edit you can validate the data with: 
+> `cargo run --bin klirr data validate`
+
+This ensures that there are no gaps in invoice numbers.
+
 ## Invoice for expenses
+
+First add the expense, then generate the invoice.
 
 ### Add expenses
 
 ```bash
 klirr data expenses --month 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lunch, 11, GBP, 2, 2025-05-31"
 ```
+
+> [!NOTE]
+> The transaction day might be a different month than the value you put in `--month`, e.g. if
+> if you had an expense on last of June but wanna include that expense in the invoice made in July
+> should save the expense under July.
+
+> [!NOTE] 
+> `klirr data expenses` will aggregate identical expenses (disregarding `quantity`) under one entry and sum
+> up the quantity. So if you run the `klirr data expenses` twice with identical input and lets say one expense
+> item having quantity `2`, if you run it lets say four times, it will still show as one entry but with a
+> quantity of `8`.
+
+> [!TIP]
+> There is currently no support for subtracting/removing expenses using Cli, if you made a mistake
+> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/expenses.ron`
+> $DATA_PATH depends [on OS][data_path], but
+> typically `$HOME/Library/Application Support` on macOS
+> using your favourite text editor. After edit you can validate the data with:
+> `cargo run --bin klirr data validate`
+
+### Generate expenses invoice
 
 Then generate the expenses invoice:
 
@@ -114,8 +163,13 @@ klirr invoice expenses
 
 Interested in development? See [development guide](DEVELOPMENT.md)
 
+# How it works
+
+Interested in how it works? See [explanation guide](HOW_IT_WORKS.md)
+
 # Etymology
 
-Klirr is a Swedish 🇸🇪 onomatopoeia word meaning "clink" - the sound of coins falling onto a hard surface. It is part of the Swedish idiom "klirr i kassan" (_"clink in the cash register"_) meaning "cash flow", income you get from invoicing!
+Klirr is a Swedish 🇸🇪 a onomatopoeia word meaning "clink" - the sound of coins falling onto a hard surface. It is part of the Swedish idiom "klirr i kassan" (_"clink in the cash register"_) meaning "cash flow", income you get from invoicing!
 
-[ron]: (https://github.com/ron-rs/ron)
+[ron]: https://github.com/ron-rs/ron
+[data_path]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html

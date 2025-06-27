@@ -97,16 +97,22 @@ pub struct ExpensesInput {
 #[command(about = "Generate an invoice PDF", long_about = None)]
 pub struct InvoiceInput {
     /// The month for which the invoice is generated.
-    #[arg(long, short = 'm', default_value_t = TargetMonth::Last)]
-    #[builder(setter(into), default = TargetMonth::Last)]
+    #[arg(long, short = 'm', default_value_t)]
+    #[builder(setter(into), default)]
     #[getset(get = "pub")]
     month: TargetMonth,
 
     /// The language for which the invoice is generated.
-    #[arg(long, short = 'l', default_value_t = Language::EN)]
-    #[builder(setter(into), default = Language::EN)]
+    #[arg(long, short = 'l', default_value_t)]
+    #[builder(setter(into), default)]
     #[getset(get = "pub")]
     language: Language,
+
+    /// The layout of the invoice to use
+    #[arg(long, short = 't', default_value_t)]
+    #[builder(setter(into), default)]
+    #[getset(get = "pub")]
+    layout: Layout,
 
     /// The items to be invoiced, either expenses our consulting services
     /// with an optional number of days off.
@@ -158,6 +164,7 @@ impl InvoiceInput {
         let items = self._invoiced_items()?;
         let valid = ValidInput::builder()
             .month(self.month.year_and_month())
+            .layout(*self.layout())
             .items(items)
             .language(*self.language())
             .maybe_output_path(self.out)

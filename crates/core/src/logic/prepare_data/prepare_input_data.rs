@@ -4,7 +4,7 @@ pub fn prepare_invoice_input_data(
     data: Data,
     input: ValidInput,
     hardcoded_exchange_rates: Option<ExchangeRates>,
-) -> Result<DataTypstCompat> {
+) -> Result<PreparedData> {
     info!("Preparing invoice input data for PDF generation...");
     let partial = data.to_partial(input)?;
     let exchange_rates = hardcoded_exchange_rates.map(Ok).unwrap_or_else(|| {

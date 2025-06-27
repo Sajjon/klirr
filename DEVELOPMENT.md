@@ -25,3 +25,7 @@ Install [`imagemagick`](https://imagemagick.org)
 ```bash
 brew install imagemagick
 ```
+
+# How it works
+
+Interested in how it works? See [explanation guide](HOW_IT_WORKS.md)

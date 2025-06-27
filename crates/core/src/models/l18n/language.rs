@@ -1,12 +1,13 @@
 use core::fmt;
 
-use strum::{EnumIter, IntoEnumIterator};
-
 use crate::prelude::*;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, DeserializeFromStr, SerializeDisplay, EnumIter)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, Default, Hash, DeserializeFromStr, SerializeDisplay, EnumIter,
+)]
 pub enum Language {
     /// 🇬🇧 English
+    #[default]
     EN,
     /// 🇸🇪 Swedish
     SV,

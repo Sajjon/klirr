@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use klirr_core::prelude::to_typst_let;
 use typst::layout::PagedDocument;
 use typst_pdf::PdfOptions;
 use typst_pdf::pdf;
@@ -9,12 +8,11 @@ pub const TYPST_VIRTUAL_NAME_LAYOUT: &str = "layout.typ";
 pub const TYPST_VIRTUAL_NAME_DATA: &str = "data.typ";
 pub const TYPST_VIRTUAL_NAME_L18N: &str = "l18n.typ";
 
-const INVOICE_TYP: &str = include_str!("../../../crates/render/src/invoice.typ");
-
 /// Renders a PDF document using Typst with the provided layout, localization, and data.
-pub fn render(l18n: L18n, data: DataTypstCompat) -> Result<Pdf> {
-    let l18n_typst_str = to_typst_let(&l18n.content());
-    let data_typst_str = to_typst_let(&data);
+pub fn render(l18n: L18n, data: PreparedData, layout: Layout) -> Result<Pdf> {
+    let l18n_typst_str = l18n.content().to_typst_fn();
+    let data_typst_str = data.to_typst_fn();
+    let layout_typst_str = layout.to_typst_fn();
     let main = format!(
         r#"
     #import "{}": provide as provide_data
@@ -27,7 +25,7 @@ pub fn render(l18n: L18n, data: DataTypstCompat) -> Result<Pdf> {
 
     debug!("☑️ Creating typst 'World' (environment/context), this usually takes ~2 seconds.");
     let context =
-        TypstContext::with_inline(main, INVOICE_TYP.to_owned(), l18n_typst_str, data_typst_str)?;
+        TypstContext::with_inline(main, layout_typst_str, l18n_typst_str, data_typst_str)?;
     debug!("✅ Created typst 'World' (environment/context)");
 
     debug!("☑️ Compiling typst...");

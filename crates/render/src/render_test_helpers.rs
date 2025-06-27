@@ -115,9 +115,10 @@ pub fn compare_image_against_expected(
 
 /// Generates a PNG image from a PDF rendered from the given layout path and input data.
 fn generate_pdf_into_png_image(l18n: L18n, sample: Data, input: ValidInput) -> Vec<u8> {
+    let layout = *input.layout();
     let data =
         prepare_invoice_input_data(sample, input, Some(ExchangeRates::hard_coded())).unwrap();
-    let pdf = render(l18n, data).unwrap();
+    let pdf = render(l18n, data, layout).unwrap();
     convert_pdf_to_pngs(pdf.as_ref(), 85.0).expect("Should be able to convert")
 }
 

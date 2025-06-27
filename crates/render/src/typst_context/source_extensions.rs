@@ -8,7 +8,7 @@ pub(crate) trait InlineSource: Sized {
 
 impl InlineSource for Source {
     fn inline(source_text: String, virtual_path: impl AsRef<Path>) -> Result<Self> {
-        // Create a new FileId for the virtual inline file ("/inline.typ").
+        // Create a new FileId for the virtual inline file.
         let file_id = FileId::new(None, VirtualPath::new(virtual_path));
         // Prepare the Typst source.
         Ok(Source::new(file_id, source_text))

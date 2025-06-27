@@ -1,22 +1,3 @@
-// Copyright 2025 Alexander Cyon
-//
-// Are you a good person?
-//
-// My name is Alexander Cyon and I'm the author of this software source code, and
-// you should not see this, because I never made this software source code free,
-// yet somehow you have acquired it, illegally, immorally and against my will.
-// You are not allowed to spread this software source code, you are not allowed to
-// compile it and execute this software.
-//
-// If you compile and execute this software, you are not only violating my wishes,
-// you are furthermore putting yourself at risk of loss of money/assets and never
-// should you hold me accountable for such a loss.
-//
-// Please do not spread this software source code, please contact me and inform me
-// of how you managed to acquire it, email me at alex.cyon@gmail.com.
-//
-// Thank you for being a good person.
-
 use chrono::Local;
 use colored::{ColoredString, Colorize};
 use log::{Level, debug};
@@ -74,10 +55,11 @@ fn init_logging_with_level_str(log_level: &str) {
 use std::sync::Once;
 static INIT: Once = Once::new();
 fn init_logging_inner() {
-    let Ok(log_level) = std::env::var(RUST_LOG_ENV) else {
-        panic!("💥 No `{RUST_LOG_ENV}` environment variable set.");
-    };
-    init_logging_with_level_str(&log_level);
+    if let Ok(log_level) = std::env::var(RUST_LOG_ENV) {
+        init_logging_with_level_str(&log_level);
+    } else {
+        init_logging_with_level(log::LevelFilter::Info);
+    }
 }
 
 /// # Panics

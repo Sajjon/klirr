@@ -1,10 +1,12 @@
-pub const INVOICES_OUTPUT_DIR: &str = "invoices";
+pub const INVOICES_FOLDER_NAME: &str = "invoices";
 
 use crate::prelude::*;
 
 pub type DataWithItemsPricedInSourceCurrency =
     DataFromDiskWithItemsOfKind<LineItemsPricedInSourceCurrency>;
-pub type DataTypstCompat = DataFromDiskWithItemsOfKind<LineItemsFlat>;
+pub type PreparedData = DataFromDiskWithItemsOfKind<LineItemsFlat>;
+
+impl ToTypst for PreparedData {}
 
 pub trait HasSample: Sized {
     /// Returns a sample instance of the type.
@@ -76,9 +78,13 @@ impl<Items: Serialize + MaybeIsExpenses> DataFromDiskWithItemsOfKind<Items> {
         match &self.output_path {
             OutputPath::AbsolutePath(path) => Ok(path.clone()),
             OutputPath::Name(name) => {
-                let mut path = PathBuf::from(INVOICES_OUTPUT_DIR);
+                let mut path =
+                    dirs_next::document_dir().ok_or(Error::FailedToCreateOutputDirectory {
+                        underlying: "Failed to find output dir (documents dir)".to_owned(),
+                    })?;
+                path.push(INVOICES_FOLDER_NAME);
                 path.push(name);
-                create_folder_relative_to_workspace(&path)
+                Ok(path)
             }
         }
     }
@@ -100,7 +106,7 @@ impl<Items: Serialize + MaybeIsExpenses + HasSample> HasSample
 }
 
 impl DataWithItemsPricedInSourceCurrency {
-    /// Converts the `DataWithItemsPricedInSourceCurrency` into a `DataTypstCompat`
+    /// Converts the `DataWithItemsPricedInSourceCurrency` into a `PreparedData`
     /// which is compatible with Typst rendering.
     /// This method prepares the invoice data for rendering by creating an
     /// `ExchangeRates` object and converting the line items into a flat structure.
@@ -117,9 +123,9 @@ impl DataWithItemsPricedInSourceCurrency {
     /// let result = data.to_typst(exchange_rates);
     /// assert!(result.is_ok(), "Expected conversion to succeed, got: {:?}", result);
     /// ```
-    pub fn to_typst(self, exchange_rates: ExchangeRates) -> Result<DataTypstCompat> {
+    pub fn to_typst(self, exchange_rates: ExchangeRates) -> Result<PreparedData> {
         let line_items = LineItemsFlat::try_from((self.line_items, exchange_rates))?;
-        Ok(DataTypstCompat {
+        Ok(PreparedData {
             line_items,
             information: self.information,
             vendor: self.vendor,

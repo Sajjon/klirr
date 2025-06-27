@@ -22,6 +22,7 @@ pub mod prelude {
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value;
     pub use serde_with::{DeserializeFromStr, SerializeDisplay};
+    pub use strum::{EnumIter, IntoEnumIterator};
     pub use thiserror::Error as ThisError;
     pub use typed_builder::TypedBuilder;
 }
