@@ -59,6 +59,11 @@ jobs:
     # Rust unit, doc and integration
     test-rust:
         runs-on: ubuntu-latest
+
+        env:
+            HOME: /home/runner
+            XDG_DOCUMENTS_DIR: /home/runner/Documents
+
         steps:
             - uses: actions/checkout@v4
 
@@ -76,6 +81,11 @@ jobs:
         container:
             image: xd009642/tarpaulin:0.32.8
             options: --security-opt seccomp=unconfined
+
+        env:
+            HOME: /home/runner
+            XDG_DOCUMENTS_DIR: /home/runner/Documents
+
         steps:
             - name: Checkout repository
               uses: actions/checkout@v2
