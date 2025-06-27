@@ -49,7 +49,7 @@ Before you can use `klirr` to generate invoices you need to provide information 
 klirr data init
 ```
 
-You will be promptd
+You will be prompted
 
 After setup is complete, you should have the following files in `$DATA_PATH/klirr/data` (
 `$DATA_PATH` depends [on OS][data_path], so full path is `$HOME/Library/Application Support/klirr/data` on macOS):
@@ -169,7 +169,7 @@ Interested in how it works? See [explanation guide](HOW_IT_WORKS.md)
 
 # Etymology
 
-Klirr is a Swedish 🇸🇪 a onomatopoeia word meaning "clink" - the sound of coins falling onto a hard surface. It is part of the Swedish idiom "klirr i kassan" (_"clink in the cash register"_) meaning "cash flow", income you get from invoicing!
+Klirr is a Swedish 🇸🇪 an onomatopoeia word meaning "clink" - the sound of coins falling onto a hard surface. It is part of the Swedish idiom "klirr i kassan" (_"clink in the cash register"_) meaning "cash flow", income you get from invoicing!
 
 [ron]: https://github.com/ron-rs/ron
 [data_path]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html

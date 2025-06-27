@@ -5,7 +5,7 @@ use crate::prelude::*;
 /// the items to be invoiced, the layout of the invoice, and an optional output path
 /// for the generated PDF file.
 #[derive(Debug, Clone, Display, TypedBuilder, Getters)]
-#[display("Month: {}, out: {:?}, items: {}, language: {}", month, maybe_output_path.as_ref().map(|d|d.display()), items, language)]
+#[display("Layout: {}, Month: {}, out: {:?}, items: {}, language: {}", layout, month, maybe_output_path.as_ref().map(|d|d.display()), items, language)]
 pub struct ValidInput {
     /// The language to use for the invoice, used on labels, headers etc.
     /// Defaults to English (`Language::EN`).

@@ -28,7 +28,7 @@ When you create an invoice, high level this is what Klirr does:
     - Put all this processed and calculated values in a `PreparedData`
 1. Load the `L18nContent` value using `language` input
 1. Load the `Layout` value using `layout` input
-1. Create a `main.typ` file which imports helper Typst files created from `L18nContent` and `PreparedData`. Convert Rust values to Typst dictionaries. Call Typst function called `render_invoice` declared in `Layout`: `layout.render_invoice(data, 1l8n)` which outputs the final Typst content.
+1. Create a `main.typ` file which imports helper Typst files created from `L18nContent` and `PreparedData`. Convert Rust values to Typst dictionaries. Call Typst function called `render_invoice` declared in `Layout`: `layout.render_invoice(data, l18n)` which outputs the final Typst content.
 1. Compile the Typst content from the last step in Rust using `typst::compile` creating a `PagedDocument`
 1. Convert the `PagedDocument` into `Pdf` bytes
 1. Depending on `output` path from input we name it and place it at a user provided absolute path, or we name it `"<INVOICE_DATE>_<VENDOR_NAME>_<INVOICE_NUMBER>.pdf"` (or including "_expense_`if expense), and save it in`$HOME/Documents/invoices/` (will be created if does not exist).
