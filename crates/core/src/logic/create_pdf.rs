@@ -20,7 +20,7 @@ pub fn create_pdf_with_data(
 ) -> Result<PathBuf> {
     let l18n = get_localization(input.language())?;
     let layout = *input.layout();
-    let data = prepare_invoice_input_data(data, input, None)?;
+    let data = prepare_invoice_input_data(data, input, ExchangeRatesFetcher::default())?;
     let output_path = data.absolute_path()?;
     create_folder_to_parent_of_path_if_needed(&output_path)?;
     let pdf = render(l18n, data, layout)?;

@@ -113,11 +113,27 @@ pub fn compare_image_against_expected(
     }
 }
 
+#[cfg(test)]
+trait TestExchangeRatesFetcher {
+    fn tmp() -> ExchangeRatesFetcher<tempfile::TempDir>;
+}
+#[cfg(test)]
+impl TestExchangeRatesFetcher for ExchangeRatesFetcher<tempfile::TempDir> {
+    fn tmp() -> ExchangeRatesFetcher<tempfile::TempDir> {
+        use tempfile::tempdir;
+
+        let tempdir = tempdir().expect("Failed to create temporary directory");
+        ExchangeRatesFetcher::builder()
+            .path_to_cache(tempdir.path().to_path_buf())
+            .extra(tempdir)
+            .build()
+    }
+}
+
 /// Generates a PNG image from a PDF rendered from the given layout path and input data.
 fn generate_pdf_into_png_image(l18n: L18n, sample: Data, input: ValidInput) -> Vec<u8> {
     let layout = *input.layout();
-    let data =
-        prepare_invoice_input_data(sample, input, Some(ExchangeRates::hard_coded())).unwrap();
+    let data = prepare_invoice_input_data(sample, input, ExchangeRatesFetcher::tmp()).unwrap();
     let pdf = render(l18n, data, layout).unwrap();
     convert_pdf_to_pngs(pdf.as_ref(), 85.0).expect("Should be able to convert")
 }

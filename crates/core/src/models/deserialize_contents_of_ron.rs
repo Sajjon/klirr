@@ -32,9 +32,9 @@ pub fn deserialize_contents_of_ron<T: DeserializeOwned>(path: impl AsRef<Path>) 
 pub fn deserialize_ron_str<T: DeserializeOwned>(ron_str: &str) -> Result<T> {
     use ron::de::from_str;
     let type_name = type_name::<T>();
-    debug!("☑️ Deserializing {} from RON str", type_name);
+    trace!("☑️ Deserializing {} from RON str", type_name);
     let result = from_str(ron_str)
-        .inspect(|_| debug!("✅ Deserialized {} from RON str", type_name))
+        .inspect(|_| trace!("✅ Deserialized {} from RON str", type_name))
         .map_err(|e| Error::Deserialize {
             type_name,
             error: e.to_string(),

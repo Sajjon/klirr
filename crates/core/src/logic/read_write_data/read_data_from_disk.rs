@@ -92,6 +92,7 @@ pub const DATA_FILE_NAME_PAYMENT: &str = "payment";
 pub const DATA_FILE_NAME_SERVICE_FEES: &str = "service_fees";
 pub const DATA_FILE_NAME_PROTO_INVOICE_INFO: &str = "invoice_info";
 pub const DATA_FILE_NAME_EXPENSES: &str = "expenses";
+pub const DATA_FILE_NAME_CACHED_RATES: &str = "cached_rates";
 
 fn client(base_path: impl AsRef<Path>) -> Result<CompanyInformation> {
     load_data(base_path, DATA_FILE_NAME_CLIENT)

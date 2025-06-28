@@ -120,7 +120,7 @@ impl Item {
     /// let item = Item::from_str("Coffee,2.5, EUR,3.0, 2025-05-31").expect("Failed to parse Item");
     /// let exchange_rates = ExchangeRates::builder()
     ///     .target_currency(Currency::USD)
-    ///     .rates(HashMap::from([
+    ///     .rates(ExchangeRatesMap::from([
     ///         (Currency::EUR, UnitPrice::from(1.2)),
     ///         (Currency::GBP, UnitPrice::from(1.5)),
     ///     ]))

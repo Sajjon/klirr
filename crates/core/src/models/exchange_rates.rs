@@ -23,7 +23,7 @@ pub struct ExchangeRates {
     ///
     #[builder(setter(into))]
     #[getset(get = "pub")]
-    rates: HashMap<Currency, UnitPrice>,
+    rates: ExchangeRatesMap,
 }
 
 impl ExchangeRates {
@@ -39,7 +39,7 @@ impl ExchangeRates {
     /// use klirr_core::prelude::*;
     /// let exchange_rates = ExchangeRates::builder()
     ///     .target_currency(Currency::EUR)
-    ///     .rates(HashMap::from([
+    ///     .rates(ExchangeRatesMap::from([
     ///         (Currency::USD, UnitPrice::from(0.85)),
     ///         (Currency::GBP, UnitPrice::from(1.1)),
     ///     ]))
@@ -78,7 +78,7 @@ impl ExchangeRates {
 
 impl ExchangeRates {
     pub fn hard_coded() -> Self {
-        let rates = HashMap::from([
+        let rates = ExchangeRatesMap::from([
             (Currency::EUR, UnitPrice::from(1.0)),
             (Currency::USD, UnitPrice::from(1.2)),
             (Currency::GBP, UnitPrice::from(0.85)),
@@ -113,7 +113,7 @@ mod tests {
     fn test_convert_not_found() {
         let exchange_rates = ExchangeRates::builder()
             .target_currency(Currency::EUR)
-            .rates(HashMap::new())
+            .rates(ExchangeRatesMap::new())
             .build();
         let result = exchange_rates.convert(100.0, Currency::JPY);
         assert!(result.is_err());
@@ -123,7 +123,7 @@ mod tests {
     fn test_get_rate_not_found() {
         let exchange_rates = ExchangeRates::builder()
             .target_currency(Currency::EUR)
-            .rates(HashMap::new())
+            .rates(ExchangeRatesMap::new())
             .build();
         let result = exchange_rates.get_rate(Currency::JPY);
         assert!(result.is_err());

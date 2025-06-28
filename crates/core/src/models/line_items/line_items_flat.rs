@@ -67,7 +67,10 @@ mod tests {
     fn test_line_items_flat_conversion() {
         let line_items = LineItemsPricedInSourceCurrency::sample();
         let exchange_rates = ExchangeRates::builder()
-            .rates(HashMap::from_iter([(Currency::GBP, UnitPrice::from(10.0))]))
+            .rates(ExchangeRatesMap::from_iter([(
+                Currency::GBP,
+                UnitPrice::from(10.0),
+            )]))
             .target_currency(Currency::EUR)
             .build();
         let result = LineItemsFlat::try_from((line_items, exchange_rates));
