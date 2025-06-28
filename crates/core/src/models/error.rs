@@ -6,6 +6,10 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError)]
 pub enum Error {
+    /// Failed to parse a string into an `F64`, e.g. when the string is not a valid number.
+    #[error("Failed to parse f64 from string: {bad_value}, reason: {reason}")]
+    InvalidF64String { bad_value: String, reason: String },
+
     /// Failed to write data to disk, e.g. when the file system is not accessible.
     #[error("Failed to write data to disk, because: {underlying}")]
     FailedToWriteDataToDisk { underlying: String },

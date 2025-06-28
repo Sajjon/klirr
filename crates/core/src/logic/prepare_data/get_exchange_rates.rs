@@ -99,7 +99,7 @@ type ExchangeRate = UnitPrice;
 type FetchedNew = bool;
 
 /// A cache of exchange rates, indexed by date, from currency, and to currency
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 struct CachedRates(IndexMap<Date, IndexMap<FromCurrency, IndexMap<ToCurrency, ExchangeRate>>>);
 impl CachedRates {
     /// Returns a mutable reference to the rates for a specific date, creating a new entry if it doesn't exist.
@@ -189,6 +189,7 @@ impl<T> ExchangeRatesFetcher<T> {
     fn update_cache_if_needed(&self, rates_by_day: &CachedRates, fetched_new_rates: bool) {
         if !fetched_new_rates {
             debug!("ℹ️ No new rates fetched, used only cached rates.");
+            return;
         }
         // Update cache
         debug!(
@@ -202,7 +203,7 @@ impl<T> ExchangeRatesFetcher<T> {
                 // so that the user is aware of it.
                 // They can still use the fetched rates, but they won't be cached.
                 warn!(
-                    "Failed to cached exchange rates: {} (this has no affect on PDF generation.)",
+                    "Failed to cache exchange rates: {} (this has no affect on PDF generation.)",
                     e
                 );
             }
@@ -237,7 +238,9 @@ impl<T> FetchExchangeRates for ExchangeRatesFetcher<T> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
+    use tempfile::{TempDir, tempdir};
     use test_log::test;
 
     use httpmock::Method::GET;
@@ -372,5 +375,75 @@ mod tests {
         });
         assert!(rate.is_ok());
         assert_eq!(rate.unwrap(), UnitPrice::from(1.0));
+    }
+
+    trait TestExchangeRatesFetcher {
+        fn tmp(tempdir: TempDir) -> ExchangeRatesFetcher<tempfile::TempDir>;
+    }
+    impl TestExchangeRatesFetcher for ExchangeRatesFetcher<tempfile::TempDir> {
+        fn tmp(tempdir: TempDir) -> ExchangeRatesFetcher<tempfile::TempDir> {
+            ExchangeRatesFetcher::builder()
+                .path_to_cache(tempdir.path().to_path_buf())
+                .extra(tempdir)
+                .build()
+        }
+    }
+
+    #[test]
+    fn test_if_feched_new_rates_is_false_cache_is_unchanged() {
+        let tempdir = tempdir().unwrap();
+        let fetcher = ExchangeRatesFetcher::tmp(tempdir);
+        fetcher.update_cache_if_needed(&CachedRates::default(), false);
+        let cache_path =
+            path_to_ron_file_with_base(&fetcher.path_to_cache, DATA_FILE_NAME_CACHED_RATES);
+        assert!(
+            !cache_path.exists(),
+            "Cache file should not exist when no new rates are fetched."
+        );
+    }
+
+    #[test]
+    fn test_if_feched_new_rates_is_true_cache_is_changed() {
+        let tempdir = tempdir().unwrap();
+        let path = tempdir.path().to_path_buf();
+        let fetcher = ExchangeRatesFetcher::tmp(tempdir);
+        let mut cache = CachedRates::default();
+        cache
+            ._rates_for_day_and_from_currency(Date::sample(), Currency::EUR)
+            .insert(Currency::USD, UnitPrice::from(1.2));
+        fetcher.update_cache_if_needed(&cache, true);
+
+        let loaded: CachedRates = load_data(path, DATA_FILE_NAME_CACHED_RATES).unwrap();
+        assert_eq!(loaded, cache, "Cache should be updated with new rates.");
+    }
+
+    #[test]
+    fn test_fetch_for_items_all_found_in_cache() {
+        let tempdir = tempdir().unwrap();
+        let fetcher = ExchangeRatesFetcher::tmp(tempdir);
+        let date = Date::sample();
+        let from = Currency::EUR;
+        let to = Currency::USD;
+        let rate = UnitPrice::from(1.2);
+
+        // Create a cache with the rate
+        let mut cache = CachedRates::default();
+        cache
+            ._rates_for_day_and_from_currency(date, from)
+            .insert(to, rate);
+        fetcher._save_cache(&cache).unwrap();
+
+        // Create an item that uses this rate
+        let item = Item::builder()
+            .name("Test Item")
+            .transaction_date(date)
+            .quantity(10.0)
+            .unit_price(100.0)
+            .currency(from)
+            .build();
+
+        // Fetch rates for the item
+        let rates = fetcher.fetch_for_items(to, vec![item]).unwrap();
+        assert_eq!(rates.rates().get(&from).unwrap(), &rate);
     }
 }
