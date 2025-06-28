@@ -159,6 +159,11 @@ Then generate the expenses invoice:
 klirr invoice expenses
 ```
 
+> [!NOTE]
+> Exchange rates will be cached in `$DATA_PATH/klirr/data/cached_rates.ron` keyed
+> under the `(Date, FromCurrency, ToCurrency)` triple, to not burden the exchanges
+> API unnecessarily and to make klirr extra fast for you.
+
 # Development
 
 Interested in development? See [development guide](DEVELOPMENT.md)

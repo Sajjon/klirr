@@ -24,7 +24,7 @@ When you create an invoice, high level this is what Klirr does:
     - Calculate the invoice date (last day of `target` month)
     - Calculate the due date (invoice day + number of days dictated by `payment.terms`)
     - **If invoice is for services:** calculate number of days being charged for by calculating the number of working days for the `target` month and subtracts and `days off`
-    - **If invoice is for expenses:** perform networks call fetching exchanges rates from source currency to target currency at the dates the expenses occurred
+    - **If invoice is for expenses:** load the exchanges rates from `source` currency to `target` currency at the dates the expenses occurred by looking for rates in a local cache first (`$DATA_PATH/klirr/data/cached_rates.ron`) and if missing, perform networks call fetching the rate and update cache.
     - Put all this processed and calculated values in a `PreparedData`
 1. Load the `L18nContent` value using `language` input
 1. Load the `Layout` value using `layout` input

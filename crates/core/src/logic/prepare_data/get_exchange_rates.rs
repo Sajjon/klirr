@@ -33,11 +33,16 @@ impl DeserializableResponse for reqwest::blocking::Response {
     }
 }
 
+/// Formats a URL for the [Frankfurter API][api] to fetch exchange rates
+///
+/// [api]: https://frankfurter.dev/
 fn format_url(date: Date, from: Currency, to: Currency) -> String {
     format!("{}/{}?from={}&to={}", FRANKFURTER_API, date, from, to)
 }
 
-/// Makes blocking requests to the Frankfurter API to get the exchange rate
+/// Makes blocking requests to the [Frankfurter API][api] to get the exchange rate
+///  
+/// [api]: https://frankfurter.dev/
 pub(super) fn _get_exchange_rate_with_fetcher<T: DeserializableResponse>(
     date: Date,
     from: Currency,
@@ -63,15 +68,10 @@ pub(super) fn _get_exchange_rate_with_fetcher<T: DeserializableResponse>(
         })
 }
 
+/// Map from `Currency` to `UnitPrice`
 pub type ExchangeRatesMap = IndexMap<Currency, UnitPrice>;
 
-// fn get_exchange_rates_if_needed(
-//     target_currency: Currency,
-//     items: &LineItemsPricedInSourceCurrency,
-// ) -> Result<ExchangeRates> {
-//     get_exchange_rates_if_needed_with_fetcher(target_currency, items, get_exchange_rate)
-// }
-
+/// A fetcher for exchange rates, which caches rates in a local file
 #[derive(TypedBuilder)]
 pub struct ExchangeRatesFetcher<T = ()> {
     path_to_cache: PathBuf,
@@ -81,6 +81,7 @@ pub struct ExchangeRatesFetcher<T = ()> {
 }
 
 impl Default for ExchangeRatesFetcher {
+    /// Cache exchange rates in the user's data directory.
     fn default() -> Self {
         Self {
             path_to_cache: data_dir(),
@@ -93,11 +94,15 @@ type FromCurrency = Currency;
 type ToCurrency = Currency;
 type ExchangeRate = UnitPrice;
 
+/// If the rates was fetched using network request, this is `true`.
+/// If the rates were loaded from cache, this is `false`.
 type FetchedNew = bool;
 
+/// A cache of exchange rates, indexed by date, from currency, and to currency
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 struct CachedRates(IndexMap<Date, IndexMap<FromCurrency, IndexMap<ToCurrency, ExchangeRate>>>);
 impl CachedRates {
+    /// Returns a mutable reference to the rates for a specific date, creating a new entry if it doesn't exist.
     fn _rates_for_day(
         &mut self,
         date: impl Borrow<Date>,
@@ -105,6 +110,7 @@ impl CachedRates {
         self.0.entry(*date.borrow()).or_default()
     }
 
+    /// Returns a mutable reference to the rates for a specific date and from currency, creating a new entry if it doesn't exist.
     fn _rates_for_day_and_from_currency(
         &mut self,
         date: impl Borrow<Date>,
@@ -113,6 +119,12 @@ impl CachedRates {
         self._rates_for_day(date).entry(*from.borrow()).or_default()
     }
 
+    /// Loads the exchange rate for a specific date, from currency, and to currency.
+    /// If the rate is not found, it fetches it using the provided function.
+    ///
+    /// If a new rate is fetched it is inserted into the cache.
+    ///
+    /// Returns the exchange rate and a boolean indicating whether it was fetched from the network.
     fn load_else_fetch(
         &mut self,
         date: impl Borrow<Date>,
@@ -136,59 +148,85 @@ impl CachedRates {
 }
 
 impl<T> ExchangeRatesFetcher<T> {
-    fn load_cache(&self) -> Result<CachedRates> {
+    /// Loads the cached exchange rates from disk.
+    fn _load_cache(&self) -> Result<CachedRates> {
         load_data(&self.path_to_cache, DATA_FILE_NAME_CACHED_RATES)
     }
-    fn save_cache(&self, rates: &CachedRates) -> Result<()> {
+
+    /// Saves the cached exchange rates to disk.
+    fn _save_cache(&self, rates: &CachedRates) -> Result<()> {
         save_to_disk(
             rates,
             path_to_ron_file_with_base(&self.path_to_cache, DATA_FILE_NAME_CACHED_RATES),
         )
     }
-}
 
-impl<T> FetchExchangeRates for ExchangeRatesFetcher<T> {
-    fn fetch_for_items(
-        &self,
+    fn do_fetch(
+        cache: &mut CachedRates,
         target_currency: Currency,
         items: Vec<Item>,
-    ) -> Result<ExchangeRates> {
-        let mut rates_by_day = self.load_cache().unwrap_or_else(|_| {
-            debug!("No cached exchange rates found, fetching new rates.");
-            CachedRates::default()
-        });
+    ) -> Result<(ExchangeRatesMap, FetchedNew)> {
         let mut fetched_new_rates = false;
         let mut rates: ExchangeRatesMap = IndexMap::new();
         for expense in items {
             let date = expense.transaction_date();
             let from = *expense.currency();
             let to = target_currency;
-            let (rate, is_new) = rates_by_day.load_else_fetch(date, from, to, get_exchange_rate)?;
+            let (rate, is_new) = cache.load_else_fetch(date, from, to, get_exchange_rate)?;
             fetched_new_rates |= is_new;
             rates.insert(from, rate);
         }
-        debug!("✅ Fetched exchanges rates for #{} expenses.", rates.len());
-        if fetched_new_rates {
-            // Update cache
-            debug!(
-                "✅ Fetched new rates, updating cache: {}",
-                self.path_to_cache.display()
-            );
-            match self.save_cache(&rates_by_day) {
-                Ok(_) => debug!("ℹ️ Cached exchange rates updated."),
-                Err(e) => {
-                    // Failing to update cache is not critical, but we log it
-                    // so that the user is aware of it.
-                    // They can still use the fetched rates, but they won't be cached.
-                    warn!(
-                        "Failed to cached exchange rates: {} (this has no affect on PDF generation.)",
-                        e
-                    );
-                }
-            }
-        } else {
+        Ok((rates, fetched_new_rates))
+    }
+
+    fn load_cache_else_new(&self) -> CachedRates {
+        self._load_cache().unwrap_or_else(|_| {
+            debug!("No cached exchange rates found, fetching new rates.");
+            CachedRates::default()
+        })
+    }
+
+    fn update_cache_if_needed(&self, rates_by_day: &CachedRates, fetched_new_rates: bool) {
+        if !fetched_new_rates {
             debug!("ℹ️ No new rates fetched, used only cached rates.");
         }
+        // Update cache
+        debug!(
+            "☑️ Fetched new rates, updating cache: {}",
+            self.path_to_cache.display()
+        );
+        match self._save_cache(rates_by_day) {
+            Ok(_) => debug!("✅ Cached exchange rates updated."),
+            Err(e) => {
+                // Failing to update cache is not critical, but we log it
+                // so that the user is aware of it.
+                // They can still use the fetched rates, but they won't be cached.
+                warn!(
+                    "Failed to cached exchange rates: {} (this has no affect on PDF generation.)",
+                    e
+                );
+            }
+        }
+    }
+}
+
+impl<T> FetchExchangeRates for ExchangeRatesFetcher<T> {
+    /// Fetches exchange rates from local cache if found, for the given target
+    /// currency and items, else if not found in local cache, fetches them
+    /// from the [Frankfurter API][api] and caches them for future use.
+    ///
+    /// Each item contains a "source currency" and a "transaction date".
+    ///
+    /// [api]: https://frankfurter.dev/
+    fn fetch_for_items(
+        &self,
+        target_currency: Currency,
+        items: Vec<Item>,
+    ) -> Result<ExchangeRates> {
+        let mut rates_by_day = self.load_cache_else_new();
+        let (rates, fetched_new_rates) = Self::do_fetch(&mut rates_by_day, target_currency, items)?;
+        debug!("✅ Fetched exchanges rates for #{} expenses.", rates.len());
+        self.update_cache_if_needed(&rates_by_day, fetched_new_rates);
         let rates = ExchangeRates::builder()
             .target_currency(target_currency)
             .rates(rates)
