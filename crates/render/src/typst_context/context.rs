@@ -24,6 +24,7 @@ pub struct TypstContext {
 
 impl TypstContext {
     fn new(main: Source, layout: Source, l18n: Source, data: Source) -> Self {
+        trace!("Creating TypstContext START");
         let content = Content::builder()
             .main(main)
             .layout(layout)
@@ -32,6 +33,7 @@ impl TypstContext {
             .build();
         let environment = Environment::default();
 
+        trace!("Creating TypstContext END");
         Self {
             content,
             environment,

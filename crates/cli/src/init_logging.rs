@@ -21,7 +21,7 @@ pub(crate) fn init_logging_with_level(log_level: log::LevelFilter) {
     println!("Setting up logging with level: {log_level}");
     fern::Dispatch::new()
         .format(|out, message, record| {
-            let time = Local::now().format("%H:%M:%S");
+            let time = Local::now().format("%H:%M:%S%.3f");
             let color = color_from_level(record.level());
             out.finish(format_args!("{time} {color} > {message}"));
         })

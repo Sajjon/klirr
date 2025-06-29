@@ -16,6 +16,7 @@ log.workspace = true
 serde_json.workspace = true
 typed-builder.workspace = true
 getset.workspace = true
+dirs-next.workspace = true
 
 [dev-dependencies]
 image-compare = "0.4.2"
