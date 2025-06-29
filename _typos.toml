@@ -3,3 +3,6 @@ extend-exclude = [
     "crates/core/src/models/l18n/swedish.rs",
     "crates/core/src/models/l18n/snapshots/klirr_core__models__l18n__localization__tests__l18n_swedish.snap",
 ]
+
+[default.extend-words]
+typ = "typ"
