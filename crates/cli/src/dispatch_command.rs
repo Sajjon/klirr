@@ -30,6 +30,20 @@ pub fn run_data_command(command: &DataAdminInputCommands) -> Result<()> {
     }
 }
 
+pub fn render_sample() -> Result<PathBuf> {
+    let path = dirs_next::home_dir()
+        .expect("Expected to be able to find HOME dir")
+        .join("klirr_sample.pdf");
+    create_pdf_with_data(
+        Data::sample(),
+        ValidInput::builder()
+            .maybe_output_path(path)
+            .month(YearAndMonth::last())
+            .build(),
+        render,
+    )
+}
+
 fn run_invoice_command_with_base_path(
     input: InvoiceInput,
     data_path: impl AsRef<Path>,

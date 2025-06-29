@@ -1,8 +1,20 @@
 [![codecov](https://codecov.io/gh/Sajjon/klirr/graph/badge.svg?token=HG6N5QPYPH)](https://codecov.io/gh/Sajjon/klirr)
 
+> [!TIP]
+> Tired of manual bumping invoice number?
+> Tired of calculating number of working days?
+> Tired of looking up exchange rates and converting expenses into your currency?
+>
+> Do you prefer automation and maintenance free tools?
+>
+> Then klirr is something for you!
+
 # Klirr
 
-A config **once**, inter-month-idempotent, calendar aware, capable and **maintenance-free** invoice solution written in Rust + [Typst](https://github.com/typst/typst).
+Klirr is a config **once**, inter-month-idempotent, calendar aware, capable and **maintenance-free** invoice solution written in Rust + [Typst](https://github.com/typst/typst).
+
+> [!TIP]
+> Scroll down to example invoice in the bottom to see what the invoice looks like.
 
 # Features
 
@@ -40,6 +52,12 @@ cargo install --git https://github.com/Sajjon/klirr
 ```
 
 # Usage
+
+You can try klirr out with sample data before you set it up with your information if you want. Try running:
+
+```bash
+klirr sample
+```
 
 ## Init
 
@@ -116,9 +134,8 @@ Which will write to `$DATA_PATH/klirr/data/invoice_info.ron`
 > [!TIP]
 > There is currently no support for subtracting/removing expenses using Cli, if you made a mistake
 > or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/invoice_info.ron` > $DATA_PATH depends [on OS][data_path], but
-> typically `$HOME/Library/Application Support` on macOS
-> using your favourite text editor. After edit you can validate the data with: 
-> `cargo run --bin klirr data validate`
+> typically `$HOME/Library/Application Support`on macOS
+using your favourite text editor. After edit you can validate the data with: `cargo run --bin klirr data validate`
 
 This ensures that there are no gaps in invoice numbers.
 
@@ -137,19 +154,16 @@ klirr data expenses --month 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lun
 > if you had an expense on last of June but wanna include that expense in the invoice made in July
 > should save the expense under July.
 
-> [!NOTE] 
-> `klirr data expenses` will aggregate identical expenses (disregarding `quantity`) under one entry and sum
+> [!NOTE] > `klirr data expenses` will aggregate identical expenses (disregarding `quantity`) under one entry and sum
 > up the quantity. So if you run the `klirr data expenses` twice with identical input and lets say one expense
 > item having quantity `2`, if you run it lets say four times, it will still show as one entry but with a
 > quantity of `8`.
 
 > [!TIP]
 > There is currently no support for subtracting/removing expenses using Cli, if you made a mistake
-> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/expenses.ron`
-> $DATA_PATH depends [on OS][data_path], but
-> typically `$HOME/Library/Application Support` on macOS
-> using your favourite text editor. After edit you can validate the data with:
-> `cargo run --bin klirr data validate`
+> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/expenses.ron` > $DATA_PATH depends [on OS][data_path], but
+> typically `$HOME/Library/Application Support`on macOS
+using your favourite text editor. After edit you can validate the data with:`cargo run --bin klirr data validate`
 
 ### Generate expenses invoice
 
@@ -175,6 +189,12 @@ Interested in how it works? See [explanation guide](HOW_IT_WORKS.md)
 # Etymology
 
 Klirr is a Swedish 🇸🇪 an onomatopoeia word meaning "clink" - the sound of coins falling onto a hard surface. It is part of the Swedish idiom "klirr i kassan" (_"clink in the cash register"_) meaning "cash flow", income you get from invoicing!
+
+# Example
+
+This is an example of the _Aioo_ `Layout` rendered using `English`.
+
+[![Invoice Preview](.github/assets/example.jpg)](.github/assets/example.jpg)
 
 [ron]: https://github.com/ron-rs/ron
 [data_path]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html
