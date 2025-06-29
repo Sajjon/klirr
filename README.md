@@ -16,7 +16,7 @@ Klirr is a config **once**, inter-month-idempotent, calendar aware, capable and 
 -   Config once: Set your company, client and project information using interactive Terminal UI (creates RON files). **No Rust, Typst or [RON][ron] skills needed!**
 -   Inter-month-idempotent: You build the invoice any number of times, it always results in the same invoice number when run within the same month. The proceeding month the next invoice number will be used.
 -   Calendar aware: Using your machines system time to determine the month, it calculates the number of working days for the target month. Invoice date is set to last day of the target month and due date is set dependent on the payment terms set in your RON files.
--   Capable: Supports setting number of days you were off, to be extracted from the automatically calculated number of working days. Supports expenses using "<PRODUCT>, <COST>, <CURRENCY>, <QUANTITY>, <DATE>" CSV string.
+-   Capable: Supports setting number of days you were off, to be extracted from the automatically calculated number of working days. Supports expenses using `"{PRODUCT}, {COST}, {CURRENCY}, {QUANTITY}, {DATE}"`` CSV string.
 -   Maintenance free: The invoice number automatically set based on the current month. When you build the invoice the next month, the next number is used.
 
 # Installation
