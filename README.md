@@ -1,13 +1,8 @@
 [![codecov](https://codecov.io/gh/Sajjon/klirr/graph/badge.svg?token=HG6N5QPYPH)](https://codecov.io/gh/Sajjon/klirr)
 
-> [!TIP]
-> Tired of manual bumping invoice number?
-> Tired of calculating number of working days?
-> Tired of looking up exchange rates and converting expenses into your currency?
->
-> Do you prefer automation and maintenance free tools?
->
-> Then klirr is something for you!
+**Tired of manual bumping invoice number, calculating number of working days and looking up exchange rates and converting expenses into your currency?**
+
+**Do you prefer automation? Then klirr is something for you!**
 
 # Klirr
 
