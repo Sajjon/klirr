@@ -111,8 +111,13 @@ impl YearAndMonth {
         let start_month = **start.month() as u16;
         let end_year = **end.year();
         let end_month = **end.month() as u16;
-
-        (end_year - start_year) * 12 + (end_month - start_month)
+        // When we perform arithmetic below we need to consider
+        // e.g. Start: 2024-12, End: 2025-03, where start month can come later
+        // in the year than the end month.
+        let months_per_year = 12;
+        let start_months = start_year * months_per_year + start_month;
+        let end_months = end_year * months_per_year + end_month;
+        end_months - start_months
     }
 }
 
@@ -593,6 +598,13 @@ mod tests {
         assert_eq!(DEC_2025.last_day_of_month(), Day::try_from(31).unwrap());
 
         assert_eq!(FEB_2025.last_day_of_month(), Day::try_from(28).unwrap());
+    }
+
+    #[test]
+    fn test_elapsed_months_since_when_start_month_is_later_in_the_year_than_end_month() {
+        let start = YearAndMonth::december(2024);
+        let end = YearAndMonth::april(2025);
+        assert_eq!(end.elapsed_months_since(start), 4);
     }
 
     #[test]

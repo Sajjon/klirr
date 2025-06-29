@@ -446,4 +446,21 @@ mod tests {
         let rates = fetcher.fetch_for_items(to, vec![item]).unwrap();
         assert_eq!(rates.rates().get(&from).unwrap(), &rate);
     }
+
+    #[test]
+    fn when_cache_is_filled_with_gibberish_then_it_is_reset() {
+        let tempdir = tempdir().unwrap();
+        let fetcher = ExchangeRatesFetcher::tmp(tempdir);
+        let cache_path =
+            path_to_ron_file_with_base(&fetcher.path_to_cache, DATA_FILE_NAME_CACHED_RATES);
+
+        // Write gibberish to the cache file
+        std::fs::write(&cache_path, "gibberish").unwrap();
+
+        assert_eq!(
+            fetcher.load_cache_else_new(),
+            CachedRates::default(),
+            "Cache should be reset to default when gibberish is found."
+        );
+    }
 }

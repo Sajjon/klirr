@@ -17,6 +17,6 @@ impl Default for FooterText {
 
 impl HasSample for FooterText {
     fn sample() -> Self {
-        Self::default()
+        Self::from("Billed with the utmost discretion—your secrets are safe, for a price.")
     }
 }

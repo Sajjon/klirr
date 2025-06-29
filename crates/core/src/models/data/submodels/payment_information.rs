@@ -34,9 +34,9 @@ pub struct PaymentInformation {
 impl HasSample for PaymentInformation {
     fn sample() -> Self {
         Self::builder()
-            .bank_name("SEB")
-            .iban("SE21 9000 0123 9876 5432 1009")
-            .bic("ESSESESS")
+            .bank_name("Banque de Paris")
+            .iban("FR76 3000 6000 0112 3456 7890 189")
+            .bic("BNPAFRPP")
             .currency(Currency::EUR)
             .terms(PaymentTerms::sample())
             .build()

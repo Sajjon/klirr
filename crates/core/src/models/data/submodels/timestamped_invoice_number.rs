@@ -17,11 +17,11 @@ pub struct TimestampedInvoiceNumber {
 impl HasSample for TimestampedInvoiceNumber {
     fn sample() -> Self {
         Self::builder()
-            .offset(InvoiceNumber::from(237u16))
+            .offset(InvoiceNumber::from(17u16))
             .month(
                 YearAndMonth::builder()
-                    .year(2017)
-                    .month(Month::March)
+                    .year(1905)
+                    .month(Month::October)
                     .build(),
             )
             .build()

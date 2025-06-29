@@ -1,3 +1,7 @@
+---
+source: crates/core/src/logic/serde_to_typst.rs
+expression: typst
+---
 #let provide() = {
   (
   client: (
@@ -17,10 +21,10 @@
   ),
   information: (
     due_date: "2025-06-30",
-    emphasize_color_hex: "#e6007a",
-    footer_text: "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation.",
+    emphasize_color_hex: "#8b008b",
+    footer_text: "Billed with the utmost discretion—your secrets are safe, for a price.",
     invoice_date: "2025-05-31",
-    number: 333,
+    number: 1450,
     purchase_order: "PO-12345",
   ),
   line_items: (
@@ -28,38 +32,38 @@
     items: (
       (
         currency: "EUR",
-        name: "Agreed Consulting Fees",
+        name: "Discreet Investigative Services",
         quantity: 22.0,
-        total_cost: 7700.0,
+        total_cost: 17094.0,
         transaction_date: "2025-05-31",
-        unit_price: 350.0,
+        unit_price: 777.0,
       ),
     ),
   ),
   output_path: (
-    name: "2025-05-31_Bra_Detektiv_AB_invoice_333.pdf",
+    name: "2025-05-31_Lupin_et_Associés_invoice_1450.pdf",
   ),
   payment_info: (
-    bank_name: "SEB",
-    bic: "ESSESESS",
+    bank_name: "Banque de Paris",
+    bic: "BNPAFRPP",
     currency: "EUR",
-    iban: "SE21 9000 0123 9876 5432 1009",
+    iban: "FR76 3000 6000 0112 3456 7890 189",
     terms: "Net 30",
   ),
   vendor: (
-    company_name: "Bra Detektiv AB",
-    contact_person: "Ture Sventon",
-    organisation_number: "556123-4567",
+    company_name: "Lupin et Associés",
+    contact_person: "Arsène Lupin",
+    organisation_number: "7418529-3012",
     postal_address: (
-      city: "Stockholm",
-      country: "Sweden",
+      city: "Paris",
+      country: "France",
       street_address: (
-        line_1: "Storgatan 45",
-        line_2: "4 tr",
+        line_1: "5 Avenue Henri-Martin",
+        line_2: "Appartement 24",
       ),
-      zip: "114 32",
+      zip: "75116",
     ),
-    vat_number: "SE556123456701",
+    vat_number: "FR74185293012",
   ),
 )
 }

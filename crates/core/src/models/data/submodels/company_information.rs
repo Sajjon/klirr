@@ -47,11 +47,11 @@ impl CompanyInformation {
 
     pub fn sample_vendor() -> Self {
         Self::builder()
-            .company_name("Bra Detektiv AB")
-            .contact_person("Ture Sventon")
-            .organisation_number("556123-4567")
+            .company_name("Lupin et Associés")
+            .contact_person("Arsène Lupin")
+            .organisation_number("7418529-3012")
             .postal_address(PostalAddress::sample_vendor())
-            .vat_number("SE556123456701")
+            .vat_number("FR74185293012")
             .build()
     }
 }

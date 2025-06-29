@@ -44,15 +44,15 @@ impl PostalAddress {
 
     pub fn sample_vendor() -> Self {
         Self::builder()
-            .city("Stockholm")
-            .country("Sweden")
+            .city("Paris")
+            .country("France")
             .street_address(
                 StreetAddress::builder()
-                    .line_1("Storgatan 45")
-                    .line_2("4 tr")
+                    .line_1("5 Avenue Henri-Martin")
+                    .line_2("Appartement 24")
                     .build(),
             )
-            .zip("114 32")
+            .zip("75116")
             .build()
     }
 }

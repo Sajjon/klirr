@@ -1,3 +1,7 @@
+---
+source: crates/core/src/logic/serde_to_typst.rs
+expression: typst
+---
 #let provide() = {
   (
   client_info: (

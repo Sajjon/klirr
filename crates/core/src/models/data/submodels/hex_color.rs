@@ -24,7 +24,7 @@ impl Default for HexColor {
 
 impl HasSample for HexColor {
     fn sample() -> Self {
-        Self::from_str("#e6007a").expect("Failed to create sample HexColor")
+        Self::from_str("#8b008b").expect("Failed to create sample HexColor")
     }
 }
 

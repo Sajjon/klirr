@@ -86,7 +86,7 @@ mod tests {
     use test_log::test;
 
     macro_rules! test_data_to_typst {
-        ($sample:expr, $input:expr, $expected:expr) => {{
+        ($sample:expr, $input:expr) => {{
             let input = $sample
                 .to_partial($input)
                 .unwrap()
@@ -101,14 +101,14 @@ mod tests {
                 )
                 .unwrap();
             let typst = input.to_typst_fn();
-            pretty_assertions::assert_eq!(typst, $expected);
+            insta::assert_snapshot!(typst);
         }};
     }
 
     macro_rules! test_l18n_to_typst {
-        ($input:expr, $expected:expr) => {{
+        ($input:expr) => {{
             let typst = $input.content().to_typst_fn();
-            pretty_assertions::assert_eq!(typst, $expected);
+            insta::assert_snapshot!(typst);
         }};
     }
 
@@ -120,8 +120,7 @@ mod tests {
                 .items(InvoicedItems::Expenses)
                 .month(YearAndMonth::sample())
                 .language(Language::EN)
-                .build(),
-            include_str!("../fixtures/expected_input_expenses.typ")
+                .build()
         );
     }
 
@@ -133,16 +132,12 @@ mod tests {
                 .items(InvoicedItems::Service { days_off: None })
                 .month(YearAndMonth::sample())
                 .language(Language::EN)
-                .build(),
-            include_str!("../fixtures/expected_input_services.typ")
+                .build()
         );
     }
 
     #[test]
     fn l18n_english_to_typst_macro() {
-        test_l18n_to_typst!(
-            &L18n::new(Language::EN).unwrap(),
-            include_str!("../fixtures/expected_l18n_english.typ")
-        );
+        test_l18n_to_typst!(&L18n::new(Language::EN).unwrap());
     }
 }
