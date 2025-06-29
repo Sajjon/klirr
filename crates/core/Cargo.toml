@@ -31,3 +31,4 @@ insta.workspace = true
 pretty_assertions.workspace = true
 tempfile.workspace = true
 test-log.workspace = true
+ttf-parser = "0.25.1"

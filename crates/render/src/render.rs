@@ -24,8 +24,13 @@ pub fn render(l18n: L18n, data: PreparedData, layout: Layout) -> Result<Pdf> {
     );
 
     debug!("☑️ Creating typst 'World' (environment/context), this usually takes ~2 seconds.");
-    let context =
-        TypstContext::with_inline(main, layout_typst_str, l18n_typst_str, data_typst_str)?;
+    let context = TypstContext::with_inline(
+        layout.required_fonts(),
+        main,
+        layout_typst_str,
+        l18n_typst_str,
+        data_typst_str,
+    )?;
     debug!("✅ Created typst 'World' (environment/context)");
 
     debug!("☑️ Compiling typst...");

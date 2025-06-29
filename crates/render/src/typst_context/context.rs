@@ -23,7 +23,13 @@ pub struct TypstContext {
 }
 
 impl TypstContext {
-    fn new(main: Source, layout: Source, l18n: Source, data: Source) -> Self {
+    fn new(
+        fonts_used_by_layout: IndexSet<FontIdentifier>,
+        main: Source,
+        layout: Source,
+        l18n: Source,
+        data: Source,
+    ) -> Result<Self> {
         trace!("Creating TypstContext START");
         let content = Content::builder()
             .main(main)
@@ -31,27 +37,29 @@ impl TypstContext {
             .data(data)
             .l18n(l18n)
             .build();
-        let environment = Environment::default();
+        let environment = Environment::new(fonts_used_by_layout)?;
 
         trace!("Creating TypstContext END");
-        Self {
+        Ok(Self {
             content,
             environment,
-        }
+        })
     }
 
     pub fn with_inline(
+        fonts_used_by_layout: IndexSet<FontIdentifier>,
         main_inline: String,
         layout_inline: String,
         l18n_inline: String,
         data_inline: String,
     ) -> Result<Self> {
-        Ok(Self::new(
+        Self::new(
+            fonts_used_by_layout,
             Source::inline(main_inline, Path::new(TYPST_VIRTUAL_NAME_MAIN))?,
             Source::inline(layout_inline, Path::new(TYPST_VIRTUAL_NAME_LAYOUT))?,
             Source::inline(l18n_inline, Path::new(TYPST_VIRTUAL_NAME_L18N))?,
             Source::inline(data_inline, Path::new(TYPST_VIRTUAL_NAME_DATA))?,
-        ))
+        )
     }
 }
 
@@ -91,11 +99,7 @@ impl World for TypstContext {
     }
 
     fn font(&self, index: usize) -> Option<Font> {
-        let Some(font_slot) = self.environment().fonts().get(index) else {
-            panic!("Font Slot not found at index: {}", index);
-        };
-
-        if let Some(font) = font_slot.get() {
+        if let Some(font) = self.environment().fonts().get(index).cloned() {
             Some(font)
         } else {
             panic!("Font not found at index: {}", index);
@@ -129,11 +133,13 @@ mod tests {
 
     fn sut() -> TypstContext {
         TypstContext::new(
+            IndexSet::default(),
             Source::detached("main"),
             Source::detached("layout"),
             Source::detached("l18n"),
             Source::detached("data"),
         )
+        .unwrap()
     }
 
     #[test]
