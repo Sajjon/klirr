@@ -6,20 +6,18 @@
 
 # Klirr
 
-Klirr is a config **once**, inter-month-idempotent, calendar aware, capable and **maintenance-free** invoice solution written in Rust + [Typst](https://github.com/typst/typst).
+Klirr is a CICASS (kickass): **C**onfig-once, **I**nter-month-idempotent, **C**alendar aware, **A**dvanced and **S**elf-**S**ustaining invoice solution written in Rust + [Typst](https://github.com/typst/typst).
 
 > [!TIP]
 > Scroll down to example invoice in the bottom to see what the invoice looks like.
 
-# Features
+# Description
 
--   Config once: Set your company, client and project information using interactive Terminal UI (creates RON files). **No Rust, Typst or [RON][ron] skills needed!**
--   Inter-month-idempotent: You build the invoice any number of times, it always results in the same invoice number when run within the same month. The proceeding month the next invoice number will be used.
--   Calendar aware: Using your machines system time to determine the month, it calculates the number of working days for the target month. Invoice date is set to last day of the target month and due date is set dependent on the payment terms set in your RON files.
--   Capable: Supports setting number of days you were off, to be extracted from the automatically calculated number of working days. Supports expenses using `"{PRODUCT}, {COST}, {CURRENCY}, {QUANTITY}, {DATE}"` CSV string.
--   Maintenance free: The invoice number automatically set based on the current month. When you build the invoice the next month, the next number is used.
--   Multi-layout support: Currently only one layout is implemented, but the code base is prepared to very easily support more.
--   Multi-language support: The labels/headers are dynamically loaded through l18n - supported languages are English and Swedish - it is trivial for anyone to make a PR to add support for more languages.
+-   **C**onfig once: Set your company, client and project information using interactive Terminal UI (creates RON files). **No Rust, Typst or [RON][ron] skills needed!**
+-   **I**nter-month-idempotent: You build the invoice any number of times, it always results in the same invoice number when run within the same month. The proceeding month the next invoice number will be used.
+-   **C**alendar aware: Using your machines system time to determine the month, it calculates the number of working days for the target month. Invoice date is set to last day of the target month and due date is set dependent on the payment terms set in your RON files.
+-   **A**dvanced: Rich feature set, supports setting number of days you were off, to be extracted from the automatically calculated number of working days. Supports expenses using `"{PRODUCT}, {COST}, {CURRENCY}, {QUANTITY}, {DATE}"` CSV string. Multi-layout support: Currently only one layout is implemented, but the code base is prepared to very easily support more. Multi-language support: The labels/headers are dynamically loaded through l18n - supported languages are English and Swedish - it is trivial for anyone to make a PR to add support for more languages.
+-   **S**elf-**S**ustaining: Maintenance free, the invoice number automatically set based on the current month. When you build the invoice the next month, the next number is used.
 
 # Installation
 
@@ -65,7 +63,34 @@ After setup is complete, you should have the following files in `$DATA_PATH/klir
 
 These files use [`RON` ("Rusty Object Notation")][ron] file format, a modern object notation superior to JSON/YAML/TOML.
 
-### Manually Update
+## Edit Data
+If you later want to edit the data you input during init you can do so with another command:
+```bash
+klirr data edit all
+```
+Will start a flow similar to `init` flow, but loading in all your existing data, hit ENTER to keep using existing data, or input a new value.
+
+Alternatively you can edit individual files using:
+```bash
+klirr data edit vendor
+```
+
+```bash
+klirr data edit client
+```
+
+You can see the possible values with:
+```bash
+klirr data edit --help
+```
+
+> [!NOTE]
+> `klirr data edit` does not support editing `expenses.ron` (expensed months) since
+> it is an array of values and not easily edited in a simple TUI prompt.
+> You append expenses using the `klirr data expenses` command, see more info
+> below.
+
+#### Manually
 
 You can of course manually edit the files in the data folder by opening them up in your favourite text editor.
 
@@ -138,7 +163,7 @@ klirr data expenses --month 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lun
 ```
 
 > [!NOTE]
-> The transaction day might be a different month than the value you put in `--month`, e.g. if
+> The transaction day is allowed to be a different month than the value you put in `--month`, e.g. if
 > if you had an expense on last of June but wanna include that expense in the invoice made in July
 > should save the expense under July.
 
@@ -150,13 +175,16 @@ klirr data expenses --month 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lun
 
 > [!TIP]
 > There is currently no support for subtracting/removing expenses using Cli, if you made a mistake
-> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/expenses.ron` > $DATA_PATH depends [on OS][data_path], but
+> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/expenses.ron` 
+> where `$DATA_PATH` depends [on OS][data_path], but
 > typically `$HOME/Library/Application Support` on macOS
 > using your favourite text editor.
 >
 > After edit you can validate the data with:
 >
 > `cargo run --bin klirr data validate`
+>
+> You cannot edit expenses using `klirr data edit` as mentioned above.
 
 ### Generate expenses invoice
 

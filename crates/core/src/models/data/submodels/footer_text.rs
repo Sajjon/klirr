@@ -20,3 +20,16 @@ impl HasSample for FooterText {
         Self::from("Billed with the utmost discretion—your secrets are safe, for a price.")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn default_neq_sample() {
+        let default = FooterText::default();
+        let sample = FooterText::sample();
+        assert_ne!(default, sample);
+    }
+}

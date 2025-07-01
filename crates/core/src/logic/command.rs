@@ -13,13 +13,13 @@ fn input_data_at(
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataSelector {
+    /// All but expensed months
     All,
     Vendor,
     Client,
     Information,
     PaymentInfo,
     ServiceFees,
-    ExpensedMonths,
 }
 
 impl DataSelector {
@@ -31,7 +31,6 @@ impl DataSelector {
             DataSelector::Information => matches!(target, DataSelector::Information),
             DataSelector::PaymentInfo => matches!(target, DataSelector::PaymentInfo),
             DataSelector::ServiceFees => matches!(target, DataSelector::ServiceFees),
-            DataSelector::ExpensedMonths => matches!(target, DataSelector::ExpensedMonths),
         }
     }
 }
@@ -197,5 +196,41 @@ mod tests {
         // Verify that the month was recorded correctly
         let data = expensed_months(tempdir.path()).unwrap();
         assert!(data.contains(&month));
+    }
+
+    #[test]
+    fn test_data_selector_includes() {
+        let all_selector = DataSelector::All;
+        assert!(all_selector.includes(DataSelector::All));
+        assert!(all_selector.includes(DataSelector::Vendor));
+        assert!(all_selector.includes(DataSelector::Client));
+        assert!(all_selector.includes(DataSelector::Information));
+        assert!(all_selector.includes(DataSelector::PaymentInfo));
+        assert!(all_selector.includes(DataSelector::ServiceFees));
+
+        let vendor_selector = DataSelector::Vendor;
+        assert!(vendor_selector.includes(DataSelector::Vendor));
+        assert!(!vendor_selector.includes(DataSelector::Client));
+    }
+
+    #[test]
+    fn test_edit_data_at() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let data = Data::sample();
+        let first = CompanyInformation::sample_vendor();
+        let second = CompanyInformation::sample_client();
+        assert_ne!(
+            first, second,
+            "Sample vendor and client should not be the same"
+        );
+        save_data_with_base_path(data.with_client(first.clone()), tempdir.path()).unwrap();
+        let result = edit_data_at(tempdir.path(), |data| Ok(data.with_client(second.clone())));
+        assert!(
+            result.is_ok(),
+            "Expected data edit to succeed, got: {:?}",
+            result
+        );
+        let edited_data = read_data_from_disk_with_base_path(tempdir.path()).unwrap();
+        assert_eq!(*edited_data.client(), second);
     }
 }

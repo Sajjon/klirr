@@ -52,12 +52,6 @@ impl From<Date> for YearAndMonth {
 }
 
 impl YearAndMonth {
-    /// Returns `June 2025` as a string.
-    pub fn month_year(&self, l18n: &L18nContent) -> String {
-        format!("{} {}", self.month.name(l18n), self.year)
-    }
-}
-impl YearAndMonth {
     /// Creates a new `YearAndMonth` with the given year and month.
     /// # Examples
     /// ```

@@ -25,12 +25,6 @@ impl std::fmt::Debug for Month {
 }
 
 impl Month {
-    /// Uses localization to return the name of the month, e.g "June" for English
-    /// for `Month::June`.
-    pub fn name(&self, localization: &L18nContent) -> String {
-        localization.month_names()[*self.month() as usize - 1].clone()
-    }
-
     /// Returns the month as a number, e.g. 1 for January, 2 for February, etc.
     /// This is useful for serialization and comparisons.
     /// # Examples

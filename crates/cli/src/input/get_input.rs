@@ -75,8 +75,8 @@ pub enum EditDataInputSelector {
     Information,
     PaymentInfo,
     ServiceFees,
-    ExpensedMonths,
 }
+
 impl From<EditDataInputSelector> for DataSelector {
     fn from(selector: EditDataInputSelector) -> Self {
         match selector {
@@ -86,7 +86,6 @@ impl From<EditDataInputSelector> for DataSelector {
             EditDataInputSelector::Information => DataSelector::Information,
             EditDataInputSelector::PaymentInfo => DataSelector::PaymentInfo,
             EditDataInputSelector::ServiceFees => DataSelector::ServiceFees,
-            EditDataInputSelector::ExpensedMonths => DataSelector::ExpensedMonths,
         }
     }
 }
@@ -375,5 +374,32 @@ mod tests {
                 let _ = input.parsed();
             }
         }
+    }
+
+    #[test]
+    fn test_data_selector_from_edit_data_input_selector() {
+        let selector = EditDataInputSelector::Vendor;
+        let data_selector: DataSelector = selector.into();
+        assert_eq!(data_selector, DataSelector::Vendor);
+
+        let selector = EditDataInputSelector::All;
+        let data_selector: DataSelector = selector.into();
+        assert_eq!(data_selector, DataSelector::All);
+
+        let selector = EditDataInputSelector::Information;
+        let data_selector: DataSelector = selector.into();
+        assert_eq!(data_selector, DataSelector::Information);
+
+        let selector = EditDataInputSelector::PaymentInfo;
+        let data_selector: DataSelector = selector.into();
+        assert_eq!(data_selector, DataSelector::PaymentInfo);
+
+        let selector = EditDataInputSelector::ServiceFees;
+        let data_selector: DataSelector = selector.into();
+        assert_eq!(data_selector, DataSelector::ServiceFees);
+
+        let selector = EditDataInputSelector::Client;
+        let data_selector: DataSelector = selector.into();
+        assert_eq!(data_selector, DataSelector::Client);
     }
 }

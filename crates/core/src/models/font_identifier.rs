@@ -1,13 +1,5 @@
 use crate::prelude::*;
 
-#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
-pub enum FontWeight {
-    Regular,
-    Bold,
-    Italic,
-    BoldItalic,
-}
-
 /// Regular weight of Computer Modern font. For more info see [`FontIdentifier::ComputerModern`].
 const FONT_COMPUTER_MODERN_REGULAR: &[u8] = include_bytes!("../../assets/cmunrm.ttf");
 /// Bold weight of Computer Modern font. For more info see [`FontIdentifier::ComputerModern`].
@@ -82,5 +74,19 @@ mod tests {
                 assert_eq!(family_name_of_font_parsed_from_bytes, "CMU Serif");
                 assert_eq!(font.family_name(), family_name_of_font_parsed_from_bytes);
             });
+    }
+
+    #[test]
+    #[should_panic(expected = "Computer Modern Italic is not supported")]
+    fn test_italic_panics() {
+        let font = FontIdentifier::ComputerModern(FontWeight::Italic);
+        font.font_bytes();
+    }
+
+    #[test]
+    #[should_panic(expected = "Computer Modern Bold Italic is not supported")]
+    fn test_bold_italic_panics() {
+        let font = FontIdentifier::ComputerModern(FontWeight::BoldItalic);
+        font.font_bytes();
     }
 }

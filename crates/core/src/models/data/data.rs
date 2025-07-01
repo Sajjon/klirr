@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters, WithSetters)]
 pub struct Data {
     /// Information about this specific invoice.
     #[builder(setter(into))]
@@ -16,7 +16,7 @@ pub struct Data {
 
     /// The company that pays the invoice, the customer/buyer.
     #[builder(setter(into))]
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set_with = "pub")]
     client: CompanyInformation,
 
     /// Payment information for the vendor, used for international transfers.
