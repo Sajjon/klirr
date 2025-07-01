@@ -222,14 +222,14 @@
   }
   v(-10pt)
   table(
-    columns: (1fr, auto, auto, auto, auto),
-    align: (left, right, center, center, right),
+    columns: (auto, auto, 1fr, auto, auto),
+    align: (left, left, center, center, right),
     stroke: none,
     table.header(
       [#strong(l18n.line_items.description)],
       [#strong(l18n.line_items.when)],
-      [#strong(l18n.line_items.quantity)],
       [#strong(l18n.line_items.unit_price)],
+      [#strong(l18n.line_items.quantity)],
       [#strong(l18n.line_items.total_cost)],
     ),
     table.hline(stroke: 0.2pt),
@@ -237,8 +237,8 @@
       (
         row.name,
         format_item_date(l18n, is_expenses, row.transaction_date),
-        str(row.quantity),
         format_amount(row.unit_price, row.currency),
+        str(row.quantity),
         format_amount(row.total_cost, row.currency),
         table.hline(stroke: (thickness: 0.2pt, dash: "dashed")),
       )

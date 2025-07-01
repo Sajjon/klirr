@@ -1,6 +1,6 @@
 [package]
 name = "klirr-render"
-version = "0.1.3"
+version = "0.1.5"
 edition = "2024"
 description = "Zero-maintenance and smart FOSS generating beautiful invoices for services and expenses."
 license = "MIT"
@@ -9,7 +9,7 @@ repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
 # Internal dependencies
-klirr-core = "0.1.3"
+klirr-core = "0.1.5"
 
 # External dependencies
 chrono.workspace = true

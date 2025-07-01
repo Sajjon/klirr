@@ -32,7 +32,7 @@ expression: typst
     items: (
       (
         currency: "EUR",
-        name: "Discreet Investigative Services 2025-05",
+        name: "Discreet Investigative Services",
         quantity: 22.0,
         total_cost: 17094.0,
         transaction_date: "2025-05-31",
