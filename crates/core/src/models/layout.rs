@@ -103,9 +103,7 @@ mod tests {
         let typst = layout.to_typst_fn();
         let mut weights = HashSet::new();
         for line in typst.lines() {
-            if line.contains("#strong[#emph") {
-                weights.insert(FontWeight::BoldItalic);
-            } else if line.contains("#emph[#strong") {
+            if line.contains("#strong[#emph") || line.contains("#emph[#strong") {
                 weights.insert(FontWeight::BoldItalic);
             } else if line.contains("#strong") {
                 weights.insert(FontWeight::Bold);

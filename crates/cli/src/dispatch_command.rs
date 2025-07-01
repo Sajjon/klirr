@@ -1,12 +1,26 @@
 use crate::prelude::*;
 use klirr_render::prelude::render;
 
-fn init_data_directory(provide_data: impl FnOnce() -> Result<Data>) -> Result<()> {
-    init_data_directory_at(data_dir(), provide_data)
+fn init_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
+    init_data_at(data_dir_create_if(true), provide_data)
 }
 
-fn validate_data_directory() -> Result<()> {
-    validate_data_directory_with_base_path(data_dir()).map(|_| ())
+fn edit_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
+    edit_data_at(data_dir(), provide_data)
+}
+
+fn validate_data() -> Result<()> {
+    let base_path = data_dir();
+    info!("Validating data directory at: {}", base_path.display());
+
+    read_data_from_disk_with_base_path(base_path)
+        .map(|_| ())
+        .inspect(|_| {
+            info!("✅ Data directory is valid");
+        })
+        .inspect_err(|e| {
+            error!("❌ Data directory is invalid: {}", e);
+        })
 }
 
 fn record_expenses(month: &YearAndMonth, expenses: &[Item]) -> Result<()> {
@@ -17,10 +31,20 @@ fn record_month_off(month: &YearAndMonth) -> Result<()> {
     record_month_off_with_base_path(month, data_dir())
 }
 
+/// Curry a function that takes two arguments into a function that takes one argument and returns another function.
+/// This is useful for partially applying functions in a functional programming style.
+fn curry<T, U, R>(f: impl FnOnce(T, U) -> R, u: U) -> impl FnOnce(T) -> R {
+    move |t| f(t, u)
+}
+
 pub fn run_data_command(command: &DataAdminInputCommands) -> Result<()> {
     match command {
-        DataAdminInputCommands::Init => init_data_directory(ask_for_data),
-        DataAdminInputCommands::Validate => validate_data_directory(),
+        DataAdminInputCommands::Init => init_data(curry(ask_for_data, None)),
+        DataAdminInputCommands::Validate => validate_data(),
+        DataAdminInputCommands::Edit(input) => edit_data(curry(
+            ask_for_data,
+            Some(DataSelector::from(*input.selector())),
+        )),
         DataAdminInputCommands::MonthOff(month_off_input) => {
             record_month_off(month_off_input.month())
         }

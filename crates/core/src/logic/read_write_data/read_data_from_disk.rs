@@ -11,18 +11,37 @@ pub const BINARY_NAME: &str = "klirr";
 /// Windows: `C:\Users\Alice\AppData\Local\klirr\data`
 /// ```
 ///
+/// Creates if `create_if_not_exists` is true and if needed.
+///
+/// For more information
+/// see [dirs_next][ref]
+///
+/// [ref]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html
+pub fn data_dir_create_if(create_if_not_exists: bool) -> PathBuf {
+    let dir = dirs_next::data_local_dir()
+        .expect("Should have a data directory")
+        .join(BINARY_NAME)
+        .join("data");
+    if create_if_not_exists {
+        create_folder_if_needed(&dir)
+            .expect("Should be able to create directory at data_dir()/klirr/data");
+    }
+    dir
+}
+
+/// Returns the path to the data directory, which is typically located at
+/// ```text
+/// macOS: `~/Library/Application Support/klirr/data`
+/// Linux: `~/.local/share/klirr/data`
+/// Windows: `C:\Users\Alice\AppData\Local\klirr\data`
+/// ```
+///
 /// For more information
 /// see [dirs_next][ref]
 ///
 /// [ref]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html
 pub fn data_dir() -> PathBuf {
-    let dir = dirs_next::data_local_dir()
-        .expect("Should have a data directory")
-        .join(BINARY_NAME)
-        .join("data");
-    create_folder_if_needed(&dir)
-        .expect("Should be able to create directory at data_dir()/klirr/data");
-    dir
+    data_dir_create_if(false)
 }
 
 pub fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<()> {
@@ -67,18 +86,6 @@ pub fn save_data_with_base_path(data: Data, base_path: impl AsRef<Path>) -> Resu
         path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EXPENSES),
     )?;
     Ok(())
-}
-
-pub fn validate_data_directory_with_base_path(base_path: impl AsRef<Path>) -> Result<Data> {
-    let base_path = base_path.as_ref();
-    info!("Validating data directory at: {}", base_path.display());
-    read_data_from_disk_with_base_path(base_path)
-        .inspect(|_| {
-            info!("✅ Data directory is valid");
-        })
-        .inspect_err(|e| {
-            error!("❌ Data directory is invalid: {}", e);
-        })
 }
 
 pub fn path_to_ron_file_with_base(base_path: impl AsRef<Path>, name: &str) -> PathBuf {
