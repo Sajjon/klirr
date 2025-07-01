@@ -238,8 +238,8 @@
         row.name,
         format_item_date(l18n, is_expenses, row.transaction_date),
         str(row.quantity),
-        format_amount(row.total_cost, row.currency),
         format_amount(row.unit_price, row.currency),
+        format_amount(row.total_cost, row.currency),
         table.hline(stroke: (thickness: 0.2pt, dash: "dashed")),
       )
     },
