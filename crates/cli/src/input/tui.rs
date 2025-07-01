@@ -52,19 +52,19 @@ fn build_postal_address(
     Ok(address)
 }
 
-trait WithDefaultMaybe<'o, T> {
-    fn with_default_maybe(self, default: &'o Option<T>) -> Self;
+trait WithOptionalDefault<'o, T> {
+    fn with_optional_default(self, default: &'o Option<T>) -> Self;
 }
-impl<'a, 'o: 'a, T: AsRef<str>> WithDefaultMaybe<'o, T> for Text<'a> {
-    fn with_default_maybe(self, default: &'o Option<T>) -> Self {
+impl<'a, 'o: 'a, T: AsRef<str>> WithOptionalDefault<'o, T> for Text<'a> {
+    fn with_optional_default(self, default: &'o Option<T>) -> Self {
         match default {
             Some(value) => self.with_default(value.as_ref()),
             None => self,
         }
     }
 }
-impl<'a, 'o: 'a, T: Clone> WithDefaultMaybe<'o, T> for CustomType<'a, T> {
-    fn with_default_maybe(self, default: &'o Option<T>) -> Self {
+impl<'a, 'o: 'a, T: Clone> WithOptionalDefault<'o, T> for CustomType<'a, T> {
+    fn with_optional_default(self, default: &'o Option<T>) -> Self {
         match default {
             Some(value) => self.with_default(value.clone()),
             None => self,
@@ -91,7 +91,7 @@ fn build_company(
             .prompt()?;
 
         let contact_person = Text::new(&text("contact person"))
-            .with_default_maybe(default.contact_person())
+            .with_optional_default(default.contact_person())
             .with_help_message(&format_help_skippable(
                 if owner.to_lowercase().contains("client") {
                     "Your reference".to_owned()
@@ -206,7 +206,7 @@ fn build_invoice_info(default: &ProtoInvoiceInfo) -> Result<ProtoInvoiceInfo> {
             .build();
 
         let purchase_order = CustomType::<PurchaseOrder>::new("Purchase order number (optional)")
-            .with_default_maybe(default.purchase_order())
+            .with_optional_default(default.purchase_order())
             .with_help_message(&format_help_skippable(
                 "If you have a purchase order number, enter it here".to_owned(),
             ))
@@ -221,7 +221,7 @@ fn build_invoice_info(default: &ProtoInvoiceInfo) -> Result<ProtoInvoiceInfo> {
             .prompt_skippable()?;
 
         let emphasize_color_hex = CustomType::<HexColor>::new("Emphasize color (optional)")
-            .with_default_maybe(default.emphasize_color_hex())
+            .with_optional_default(default.emphasize_color_hex())
             .with_help_message(&format_help_skippable(
                 "This is used to emphasize certain parts of the invoice, e.g. '#e6007a'".to_owned(),
             ))

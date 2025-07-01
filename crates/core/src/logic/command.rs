@@ -211,6 +211,26 @@ mod tests {
         let vendor_selector = DataSelector::Vendor;
         assert!(vendor_selector.includes(DataSelector::Vendor));
         assert!(!vendor_selector.includes(DataSelector::Client));
+
+        let selector = DataSelector::Client;
+        assert!(selector.includes(DataSelector::Client));
+        assert!(!selector.includes(DataSelector::Vendor));
+        assert!(!selector.includes(DataSelector::All));
+
+        let selector = DataSelector::Information;
+        assert!(selector.includes(DataSelector::Information));
+        assert!(!selector.includes(DataSelector::Vendor));
+        assert!(!selector.includes(DataSelector::All));
+
+        let selector = DataSelector::PaymentInfo;
+        assert!(selector.includes(DataSelector::PaymentInfo));
+        assert!(!selector.includes(DataSelector::Vendor));
+        assert!(!selector.includes(DataSelector::All));
+
+        let selector = DataSelector::ServiceFees;
+        assert!(selector.includes(DataSelector::ServiceFees));
+        assert!(!selector.includes(DataSelector::Vendor));
+        assert!(!selector.includes(DataSelector::All));
     }
 
     #[test]
