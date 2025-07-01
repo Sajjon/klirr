@@ -1,3 +1,4 @@
+.envrc.secret
 /target
 invoices/**
 tarpaulin-report.html

@@ -1,0 +1,28 @@
+# Apply settings to the whole workspace
+workspace = true
+
+# General settings
+consolidate-commits = true
+sign-commit = false
+sign-tag = false
+push = true
+tag = true
+publish = true
+allow-branch = ["main"]
+generate-release-notes = true
+dependent-version = "upgrade" # upgrade version for dependent crates
+
+[release]
+changelog = "CHANGELOG.md"
+# Set to true to use conventional commits to auto-generate changelog entries (optional)
+# changelog-commit-conventional = true
+
+[git]
+push-remote = "origin"
+enable-github-release = true
+github-token = "${GITHUB_TOKEN}" # Make sure to export this in your environment
+
+[packages]
+klirr-core = { path = "crates/core" }
+klirr-render = { path = "crates/render" }
+klirr = { path = "crates/cli" }
