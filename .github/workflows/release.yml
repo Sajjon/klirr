@@ -47,6 +47,11 @@ jobs:
     release:
         needs: [spelling, check-formatting, test-rust]
         runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+            id-token: write
+
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         steps:
             - name: Checkout code
