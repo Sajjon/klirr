@@ -6,18 +6,21 @@
 
 # Klirr
 
-Klirr is a CICASS (kickass): **C**onfig-once, **I**nter-month-idempotent, **C**alendar aware, **A**dvanced and **S**elf-**S**ustaining invoice solution written in Rust + [Typst](https://github.com/typst/typst).
+Klirr is a **SEAMLESS** (**S**etup-Once, **E**xpense-Capable, **A**esthetic, **M**onth-Idempotent, **L**ocalized, **E**xtensible, **S**cheduling-Aware, **S**elf-Sustaining) invoice solution written in Rust + [Typst](https://github.com/typst/typst)
 
 > [!TIP]
 > Scroll down to example invoice in the bottom to see what the invoice looks like.
 
 # Description
 
--   **C**onfig once: Set your company, client and project information using interactive Terminal UI (creates RON files). **No Rust, Typst or [RON][ron] skills needed!**
--   **I**nter-month-idempotent: You build the invoice any number of times, it always results in the same invoice number when run within the same month. The proceeding month the next invoice number will be used.
--   **C**alendar aware: Using your machines system time to determine the month, it calculates the number of working days for the target month. Invoice date is set to last day of the target month and due date is set dependent on the payment terms set in your RON files.
--   **A**dvanced: Rich feature set, supports setting number of days you were off, to be extracted from the automatically calculated number of working days. Supports expenses using `"{PRODUCT}, {COST}, {CURRENCY}, {QUANTITY}, {DATE}"` CSV string. Multi-layout support: Currently only one layout is implemented, but the code base is prepared to very easily support more. Multi-language support: The labels/headers are dynamically loaded through l18n - supported languages are English and Swedish - it is trivial for anyone to make a PR to add support for more languages.
--   **S**elf-**S**ustaining: Maintenance free, the invoice number automatically set based on the current month. When you build the invoice the next month, the next number is used.
+- **S**etup Once – **One-time configuration** via an interactive Terminal UI captures all company, client, and project info. After this initial setup, no manual editing is required, and no coding or format knowledge (Rust/Typst/[RON][ron]) is needed
+- **E**xpense Handling – **Expenses (even in different currencies) are integrated automatically**. You can input expenses as simple CSV-line entries, and Klirr takes care of currency conversion using up-to-date exchange rates. This spares you the hassle of looking up rates and doing conversions yourself.
+- **A**esthetic Output – **Produces polished, professional invoices**. Klirr uses Typst templates to generate a beautiful invoice PDF for your services and expenses, so the final result looks as good as a hand-crafted invoice, with consistent styling and formatting.
+- **M**onthly Idempotent – **Inter-month idempotence** ensures consistent invoice numbering. No matter how many times you build an invoice in a given month, it will reuse the same invoice number. When a new month begins, Klirr automatically increments to the next number. This guarantees a stable, chronological sequence of invoices without duplicates or gaps.
+- **L**ocalized – **Multi-language support** is built in. Klirr dynamically loads invoice labels in different languages via i18n, and currently supports English and Swedish (adding more languages is trivial). This means your invoices can easily be generated in the language that suits you or your client.
+- **E**xtensible Templates – **Flexible invoice layout with Typst**. The invoice format is powered by Typst, and while Klirr comes with one elegant layout by default, the code is prepared to very easily support additional layouts. You can extend or customize the template system to suit different styling needs, ensuring the solution can grow with your business.
+- **S**cheduling-Aware – **Automatically accounts for dates and work days**. Klirr uses your system’s calendar to determine the target month’s working days and sets the invoice date to the last day of the month, with the due date calculated based on your specified payment terms. It even allows you to mark any days you were off work, subtracting those from the billable days – all handled automatically so that your invoice reflects the correct time worked.
+- **S**elf-Sustaining – **Maintenance-free operation**. Klirr requires virtually no ongoing manual upkeep. Invoice numbers update themselves each month, and all calculations (dates, days, numbering, conversions) happen for you. You don’t need to remember to bump invoice numbers or adjust routine details – Klirr sustains these processes on its own, month after month.
 
 # Installation
 

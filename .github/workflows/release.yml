@@ -60,6 +60,12 @@ jobs:
                   default: true
             - name: Install cargo-release
               run: cargo install cargo-release
+
+            - name: Configure Git identity
+              run: |
+                  git config --global user.name "github-actions[bot]"
+                  git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
             - name: Run cargo release patch
               env:
                   CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
