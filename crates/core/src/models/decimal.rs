@@ -3,7 +3,7 @@ use derive_more::FromStr;
 
 /// A wrapper around `rust_decimal::Decimal` which serializes to and from `f64`.
 ///
-/// We have a specific need for f64 as underlying type when serializing to RON,
+/// We have a specific need for f64 as underlying type when serialized into JSON,
 /// since we bridge to Typst dictionary and we must be able to perform arithmetic
 /// with values as numbers in Typst - which we cannot do with Strings.
 ///
