@@ -6,11 +6,19 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError)]
 pub enum Error {
+    /// Failed to convert to `f64` from a `Decimal`
+    #[error("Failed to convert to f64 from Decimal, because: {value}")]
+    InvalidDecimalToF64Conversion { value: String },
+
+    /// Failed to convert `f64` value to a `Decimal`
+    #[error("Failed to convert f64 to Decimal, because: {value}")]
+    InvalidDecimalFromF64Conversion { value: f64 },
+
     /// Failed to load a font, e.g. when the font file is not found or cannot be read.
     #[error("Failed to load font with family name: '{family_name}'")]
     FailedToLoadFont { family_name: String },
 
-    /// Failed to parse a string into an `F64`, e.g. when the string is not a valid number.
+    /// Failed to parse a string into an `Decimal`, e.g. when the string is not a valid number.
     #[error("Failed to parse f64 from string: {bad_value}, reason: {reason}")]
     InvalidF64String { bad_value: String, reason: String },
 

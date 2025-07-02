@@ -7,10 +7,10 @@ use crate::prelude::*;
 )]
 #[from(forward)]
 #[deref(forward)]
-pub struct Cost(F64);
+pub struct Cost(Decimal);
 
 impl HasSample for Cost {
     fn sample() -> Self {
-        Self::from(350.0)
+        Self::from(dec!(350.0))
     }
 }

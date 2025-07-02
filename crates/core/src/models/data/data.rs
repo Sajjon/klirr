@@ -125,7 +125,7 @@ impl Data {
                         let service = Item::builder()
                             .name(self.service_fees.name())
                             .transaction_date(invoice_date)
-                            .quantity(Quantity::from(worked_days as f64))
+                            .quantity(Quantity::from(Decimal::from(worked_days)))
                             .unit_price(*self.service_fees.unit_price())
                             .currency(*self.payment_info.currency())
                             .build();
@@ -197,7 +197,7 @@ mod tests {
                 .try_unwrap_service()
                 .unwrap()
                 .quantity(),
-            &Quantity::from(20.0)
+            &Quantity::from(dec!(20.0))
         );
     }
 }

@@ -19,7 +19,7 @@ const FRANKFURTER_API: &str = "https://api.frankfurter.app";
 #[derive(Debug, Clone, Deserialize, Getters)]
 struct FrankfurterApiResponse {
     #[getset(get = "pub")]
-    rates: HashMap<Currency, f64>,
+    rates: HashMap<Currency, Decimal>,
 }
 
 pub(super) trait DeserializableResponse {
@@ -50,7 +50,7 @@ pub(super) fn _get_exchange_rate_with_fetcher<T: DeserializableResponse>(
     fetcher: impl Fn(String) -> Result<T>,
 ) -> Result<UnitPrice> {
     if from == to {
-        return Ok(UnitPrice::from(1.0));
+        return Ok(UnitPrice::ONE);
     }
     debug!("Fetching {}/{}@{} rate.", from, to, date);
     fetcher(format_url(date, from, to))?
@@ -374,7 +374,7 @@ mod tests {
             Ok(Mock { json: "{}" }) // Mocking the fetcher to return an empty response
         });
         assert!(rate.is_ok());
-        assert_eq!(rate.unwrap(), UnitPrice::from(1.0));
+        assert_eq!(rate.unwrap(), UnitPrice::from(dec!(1.0)));
     }
 
     trait TestExchangeRatesFetcher {
@@ -410,7 +410,7 @@ mod tests {
         let mut cache = CachedRates::default();
         cache
             ._rates_for_day_and_from_currency(Date::sample(), Currency::EUR)
-            .insert(Currency::USD, UnitPrice::from(1.2));
+            .insert(Currency::USD, UnitPrice::from(dec!(1.2)));
         fetcher.update_cache_if_needed(&cache, true);
 
         let loaded: CachedRates = load_data(path, DATA_FILE_NAME_CACHED_RATES).unwrap();
@@ -424,7 +424,7 @@ mod tests {
         let date = Date::sample();
         let from = Currency::EUR;
         let to = Currency::USD;
-        let rate = UnitPrice::from(1.2);
+        let rate = UnitPrice::from(dec!(1.2));
 
         // Create a cache with the rate
         let mut cache = CachedRates::default();
@@ -437,8 +437,8 @@ mod tests {
         let item = Item::builder()
             .name("Test Item")
             .transaction_date(date)
-            .quantity(10.0)
-            .unit_price(100.0)
+            .quantity(dec!(10.0))
+            .unit_price(dec!(100.0))
             .currency(from)
             .build();
 

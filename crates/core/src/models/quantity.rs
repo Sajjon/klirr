@@ -19,14 +19,15 @@ use crate::prelude::*;
 )]
 #[from(forward)]
 #[deref(forward)]
-pub struct Quantity(F64);
+pub struct Quantity(Decimal);
 impl Quantity {
-    pub const ZERO: Self = Self(F64::ZERO);
+    pub const ZERO: Self = Self(Decimal::ZERO);
+    pub const ONE: Self = Self(Decimal::ONE);
 }
 
 impl HasSample for Quantity {
     fn sample() -> Self {
-        Self::from(1.0)
+        Self::ONE
     }
 }
 
@@ -38,12 +39,12 @@ mod tests {
     #[test]
     fn quantity_sample() {
         let sample = Quantity::sample();
-        assert_eq!(*sample, 1.0);
+        assert_eq!(sample, Quantity::ONE);
     }
 
     #[test]
     fn quantity_display() {
-        let quantity = Quantity::from(3.5);
+        let quantity = Quantity::from(dec!(3.5));
         assert_eq!(format!("{}", quantity), "3.5");
     }
 }

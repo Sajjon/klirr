@@ -69,7 +69,7 @@ mod tests {
         let exchange_rates = ExchangeRates::builder()
             .rates(ExchangeRatesMap::from_iter([(
                 Currency::GBP,
-                UnitPrice::from(10.0),
+                UnitPrice::from(dec!(10.0)),
             )]))
             .target_currency(Currency::EUR)
             .build();

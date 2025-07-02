@@ -94,8 +94,8 @@ mod tests {
                     ExchangeRates::builder()
                         .target_currency(Currency::EUR)
                         .rates(ExchangeRatesMap::from_iter([
-                            (Currency::GBP, UnitPrice::from(1.174)),
-                            (Currency::SEK, UnitPrice::from(11.05)),
+                            (Currency::GBP, UnitPrice::from(dec!(1.174))),
+                            (Currency::SEK, UnitPrice::from(dec!(11.05))),
                         ]))
                         .build(),
                 )

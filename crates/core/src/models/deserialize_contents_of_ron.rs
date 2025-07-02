@@ -110,6 +110,9 @@ mod tests {
         assert!(result.is_ok(), "Expected success, got: {:?}", result);
         let consulting_service = result.unwrap();
         assert_eq!(consulting_service.name(), "Agreed Consulting Service");
-        assert_eq!(*consulting_service.unit_price(), UnitPrice::from(350.0));
+        assert_eq!(
+            *consulting_service.unit_price(),
+            UnitPrice::from(dec!(350.0))
+        );
     }
 }

@@ -16,7 +16,7 @@ impl ServiceFees {
     pub fn sample() -> Self {
         Self::builder()
             .name("Discreet Investigative Services".to_string())
-            .unit_price(UnitPrice::from(777.0))
+            .unit_price(UnitPrice::from(dec!(777.0)))
             .build()
     }
 }

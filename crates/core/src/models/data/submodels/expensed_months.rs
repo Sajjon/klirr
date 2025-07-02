@@ -153,10 +153,10 @@ impl ExpensedMonths {
     /// let items = vec![Item::sample_expense_coffee()];
     /// expensed_months.insert_expenses(&month, items.clone());
     /// assert_eq!(expensed_months.get(&month).unwrap().len(), 1);
-    /// assert_eq!(*expensed_months.get(&month).unwrap()[0].quantity(), Quantity::from(2.0));
+    /// assert_eq!(*expensed_months.get(&month).unwrap()[0].quantity(), Quantity::from(dec!(2.0)));
     /// expensed_months.insert_expenses(&month, items.clone());
     /// assert_eq!(expensed_months.get(&month).unwrap().len(), 1); // Still one item, but quantity is now 4.0
-    /// assert_eq!(*expensed_months.get(&month).unwrap()[0].quantity(), Quantity::from(4.0)); // 2 + 2
+    /// assert_eq!(*expensed_months.get(&month).unwrap()[0].quantity(), Quantity::from(dec!(4.0))); // 2 + 2
     ///
     /// ```
     pub fn insert_expenses(&mut self, month: &YearAndMonth, items: Vec<Item>) {
@@ -223,23 +223,23 @@ mod tests {
         let month = YearAndMonth::january(2024);
         let item1 = Item::builder()
             .name("Coffee")
-            .unit_price(UnitPrice::from(2.5))
+            .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
-            .quantity(Quantity::from(3.0))
+            .quantity(Quantity::from(dec!(3.0)))
             .transaction_date(Date::from_str("2024-01-01").unwrap())
             .build();
         let item2 = Item::builder()
             .name("Coffee")
-            .unit_price(UnitPrice::from(2.5))
+            .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
-            .quantity(Quantity::from(4.0))
+            .quantity(Quantity::from(dec!(4.0)))
             .transaction_date(Date::from_str("2024-01-01").unwrap())
             .build();
         expensed_months.insert_expenses(&month, vec![item1.clone(), item2.clone()]);
         assert!(expensed_months.contains(&month));
         let retrieved_items = expensed_months.get(&month).unwrap();
         assert_eq!(retrieved_items.len(), 1);
-        assert_eq!(*retrieved_items[0].quantity(), Quantity::from(7.0)); // 3.0 + 4.0
+        assert_eq!(*retrieved_items[0].quantity(), Quantity::from(dec!(7.0))); // 3.0 + 4.0
     }
 
     #[test]
@@ -248,16 +248,16 @@ mod tests {
         let month = YearAndMonth::january(2024);
         let item1 = Item::builder()
             .name("Coffee")
-            .unit_price(UnitPrice::from(2.5))
+            .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
-            .quantity(Quantity::from(3.0))
+            .quantity(Quantity::from(dec!(3.0)))
             .transaction_date(Date::from_str("2024-01-01").unwrap())
             .build();
         let item2 = Item::builder()
             .name("Coffee")
-            .unit_price(UnitPrice::from(2.5))
+            .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
-            .quantity(Quantity::from(4.0))
+            .quantity(Quantity::from(dec!(4.0)))
             .transaction_date(Date::from_str("2024-01-01").unwrap())
             .build();
         expensed_months.insert_expenses(&month, vec![item1.clone()]);
@@ -265,7 +265,7 @@ mod tests {
         assert!(expensed_months.contains(&month));
         let retrieved_items = expensed_months.get(&month).unwrap();
         assert_eq!(retrieved_items.len(), 1);
-        assert_eq!(*retrieved_items[0].quantity(), Quantity::from(7.0)); // 3.0 + 4.0
+        assert_eq!(*retrieved_items[0].quantity(), Quantity::from(dec!(7.0))); // 3.0 + 4.0
     }
 
     #[test]

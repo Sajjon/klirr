@@ -19,6 +19,7 @@ pub mod prelude {
     pub use getset::{Getters, Setters, WithSetters};
     pub use indexmap::{IndexMap, IndexSet};
     pub use log::{debug, error, info, trace, warn};
+    pub use rust_decimal::dec;
     pub use serde::{Deserialize, Serialize};
     pub use serde_json::Value;
     pub use serde_with::{DeserializeFromStr, SerializeDisplay};

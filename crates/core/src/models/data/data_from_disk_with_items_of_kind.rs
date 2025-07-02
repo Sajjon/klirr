@@ -119,7 +119,7 @@ impl DataWithItemsPricedInSourceCurrency {
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
     /// let data = DataWithItemsPricedInSourceCurrency::sample();
-    /// let exchange_rates = ExchangeRates::builder().rates(ExchangeRatesMap::from_iter([(Currency::GBP, UnitPrice::from(10.0)), (Currency::EUR, UnitPrice::from(8.0))])).target_currency(Currency::EUR).build();
+    /// let exchange_rates = ExchangeRates::builder().rates(ExchangeRatesMap::from_iter([(Currency::GBP, UnitPrice::from(dec!(10.0))), (Currency::EUR, UnitPrice::from(dec!(8.0)))])).target_currency(Currency::EUR).build();
     /// let result = data.to_typst(exchange_rates);
     /// assert!(result.is_ok(), "Expected conversion to succeed, got: {:?}", result);
     /// ```

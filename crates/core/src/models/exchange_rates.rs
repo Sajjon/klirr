@@ -40,12 +40,12 @@ impl ExchangeRates {
     /// let exchange_rates = ExchangeRates::builder()
     ///     .target_currency(Currency::EUR)
     ///     .rates(ExchangeRatesMap::from([
-    ///         (Currency::USD, UnitPrice::from(0.85)),
-    ///         (Currency::GBP, UnitPrice::from(1.1)),
+    ///         (Currency::USD, UnitPrice::from(dec!(0.85))),
+    ///         (Currency::GBP, UnitPrice::from(dec!(1.1))),
     ///     ]))
     ///     .build();
-    /// let converted = exchange_rates.convert(100.0, Currency::USD).unwrap();
-    /// assert_eq!(*converted, 85.0);
+    /// let converted = exchange_rates.convert(dec!(100.0), Currency::USD).unwrap();
+    /// assert_eq!(*converted, dec!(85.0));
     /// ```
     ///
     /// # Errors
@@ -79,10 +79,10 @@ impl ExchangeRates {
 impl ExchangeRates {
     pub fn hard_coded() -> Self {
         let rates = ExchangeRatesMap::from([
-            (Currency::EUR, UnitPrice::from(1.0)),
-            (Currency::USD, UnitPrice::from(1.2)),
-            (Currency::GBP, UnitPrice::from(0.85)),
-            (Currency::SEK, UnitPrice::from(11.0)),
+            (Currency::EUR, UnitPrice::from(dec!(1.0))),
+            (Currency::USD, UnitPrice::from(dec!(1.2))),
+            (Currency::GBP, UnitPrice::from(dec!(0.85))),
+            (Currency::SEK, UnitPrice::from(dec!(11.0))),
         ]);
         Self {
             target_currency: Currency::EUR,
@@ -105,8 +105,8 @@ mod tests {
     #[test]
     fn test_convert() {
         let exchange_rates = ExchangeRates::hard_coded();
-        let converted = exchange_rates.convert(100.0, Currency::USD).unwrap();
-        assert_eq!(*converted, 120.0);
+        let converted = exchange_rates.convert(dec!(100.0), Currency::USD).unwrap();
+        assert_eq!(*converted, dec!(120.0));
     }
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
             .target_currency(Currency::EUR)
             .rates(ExchangeRatesMap::new())
             .build();
-        let result = exchange_rates.convert(100.0, Currency::JPY);
+        let result = exchange_rates.convert(dec!(100.0), Currency::JPY);
         assert!(result.is_err());
     }
 

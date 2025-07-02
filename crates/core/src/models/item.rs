@@ -72,8 +72,8 @@ impl Item {
                     .day(Day::try_from(20).unwrap())
                     .build(),
             )
-            .quantity(1.0)
-            .unit_price(145.0)
+            .quantity(dec!(1.0))
+            .unit_price(dec!(145.0))
             .currency(Currency::SEK)
             .build()
     }
@@ -82,8 +82,8 @@ impl Item {
         Self::builder()
             .name("Coffee")
             .transaction_date(Date::sample())
-            .quantity(2.0)
-            .unit_price(4.0)
+            .quantity(dec!(2.0))
+            .unit_price(dec!(4.0))
             .currency(Currency::GBP)
             .build()
     }
@@ -92,8 +92,8 @@ impl Item {
         Self::builder()
             .name("Sandwich")
             .transaction_date(Date::sample())
-            .quantity(1.0)
-            .unit_price(7.0)
+            .quantity(dec!(1.0))
+            .unit_price(dec!(7.0))
             .currency(Currency::GBP)
             .build()
     }
@@ -102,8 +102,8 @@ impl Item {
         Self::builder()
             .name("Agreed Consulting Fees")
             .transaction_date(Date::sample())
-            .quantity(22.0)
-            .unit_price(500.0)
+            .quantity(dec!(22.0))
+            .unit_price(dec!(500.0))
             .currency(Currency::EUR)
             .build()
     }
@@ -121,13 +121,13 @@ impl Item {
     /// let exchange_rates = ExchangeRates::builder()
     ///     .target_currency(Currency::USD)
     ///     .rates(ExchangeRatesMap::from([
-    ///         (Currency::EUR, UnitPrice::from(1.2)),
-    ///         (Currency::GBP, UnitPrice::from(1.5)),
+    ///         (Currency::EUR, UnitPrice::from(dec!(1.2))),
+    ///         (Currency::GBP, UnitPrice::from(dec!(1.5))),
     ///     ]))
     ///     .build();
     /// let converted_item = item.total_cost_in_target_currency(&exchange_rates).expect("Failed to convert item");
     /// assert_eq!(converted_item.name(), "Coffee");
-    /// assert_eq!(**converted_item.unit_price(), 3.0); // EUR to USD conversion
+    /// assert_eq!(**converted_item.unit_price(), dec!(3.0)); // EUR to USD conversion
     /// assert_eq!(converted_item.currency(), &Currency::USD);
     /// ```
     pub fn total_cost_in_target_currency(
@@ -147,7 +147,7 @@ impl Item {
     /// use klirr_core::prelude::*;
     /// let item = Item::from_str("Coffee,2.5, EUR,3.0, 2025-05-31").expect("Failed to parse Item");
     /// let converted_item = item.with_total_cost();
-    /// assert_eq!(**converted_item.total_cost(), 7.5); // 2.5 * 3.0
+    /// assert_eq!(**converted_item.total_cost(), dec!(7.50)); // 2.5 * 3.0
     /// ```
     pub fn with_total_cost(self) -> ItemConvertedIntoTargetCurrency {
         let cost = Cost::from(**self.quantity() * **self.unit_price());
@@ -187,7 +187,7 @@ impl FromStr for Item {
 
         let name = parts[0].to_string();
         let unit_price: UnitPrice = parts[1]
-            .parse::<f64>()
+            .parse::<Decimal>()
             .map_err(|e| Error::InvalidExpenseItem {
                 invalid_string: s.to_string(),
                 reason: format!("Failed to parse unit_price: {e}"),
@@ -200,7 +200,7 @@ impl FromStr for Item {
         })?;
 
         let quantity: Quantity = parts[3]
-            .parse::<f64>()
+            .parse::<Decimal>()
             .map_err(|e| Error::InvalidExpenseItem {
                 invalid_string: s.to_string(),
                 reason: format!("Failed to parse quantity: {e}"),
@@ -239,9 +239,9 @@ mod tests {
         // N.B. sometimes space after comma, sometimes not.
         let sut = Item::from_str("Coffee,2.5, EUR,3.0, 2025-05-31").expect("Failed to parse Item");
         assert_eq!(sut.name(), "Coffee");
-        assert_eq!(**sut.unit_price(), 2.5);
+        assert_eq!(**sut.unit_price(), dec!(2.5));
         assert_eq!(sut.currency(), &Currency::EUR);
-        assert_eq!(**sut.quantity(), 3.0);
+        assert_eq!(**sut.quantity(), dec!(3.0));
         assert_eq!(
             sut.transaction_date(),
             &Date::from_str("2025-05-31").unwrap()
