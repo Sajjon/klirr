@@ -7,6 +7,7 @@ use derive_more::{Debug, Unwrap};
 /// generating invoices and managing data.
 #[derive(Debug, Parser)]
 #[command(name = BINARY_NAME, about = "Generate and manage invoices")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 pub struct CliArgs {
     /// The command to run, either for generating an invoice or for data management.
     #[command(subcommand)]

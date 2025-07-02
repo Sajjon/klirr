@@ -18,7 +18,6 @@ fn color_from_level(level: Level) -> ColoredString {
 /// # Panics
 /// Panics if `log_level` is not a valid log level.
 pub(crate) fn init_logging_with_level(log_level: log::LevelFilter) {
-    println!("Setting up logging with level: {log_level}");
     fern::Dispatch::new()
         .format(|out, message, record| {
             let time = Local::now().format("%H:%M:%S%.3f");
