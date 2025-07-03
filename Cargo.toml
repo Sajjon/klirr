@@ -4,8 +4,8 @@ members = ["crates/cli", "crates/render", "crates/core"]
 
 [workspace.dependencies]
 # Internal dependencies
-klirr-core = { path = "crates/core", version = "0.1.10" }
-klirr-render = { path = "crates/render", version = "0.1.10" }
+klirr-core = { path = "crates/core", version = "0.1.11" }
+klirr-render = { path = "crates/render", version = "0.1.11" }
 
 # External dependencies
 chrono = "0.4.41"

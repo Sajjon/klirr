@@ -1,6 +1,6 @@
 [package]
 name = "klirr-render"
-version = "0.1.10"
+version = "0.1.11"
 edition = "2024"
 description = "Zero-maintenance and smart FOSS generating beautiful invoices for services and expenses."
 license = "MIT"

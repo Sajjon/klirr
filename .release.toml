@@ -19,16 +19,10 @@ update-workspace-dependencies = true
 [git]
 push-remote = "origin"
 enable-github-release = true
-github-token = "${GITHUB_TOKEN}" # Make sure to export this in your environment
-
-[packages.klirr-core]
-tag = false
-publish = true
+github-token = "${GITHUB_TOKEN}"
 
 [packages.klirr-render]
-tag = false
-publish = true
+tag-name = ""
 
-[packages.klirr]
-tag = true
-publish = true
+[packages.klirr-core]
+tag-name = ""
