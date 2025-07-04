@@ -1,5 +1,6 @@
 mod company_information;
 mod currency;
+mod email;
 mod expensed_months;
 mod footer_text;
 mod hex_color;
@@ -15,6 +16,7 @@ mod timestamped_invoice_number;
 
 pub use company_information::*;
 pub use currency::*;
+pub use email::*;
 pub use expensed_months::*;
 pub use footer_text::*;
 pub use hex_color::*;

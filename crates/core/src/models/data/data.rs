@@ -35,6 +35,11 @@ pub struct Data {
     #[builder(setter(into))]
     #[getset(get = "pub")]
     expensed_months: ExpensedMonths,
+
+    /// Email settings for sending the invoice.
+    #[builder(setter(into), default)]
+    #[getset(get = "pub")]
+    email_settings: Option<EmailSettings>,
 }
 
 impl Data {

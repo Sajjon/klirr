@@ -20,20 +20,24 @@ fn open_path(path: impl AsRef<std::path::Path>) {
 
 pub fn run(input: CliArgs) {
     match input.command {
+        Command::Email(email_input) => {
+            let _ = run_email_command(email_input.command())
+                .inspect_err(|e| error!("Failed to execute email command: {}", e));
+        }
         Command::Sample => {
             let _ = render_sample()
                 .inspect_err(|e| {
                     error!("Error creating sample invoice: {}", e);
                 })
-                .inspect(|path| {
-                    open_path(path);
+                .inspect(|outcome| {
+                    open_path(outcome.saved_at());
                 });
         }
         Command::Invoice(invoice_input) => {
             let _ = run_invoice_command(invoice_input)
                 .inspect_err(|e| error!("Error creating PDF: {}", e))
-                .inspect(|path| {
-                    open_path(path);
+                .inspect(|outcome| {
+                    open_path(outcome.saved_at());
                 });
         }
         Command::Data(data_admin_input) => {

@@ -58,7 +58,16 @@ pub fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<(
     info!("✅ Successfully saved file at: {}", path.as_ref().display());
     Ok(())
 }
-
+pub fn save_email_settings_with_base_path(
+    email_settings: EmailSettings,
+    base_path: impl AsRef<Path>,
+) -> Result<()> {
+    let base_path = base_path.as_ref();
+    save_to_disk(
+        &email_settings,
+        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EMAIL_SETTINGS),
+    )
+}
 pub fn save_data_with_base_path(data: Data, base_path: impl AsRef<Path>) -> Result<()> {
     let base_path = base_path.as_ref();
     save_to_disk(
@@ -96,6 +105,7 @@ pub fn load_data<T: DeserializeOwned>(base_path: impl AsRef<Path>, name: &str) -
     deserialize_contents_of_ron(path_to_ron_file_with_base(base_path, name))
 }
 
+pub const DATA_FILE_NAME_EMAIL_SETTINGS: &str = "email";
 pub const DATA_FILE_NAME_VENDOR: &str = "vendor";
 pub const DATA_FILE_NAME_CLIENT: &str = "client";
 pub const DATA_FILE_NAME_PAYMENT: &str = "payment";

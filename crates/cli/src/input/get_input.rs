@@ -19,12 +19,32 @@ pub struct CliArgs {
 #[derive(Debug, Subcommand, Unwrap)]
 pub enum Command {
     Sample,
+    Email(EmailInput),
 
     /// The CLI arguments for generating an invoice PDF.
     Invoice(InvoiceInput),
 
     /// CLI arguments for admin tasks related to data.
     Data(DataAdminInput),
+}
+
+#[derive(Debug, Args, Getters, PartialEq)]
+pub struct EmailInput {
+    #[command(subcommand)]
+    #[getset(get = "pub")]
+    command: EmailInputCommand,
+}
+
+#[derive(Debug, Subcommand, Unwrap, PartialEq)]
+pub enum EmailInputCommand {
+    /// Initializes the data related to sending emails in the data directory,
+    Init,
+    /// Validates the data related to sending emails in the data directory,
+    Validate,
+    /// Sends an email with a sample invoice as PDF attachment using the data
+    /// in the data directory, which includes email account, SMTP server and
+    /// recipient information.
+    Test,
 }
 
 /// The CLI arguments for data management, such as initializing the data directory,
@@ -35,13 +55,13 @@ pub struct DataAdminInput {
     /// validating the data, or recording expenses or month off.
     #[command(subcommand)]
     #[getset(get = "pub")]
-    command: DataAdminInputCommands,
+    command: DataAdminInputCommand,
 }
 
 /// The commands available for data management, such as initializing the data directory,
 /// validating the data, or recording expenses or month off.
 #[derive(Debug, Subcommand, Unwrap, PartialEq)]
-pub enum DataAdminInputCommands {
+pub enum DataAdminInputCommand {
     /// Initializes the data in the data directory, creating it if it does not exist.
     /// Such as information about you as a vendor and your client, payment information
     /// pricing etc
@@ -224,7 +244,7 @@ mod tests {
             assert!(matches!(
                 input.command,
                 Command::Data(DataAdminInput {
-                    command: DataAdminInputCommands::Init
+                    command: DataAdminInputCommand::Init
                 })
             ));
         }
@@ -235,7 +255,7 @@ mod tests {
             assert!(matches!(
                 input.command,
                 Command::Data(DataAdminInput {
-                    command: DataAdminInputCommands::Validate
+                    command: DataAdminInputCommand::Validate
                 })
             ));
         }
@@ -259,7 +279,7 @@ mod tests {
             ]);
             assert_eq!(
                 *input.command.unwrap_data().command(),
-                DataAdminInputCommands::Expenses(ExpensesInput {
+                DataAdminInputCommand::Expenses(ExpensesInput {
                     month: YearAndMonth::from_str("2025-05").unwrap(),
                     expenses: vec![item_1, item_2]
                 })

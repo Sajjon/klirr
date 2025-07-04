@@ -5,6 +5,7 @@ mod file_path_logic;
 mod prepare_data;
 mod read_write_data;
 mod save_pdf_location_to_tmp_file;
+mod send_email;
 mod serde_to_typst;
 
 pub use calendar_logic::*;
@@ -14,4 +15,5 @@ pub use file_path_logic::*;
 pub use prepare_data::*;
 pub use read_write_data::*;
 pub use save_pdf_location_to_tmp_file::*;
+pub use send_email::*;
 pub use serde_to_typst::*;

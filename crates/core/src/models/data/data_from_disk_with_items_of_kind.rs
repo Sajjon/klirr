@@ -71,12 +71,16 @@ impl<Items: Serialize + MaybeIsExpenses> DataFromDiskWithItemsOfKind<Items> {
     ///   .output_path(OutputPath::Name("invoice.pdf".into()))
     ///   .build();
     ///
-    /// let absolute_path = data.absolute_path().unwrap();
-    /// assert!(absolute_path.ends_with("invoice.pdf"));
+    /// let path_and_name = data.absolute_path_and_name().unwrap();
+    /// assert!(path_and_name.path().ends_with("invoice.pdf"));
+    /// assert_eq!(path_and_name.name(), "invoice.pdf");
     /// ```
-    pub fn absolute_path(&self) -> Result<PathBuf> {
+    pub fn absolute_path_and_name(&self) -> Result<PathAndName> {
         match &self.output_path {
-            OutputPath::AbsolutePath(path) => Ok(path.clone()),
+            OutputPath::AbsolutePath(path) => Ok(PathAndName::builder()
+                .path(path.clone())
+                .name(path.file_name().unwrap().to_string_lossy())
+                .build()),
             OutputPath::Name(name) => {
                 let mut path =
                     dirs_next::home_dir().ok_or(Error::FailedToCreateOutputDirectory {
@@ -84,10 +88,23 @@ impl<Items: Serialize + MaybeIsExpenses> DataFromDiskWithItemsOfKind<Items> {
                     })?;
                 path.push(INVOICES_FOLDER_NAME);
                 path.push(name);
-                Ok(path)
+                Ok(PathAndName::builder().path(path).name(name.clone()).build())
             }
         }
     }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters)]
+pub struct PathAndName {
+    /// The absolute path to the file.
+    #[builder(setter(into))]
+    #[getset(get = "pub")]
+    path: PathBuf,
+
+    /// The name of the file.
+    #[builder(setter(into))]
+    #[getset(get = "pub")]
+    name: String,
 }
 
 impl<Items: Serialize + MaybeIsExpenses + HasSample> HasSample
@@ -151,11 +168,9 @@ mod tests {
             .payment_info(PaymentInformation::sample())
             .line_items(LineItemsPricedInSourceCurrency::sample())
             .build();
-        assert!(
-            data.absolute_path()
-                .unwrap()
-                .ends_with("invoices/invoice.pdf")
-        );
+        let path_and_name = data.absolute_path_and_name().unwrap();
+        assert!(path_and_name.path().ends_with("invoices/invoice.pdf"));
+        assert!(path_and_name.name().ends_with("invoice.pdf"));
     }
 
     #[test]
@@ -169,7 +184,9 @@ mod tests {
             .payment_info(PaymentInformation::sample())
             .line_items(LineItemsPricedInSourceCurrency::sample())
             .build();
-        assert_eq!(data.absolute_path().unwrap(), custom_path);
+        let path_and_name = data.absolute_path_and_name().unwrap();
+        assert_eq!(path_and_name.path(), &custom_path);
+        assert_eq!(path_and_name.name(), "invoice.pdf");
     }
 
     #[test]

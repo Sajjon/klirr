@@ -8,14 +8,17 @@ documentation = "https://docs.rs/klirr-core"
 repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
-# External dependencies
-chrono.workspace = true
+aes-gcm.workspace = true
+chrono.workspace = true                                            # External dependencies
 derive_more.workspace = true
 dirs-next.workspace = true
 getset.workspace = true
+hex.workspace = true
+hkdf.workspace = true
 indexmap = { version = "2.9.0", features = ["serde"] }
 indoc = "2.0.6"
 lazy_static = "1.5.0"
+lettre.workspace = true
 log.workspace = true
 reqwest = { version = "0.12.19", features = ["blocking", "json"] }
 ron.workspace = true
@@ -23,9 +26,11 @@ rust_decimal.workspace = true
 serde_json.workspace = true
 serde_with = "3.9"
 serde.workspace = true
+sha2.workspace = true
 strum.workspace = true
 thiserror.workspace = true
 typed-builder.workspace = true
+zeroize.workspace = true
 
 [dev-dependencies]
 httpmock = "0.7.0"

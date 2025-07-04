@@ -6,7 +6,7 @@ pub fn create_pdf_with_data_base_path(
     data_base_path: impl AsRef<Path>,
     input: ValidInput,
     render: impl Fn(L18n, PreparedData, Layout) -> Result<Pdf>,
-) -> Result<PathBuf> {
+) -> Result<NamedPdf> {
     let data = read_data_from_disk_with_base_path(data_base_path)?;
     create_pdf_with_data(data, input, render)
 }
@@ -17,15 +17,21 @@ pub fn create_pdf_with_data(
     data: Data,
     input: ValidInput,
     render: impl Fn(L18n, PreparedData, Layout) -> Result<Pdf>,
-) -> Result<PathBuf> {
-    let l18n = get_localization(input.language())?;
+) -> Result<NamedPdf> {
+    let l18n: L18n = get_localization(input.language())?;
     let layout = *input.layout();
     let data = prepare_invoice_input_data(data, input, ExchangeRatesFetcher::default())?;
-    let output_path = data.absolute_path()?;
+    let output_path_and_name = data.absolute_path_and_name()?;
+    let output_path = output_path_and_name.path().to_owned();
+    let name = output_path_and_name.name().to_owned();
     create_folder_to_parent_of_path_if_needed(&output_path)?;
     let pdf = render(l18n, data, layout)?;
-    save_pdf(pdf, &output_path)?;
-    Ok(output_path)
+    save_pdf(pdf.clone(), &output_path)?;
+    Ok(NamedPdf::builder()
+        .pdf(pdf)
+        .saved_at(output_path.clone())
+        .name(name)
+        .build())
 }
 
 /// Saves the PDF file `pdf` to the specified path `pdf_path`.
@@ -54,13 +60,13 @@ mod tests {
             .month(YearAndMonth::sample())
             .build();
         let dummy_pdf_data = Vec::from(b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n");
-        let path = create_pdf_with_data(Data::sample(), input, |_, _, _| {
+        let named_pdf = create_pdf_with_data(Data::sample(), input, |_, _, _| {
             // Simulate PDF rendering
             Ok(Pdf::from(dummy_pdf_data.clone()))
         })
         .unwrap();
-        assert_eq!(path, out);
-        let result = std::fs::read(&path).unwrap();
+        assert_eq!(named_pdf.saved_at(), &out);
+        let result = std::fs::read(named_pdf.saved_at()).unwrap();
         assert_eq!(result, dummy_pdf_data);
     }
 

@@ -1,6 +1,15 @@
 use crate::prelude::*;
 use serde::de::DeserializeOwned;
 
+fn input_email_data_at(
+    write_path: impl AsRef<Path>,
+    provide_data: impl FnOnce() -> Result<EmailSettings>,
+) -> Result<()> {
+    let email_settings = provide_data()?;
+    save_email_settings_with_base_path(email_settings, write_path)?;
+    Ok(())
+}
+
 fn input_data_at(
     default_data: Data,
     write_path: impl AsRef<Path>,
@@ -54,6 +63,20 @@ pub fn init_data_at(
     let write_path = write_path.as_ref();
     info!("Initializing data directory at: {}", write_path.display());
     input_data_at(Data::sample(), write_path, provide_data)?;
+    info!("✅ Data init done, you're ready: `{} invoice`", BINARY_NAME);
+    Ok(())
+}
+
+pub fn init_email_data_at(
+    write_path: impl AsRef<Path>,
+    provide_data: impl FnOnce() -> Result<EmailSettings>,
+) -> Result<()> {
+    let write_path = write_path.as_ref();
+    info!(
+        "Initializing email settings directory at: {}",
+        write_path.display()
+    );
+    input_email_data_at(write_path, provide_data)?;
     info!("✅ Data init done, you're ready: `{} invoice`", BINARY_NAME);
     Ok(())
 }
