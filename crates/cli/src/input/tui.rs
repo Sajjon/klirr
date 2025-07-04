@@ -404,7 +404,7 @@ fn ask_for_email_account_skippable(role: EmailAddressRole) -> Result<Option<Emai
 
 use inquire::validator::Validation;
 
-fn ask_for_password(prompt: &str, help: &str) -> Result<String> {
+fn ask_for_password(with_confirmation: bool, prompt: &str, help: &str) -> Result<String> {
     // We use 4 as character minimum length for SMTP app passwords
     // and encryption passwords.
     let validator = |input: &str| {
@@ -418,11 +418,19 @@ fn ask_for_password(prompt: &str, help: &str) -> Result<String> {
         }
     };
 
-    Password::new(prompt)
+    let help_message = format!("{} (Press CTRL+R to reveal)", help);
+
+    let mut inquire = Password::new(prompt)
         .with_display_toggle_enabled()
         .with_display_mode(PasswordDisplayMode::Masked)
-        .with_help_message(&format!("{} (Press CTRL+R to reveal)", help))
-        .with_validator(validator)
+        .with_help_message(&help_message)
+        .with_validator(validator);
+
+    if !with_confirmation {
+        inquire = inquire.without_confirmation();
+    }
+
+    inquire
         .prompt()
         .map_err(|e| Error::InvalidPasswordForEmail {
             purpose: prompt.to_owned(),
@@ -430,14 +438,24 @@ fn ask_for_password(prompt: &str, help: &str) -> Result<String> {
         })
 }
 
-pub fn ask_for_email() -> Result<EmailSettings> {
-    config_render();
-
-    let smtp_app_password = ask_for_password("SMTP App Password", "Used to send email")?;
-    let smtp_app_password_encryption_password = ask_for_password(
+fn ask_for_email_encryption_password_with_confirmation(with_confirmation: bool) -> Result<String> {
+    ask_for_password(
+        with_confirmation,
         "SMTP App Password Encryption",
         "Used to encrypt the SMTP app password",
-    )?;
+    )
+}
+
+pub fn ask_for_email_encryption_password() -> Result<String> {
+    ask_for_email_encryption_password_with_confirmation(false)
+}
+
+pub fn ask_for_email() -> Result<EncryptedEmailSettings> {
+    config_render();
+
+    let smtp_app_password = ask_for_password(true, "SMTP App Password", "Used to send email")?;
+    let smtp_app_password_encryption_password =
+        ask_for_email_encryption_password_with_confirmation(true)?;
     let smtp_server = CustomType::<SmtpServer>::new("SMTP server?")
         .with_help_message("The SMTP server to use for sending emails")
         .with_default(SmtpServer::default())
@@ -458,10 +476,10 @@ pub fn ask_for_email() -> Result<EmailSettings> {
         smtp_app_password,
         smtp_app_password_encryption_password,
     );
-    let email_settings = EmailSettings::builder()
+    let email_settings = EncryptedEmailSettings::builder()
         .sender(sender)
         .smtp_server(smtp_server)
-        .encrypted_smtp_app_password(encrypted_smtp_app_password)
+        .smtp_app_password(encrypted_smtp_app_password)
         .reply_to(reply_to)
         .public_recipients(recipients.clone())
         .bcc_recipients(bcc_recipients)

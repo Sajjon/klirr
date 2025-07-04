@@ -79,15 +79,21 @@ fn run_invoice_command_with_base_path(
     Ok(pdf_location)
 }
 
-fn init_email_data_with(provide_data: impl FnOnce() -> Result<EmailSettings>) -> Result<()> {
-    init_email_data_at(data_dir_create_if(true), provide_data)
+fn init_email_data_with(
+    provide_data: impl FnOnce() -> Result<EncryptedEmailSettings>,
+) -> Result<()> {
+    init_email_data_at(data_dir(), provide_data)
 }
 pub fn init_email_data() -> Result<()> {
     init_email_data_with(ask_for_email)
 }
-pub fn validate_email_data() -> Result<()> {
-    unimplemented!()
+fn validate_email_data_with(ask_for_email_password: impl FnOnce() -> Result<String>) -> Result<()> {
+    validate_email_data_at(data_dir(), ask_for_email_password)
 }
+pub fn validate_email_data() -> Result<()> {
+    validate_email_data_with(ask_for_email_encryption_password)
+}
+
 pub fn load_email_data_and_send_test_email() -> Result<()> {
     unimplemented!()
 }

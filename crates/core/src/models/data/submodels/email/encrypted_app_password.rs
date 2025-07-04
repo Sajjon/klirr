@@ -1,7 +1,13 @@
 use crate::prelude::*;
 
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
+
+#[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct EncryptedAppPassword(Vec<u8>);
+#[serde(transparent)]
+pub struct EncryptedAppPassword(#[serde_as(as = "serde_with::hex::Hex")] Vec<u8>);
+
 impl EncryptedAppPassword {
     pub fn new_by_deriving_and_encrypting(
         app_password: String,

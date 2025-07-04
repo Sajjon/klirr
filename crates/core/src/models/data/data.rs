@@ -39,7 +39,7 @@ pub struct Data {
     /// Email settings for sending the invoice.
     #[builder(setter(into), default)]
     #[getset(get = "pub")]
-    email_settings: Option<EmailSettings>,
+    email_settings: Option<EncryptedEmailSettings>,
 }
 
 impl Data {

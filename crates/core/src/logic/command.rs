@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 
 fn input_email_data_at(
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce() -> Result<EmailSettings>,
+    provide_data: impl FnOnce() -> Result<EncryptedEmailSettings>,
 ) -> Result<()> {
     let email_settings = provide_data()?;
     save_email_settings_with_base_path(email_settings, write_path)?;
@@ -67,9 +67,27 @@ pub fn init_data_at(
     Ok(())
 }
 
+pub fn validate_email_data_at(
+    read_path: impl AsRef<Path>,
+    ask_for_email_password: impl FnOnce() -> Result<String>,
+) -> Result<()> {
+    let read_path = read_path.as_ref();
+    info!("Validating email settings at: {}", read_path.display());
+    let email_settings: EncryptedEmailSettings =
+        load_data(read_path, DATA_FILE_NAME_EMAIL_SETTINGS)?;
+    let encryption_password = ask_for_email_password()?;
+    let email_settings = email_settings.decrypt_smtp_app_password(encryption_password)?;
+    info!(
+        "✅ Email settings validated successfully, ready to send emails from: {} using #{} characters long app password",
+        email_settings.sender().email(),
+        email_settings.smtp_app_password().len()
+    );
+    Ok(())
+}
+
 pub fn init_email_data_at(
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce() -> Result<EmailSettings>,
+    provide_data: impl FnOnce() -> Result<EncryptedEmailSettings>,
 ) -> Result<()> {
     let write_path = write_path.as_ref();
     info!(

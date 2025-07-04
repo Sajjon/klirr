@@ -59,7 +59,7 @@ pub fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<(
     Ok(())
 }
 pub fn save_email_settings_with_base_path(
-    email_settings: EmailSettings,
+    email_settings: EncryptedEmailSettings,
     base_path: impl AsRef<Path>,
 ) -> Result<()> {
     let base_path = base_path.as_ref();
