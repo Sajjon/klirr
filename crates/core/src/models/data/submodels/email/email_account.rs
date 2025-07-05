@@ -9,3 +9,12 @@ pub struct EmailAccount {
     #[getset(get = "pub")]
     email: EmailAddress,
 }
+
+impl HasSample for EmailAccount {
+    fn sample() -> Self {
+        Self::builder()
+            .name("Sample Sender".to_string())
+            .email(EmailAddress::sample())
+            .build()
+    }
+}

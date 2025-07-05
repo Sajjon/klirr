@@ -59,6 +59,21 @@ pub struct EmailSettings<AppPassword: Zeroize> {
     bcc_recipients: IndexSet<EmailAddress>,
 }
 
+impl<T: Zeroize + HasSample> HasSample for EmailSettings<T> {
+    fn sample() -> Self {
+        Self::builder()
+            .smtp_app_password(T::sample())
+            .proto_email(ProtoEmail::default())
+            .reply_to(None)
+            .smtp_server(SmtpServer::default())
+            .sender(EmailAccount::sample())
+            .public_recipients([EmailAddress::sample_alice(), EmailAddress::sample_bob()])
+            .cc_recipients([EmailAddress::sample_carol()])
+            .bcc_recipients([EmailAddress::sample_dave(), EmailAddress::sample_erin()])
+            .build()
+    }
+}
+
 impl EncryptedEmailSettings {
     fn derive_and_decrypt_smtp_app_password(
         &self,

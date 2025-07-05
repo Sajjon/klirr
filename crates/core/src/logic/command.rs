@@ -363,4 +363,19 @@ mod tests {
         let edited_data = read_data_from_disk_with_base_path(tempdir.path()).unwrap();
         assert_eq!(*edited_data.client(), second);
     }
+
+    #[test]
+    fn test_input_email_data_at() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let email_settings = EncryptedEmailSettings::sample();
+        let result = input_email_data_at(tempdir.path(), || Ok(email_settings.clone()));
+        assert!(
+            result.is_ok(),
+            "Expected email data input to succeed, got: {:?}",
+            result
+        );
+        let loaded_email_settings: EncryptedEmailSettings =
+            load_data(tempdir.path(), DATA_FILE_NAME_EMAIL_SETTINGS).unwrap();
+        assert_eq!(email_settings, loaded_email_settings);
+    }
 }
