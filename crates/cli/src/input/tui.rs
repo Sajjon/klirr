@@ -1,10 +1,12 @@
 use crate::prelude::*;
 use inquire::{
-    Confirm, CustomType, DateSelect, InquireError, Password, PasswordDisplayMode, Text,
+    Confirm, CustomType, DateSelect, InquireError, Text,
     error::InquireResult,
     set_global_render_config,
     ui::{RenderConfig, StyleSheet},
 };
+use rpassword::prompt_password;
+use secrecy::{ExposeSecret, SecretString};
 
 const HOW_TO_SKIP_INSTRUCTION: &str = "Skip with ESC";
 
@@ -402,43 +404,54 @@ fn ask_for_email_account_skippable(role: EmailAddressRole) -> Result<Option<Emai
     ))
 }
 
-use inquire::validator::Validation;
-
-fn ask_for_password(with_confirmation: bool, prompt: &str, help: &str) -> Result<String> {
-    // We use 4 as character minimum length for SMTP app passwords
-    // and encryption passwords.
-    let validator = |input: &str| {
-        let min_length = 4;
-        if input.chars().count() < min_length {
-            Ok(Validation::Invalid(
-                format!("Password must have at least {} characters.", min_length).into(),
-            ))
-        } else {
-            Ok(Validation::Valid)
-        }
-    };
-
-    let help_message = format!("{} (Press CTRL+R to reveal)", help);
-
-    let mut inquire = Password::new(prompt)
-        .with_display_toggle_enabled()
-        .with_display_mode(PasswordDisplayMode::Masked)
-        .with_help_message(&help_message)
-        .with_validator(validator);
-
-    if !with_confirmation {
-        inquire = inquire.without_confirmation();
-    }
-
-    inquire
-        .prompt()
-        .map_err(|e| Error::InvalidPasswordForEmail {
-            purpose: prompt.to_owned(),
-            underlying: e.to_string(),
+fn validate(input: SecretString, min_length: usize) -> Result<SecretString> {
+    let length = input.expose_secret().len();
+    if length < min_length {
+        Err(Error::EmailPasswordTooShort {
+            min_length,
+            actual_length: length,
         })
+    } else {
+        Ok(input)
+    }
 }
 
-fn ask_for_email_encryption_password_with_confirmation(with_confirmation: bool) -> Result<String> {
+fn ask_for_password_once_with_length(
+    prompt: &str,
+    help: &str,
+    min_length: usize,
+) -> Result<SecretString> {
+    // Password from `read_password` will be zeroize at end of this function,
+    // see https://github.com/conradkleinespel/rooster/pull/50/files
+    prompt_password(format!("{} (min: #{} chars, {})", prompt, min_length, help))
+        .map(SecretString::from)
+        .map_err(|e| Error::InvalidPasswordForEmail {
+            purpose: prompt.to_string(),
+            underlying: e.to_string(),
+        })
+        .and_then(curry2(validate, min_length))
+}
+
+fn ask_for_password_once(prompt: &str, help: &str) -> Result<SecretString> {
+    ask_for_password_once_with_length(prompt, help, 4)
+}
+
+fn ask_for_password(with_confirmation: bool, prompt: &str, help: &str) -> Result<SecretString> {
+    let first = ask_for_password_once(prompt, help)?;
+    if !with_confirmation {
+        return Ok(first);
+    }
+    let second = ask_for_password_once("Please confirm your password", help)?;
+    if first.expose_secret() != second.expose_secret() {
+        return Err(Error::PasswordDoesNotMatch);
+    }
+    // second will be zeroized on drop
+    Ok(first)
+}
+
+fn ask_for_email_encryption_password_with_confirmation(
+    with_confirmation: bool,
+) -> Result<SecretString> {
     ask_for_password(
         with_confirmation,
         "SMTP App Password Encryption",
@@ -446,8 +459,26 @@ fn ask_for_email_encryption_password_with_confirmation(with_confirmation: bool) 
     )
 }
 
-pub fn ask_for_email_encryption_password() -> Result<String> {
+pub fn ask_for_email_encryption_password() -> Result<SecretString> {
     ask_for_email_encryption_password_with_confirmation(false)
+}
+
+fn ask_for_proto_email_atom_template(part: &str) -> Result<EmailAtomTemplate> {
+    CustomType::<EmailAtomTemplate>::new(&format!("Email template for {}", part))
+        .with_help_message(&EmailAtomTemplate::tutorial())
+        .with_default(EmailAtomTemplate::default())
+        .prompt()
+        .map_err(|e| Error::EmailAtomTemplateError {
+            underlying: e.to_string(),
+        })
+}
+fn ask_for_proto_email() -> Result<ProtoEmail> {
+    let subject = ask_for_proto_email_atom_template("subject")?;
+    let body = ask_for_proto_email_atom_template("body")?;
+    Ok(ProtoEmail::builder()
+        .subject_format(subject)
+        .body_format(body)
+        .build())
 }
 
 pub fn ask_for_email() -> Result<EncryptedEmailSettings> {
@@ -465,6 +496,7 @@ pub fn ask_for_email() -> Result<EncryptedEmailSettings> {
         })?;
     let sender = ask_for_email_account(EmailAddressRole::Sender)?;
     let reply_to = ask_for_email_account_skippable(EmailAddressRole::ReplyTo)?;
+    let proto_email = ask_for_proto_email()?;
     let recipients = ask_for_many_email_addresses(EmailAddressRole::Recipient)?;
     if recipients.is_empty() {
         return Err(Error::RecipientAddressesCannotBeEmpty);
@@ -484,7 +516,7 @@ pub fn ask_for_email() -> Result<EncryptedEmailSettings> {
         .public_recipients(recipients.clone())
         .bcc_recipients(bcc_recipients)
         .cc_recipients(cc_recipients)
-        .proto_email(ProtoEmail::default())
+        .proto_email(proto_email)
         .build();
 
     info!("Email settings initialized: {:?}", email_settings);

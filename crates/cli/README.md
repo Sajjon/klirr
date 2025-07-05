@@ -205,8 +205,42 @@ klirr invoice expenses
 ## Email
 Klirr can automatically send an email with the invoice for you after it has been generated.
 
-This requires you to setup an App Password with your email service, for information on
-how to set it up for [Gmail see here](https://myaccount.google.com/apppasswords).
+This requires you to setup an *App Password* with your email service, for information on
+how to set it up for [Gmail see here](https://myaccount.google.com/apppasswords). 
+If you setup klirr to be able to send emails you will be prompted for this *App Password* 
+and you will be prompted for an encryption password which will be used to encrypt 
+the *App Password*. The encryption password can be anything as long as it adheres to
+minimum length requirement (typically 4 chars min).
+
+### Init
+
+Get started with email sending of your invoices by setting up the email configuration, run:
+
+```bash
+klirr email init
+```
+
+Similarly to `klirr data init` you will now be prompted for a series of inputs required to send your email, including sender email, sender *App Password*, encryption password (see Security below for more info), recipients email address and more. 
+
+Later, when using this email sending feature you will always be prompted to input the encryption password, so that klirr can decrypt the *App Password* to be able to send emails.
+
+### Send Test email
+You can try sending a test email using `klirr email test` (you will be prompted for you encryption password).
+
+### Security
+> [!IMPORTANT]
+> Klirr's email feature is safe to use. Klirr uses strong encryption and employes 
+> all IT security best practices to keep your *App Password* safe. 
+It is crucual that an attack does not get access to your *App Password* since email 
+services does not allow users to limit the scope and permission of the *App Password*, with it
+and attacker can read all your emails and send emails to anyone impersonating you!
+
+Therefor, klirr employes these best practices to keep your *App Password* safe:
+0. Key-Derivation: Klirr does not use your encryption password directly, first it's run through a [Hash based Key-Derivation-Function](https://en.wikipedia.org/wiki/HKDF) using a application unique `INFO` (see 'How Should You Introduce Randomness into HKDF?' section of [this blog post](https://soatok.blog/2021/11/17/understanding-hkdf/)) and cryptographically secure random generated [`SALT`](https://en.wikipedia.org/wiki/Salt_(cryptography)), this forms a strong and unique `EncryptionKey`
+0. Advanced Encryption: Klirr uses [AES (Advanced Encryption Standard)] encryption with 256 bits strength, encrypted using the `EncryptionKey` from last step.
+0. Zeroisation: Klirr uses [Zeroisation](https://en.wikipedia.org/wiki/Zeroisation) to eagerly erase sensitive secrets from memory.
+
+You can review how klirr employes these safety measures in the [encryption folder of the code](crates/core/src/logic/encryption).
 
 # Development
 

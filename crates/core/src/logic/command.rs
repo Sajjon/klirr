@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use secrecy::SecretString;
 use serde::de::DeserializeOwned;
 
 fn input_email_data_at(
@@ -69,7 +70,7 @@ pub fn init_data_at(
 
 fn decrypt_email_settings_and<T>(
     read_path: impl AsRef<Path>,
-    ask_for_email_password: impl FnOnce() -> Result<String>,
+    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
     on_decrypt: impl FnOnce(DecryptedEmailSettings) -> Result<T>,
 ) -> Result<T> {
     let read_path = read_path.as_ref();
@@ -119,7 +120,7 @@ impl DecryptedEmailSettings {
 
 pub fn load_email_data_and_send_test_email_at(
     read_path: impl AsRef<Path>,
-    ask_for_email_password: impl FnOnce() -> Result<String>,
+    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
     render_sample: impl FnOnce() -> Result<NamedPdf>,
 ) -> Result<()> {
     let read_path = read_path.as_ref();
@@ -139,7 +140,7 @@ pub fn load_email_data_and_send_test_email_at(
 }
 pub fn validate_email_data_at(
     read_path: impl AsRef<Path>,
-    ask_for_email_password: impl FnOnce() -> Result<String>,
+    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
 ) -> Result<()> {
     let read_path = read_path.as_ref();
     info!("Validating email settings at: {}", read_path.display());

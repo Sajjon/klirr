@@ -6,6 +6,26 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError, PartialEq)]
 pub enum Error {
+    /// Password does not match, e.g. when the user tries to set a password
+    /// and the confirmation password does not match.
+    #[error("Passwords do not match")]
+    PasswordDoesNotMatch,
+
+    /// Email password is too short.
+    #[error(
+        "Email password is too short, expected at least {min_length} characters, but found {actual_length}"
+    )]
+    EmailPasswordTooShort {
+        /// The minimum length of the email password.
+        min_length: usize,
+        /// The actual length of the email password.
+        actual_length: usize,
+    },
+
+    /// Failed to parse the email atom template, e.g. when the template is not valid.
+    #[error("Failed parse email atom template, because: {underlying}")]
+    EmailAtomTemplateError { underlying: String },
+
     /// Invalid email address
     #[error("Invalid email address for: {role}, because: {underlying}")]
     InvalidEmailAddress { role: String, underlying: String },
@@ -29,8 +49,8 @@ pub enum Error {
     #[error("Failed to parse string into a valid UTF-8 string")]
     InvalidUtf8,
 
-    /// Failed to encrypt data with AES.
-    #[error("Failed to encrypt data with AES")]
+    /// Failed to decrypt data with AES.
+    #[error("Failed to decrypt data with AES")]
     AESDecryptionFailed,
 
     /// Invalid AES bytes, e.g. when the length is not as expected.

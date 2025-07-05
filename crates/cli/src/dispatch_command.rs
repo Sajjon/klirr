@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use klirr_render::prelude::render;
+use secrecy::SecretString;
 
 fn init_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
     init_data_at(data_dir_create_if(true), provide_data)
@@ -108,7 +109,9 @@ fn init_email_data_with(
 pub fn init_email_data() -> Result<()> {
     init_email_data_with(ask_for_email)
 }
-fn validate_email_data_with(ask_for_email_password: impl FnOnce() -> Result<String>) -> Result<()> {
+fn validate_email_data_with(
+    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+) -> Result<()> {
     validate_email_data_at(data_dir(), ask_for_email_password)
 }
 pub fn validate_email_data() -> Result<()> {
@@ -116,7 +119,7 @@ pub fn validate_email_data() -> Result<()> {
 }
 
 fn load_email_data_and_send_test_email_with(
-    ask_for_email_password: impl FnOnce() -> Result<String>,
+    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
     render_sample: impl FnOnce() -> Result<NamedPdf>,
 ) -> Result<()> {
     load_email_data_and_send_test_email_at(data_dir(), ask_for_email_password, render_sample)

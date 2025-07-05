@@ -2,22 +2,26 @@ use crate::prelude::*;
 
 pub type AesNonce = [u8; 12];
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, TypedBuilder, Getters)]
 pub struct AesGcmSealedBox {
     /// Nonce is 12 bytes
-    pub(super) nonce: AesNonce,
+    #[builder(setter(into))]
+    #[getset(get = "pub")]
+    nonce: AesNonce,
 
     /// Auth tag and encrypted payload
-    pub(super) cipher_text: Vec<u8>,
+    #[builder(setter(into))]
+    #[getset(get = "pub")]
+    cipher_text: Vec<u8>,
 }
 
 impl AesGcmSealedBox {
-    pub const AUTH_TAG_LEN: usize = 16;
-    pub const NONCE_LEN: usize = 12;
-    pub const LOWER_BOUND_LEN: usize = Self::AUTH_TAG_LEN + Self::NONCE_LEN + 1; // at least 1 byte cipher. VERY much LOWER bound
+    const AUTH_TAG_LEN: usize = 16;
+    const NONCE_LEN: usize = 12;
+    const LOWER_BOUND_LEN: usize = Self::AUTH_TAG_LEN + Self::NONCE_LEN + 1; // at least 1 byte cipher. VERY much LOWER bound
 
     pub(super) fn combined(self) -> Vec<u8> {
-        let mut combined = Vec::<u8>::new();
+        let mut combined = Vec::with_capacity(self.nonce.len() + self.cipher_text.len());
         let mut nonce = self.nonce.to_vec();
         let mut cipher_text = self.cipher_text;
         combined.append(&mut nonce);

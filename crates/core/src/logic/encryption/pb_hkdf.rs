@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use hkdf::Hkdf;
+use secrecy::{ExposeSecret, SecretString};
 use sha2::Sha256;
 
 /// A simple `HKDF` based scheme using UTF8 encoding of the password as input.
@@ -23,6 +24,10 @@ impl PbHkdfSha256 {
 
     pub fn derive_key(ikm: impl AsRef<[u8]>) -> EncryptionKey {
         Self::derive_key_with_ikm_salt_info(ikm, None, Some(Self::INFO)).into()
+    }
+
+    pub fn derive_key_from(secret_string: SecretString) -> EncryptionKey {
+        Self::derive_key(secret_string.expose_secret())
     }
 }
 

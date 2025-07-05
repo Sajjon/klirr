@@ -9,7 +9,7 @@ repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
 aes-gcm.workspace = true
-chrono.workspace = true                                            # External dependencies
+chrono.workspace = true
 derive_more.workspace = true
 dirs-next.workspace = true
 getset.workspace = true
@@ -24,6 +24,7 @@ rand.workspace = true
 reqwest = { version = "0.12.19", features = ["blocking", "json"] }
 ron.workspace = true
 rust_decimal.workspace = true
+secrecy.workspace = true
 serde_json.workspace = true
 serde_with = { version = "3.9", features = ["hex"] }
 serde.workspace = true
