@@ -106,7 +106,7 @@ impl From<EmailCredentials> for Credentials {
         )
     }
 }
-pub fn send_email(email: Email, credentials: EmailCredentials) -> Result<()> {
+pub fn send_email_with_credentials(email: Email, credentials: EmailCredentials) -> Result<()> {
     let email_with_sender = EmailWithSender::builder()
         .email(email)
         .sender(credentials.account().clone())
@@ -135,4 +135,24 @@ pub fn send_email(email: Email, credentials: EmailCredentials) -> Result<()> {
         warn!("Email sent, but response was negative: {:?}", response);
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    #[test]
+    fn test_singlepart_from_attachment() {
+        let named_pdf = NamedPdf::builder()
+            .name("test.pdf".to_string())
+            .pdf(Pdf(vec![0xde, 0xad, 0xbe, 0xef])) // Sample PDF data
+            .prepared_data(PreparedData::sample())
+            .saved_at(PathBuf::from("/tmp/test.pdf"))
+            .build();
+        let attachment: Attachment = named_pdf.into();
+        let single_part: SinglePart = attachment.into();
+
+        assert_eq!(hex::encode(single_part.formatted()), "436f6e74656e742d446973706f736974696f6e3a206174746163686d656e743b2066696c656e616d653d22746573742e706466220d0a436f6e74656e742d547970653a206170706c69636174696f6e2f7064660d0a436f6e74656e742d5472616e736665722d456e636f64696e673a206261736536340d0a0d0a3371322b37773d3d0d0a".to_owned());
+    }
 }

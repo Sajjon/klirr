@@ -19,3 +19,14 @@ pub struct NamedPdf {
     #[getset(get = "pub")]
     name: String,
 }
+
+impl HasSample for NamedPdf {
+    fn sample() -> Self {
+        Self::builder()
+            .prepared_data(PreparedData::sample())
+            .pdf(Pdf(vec![0; 100])) // Sample PDF data
+            .saved_at(PathBuf::from("/tmp/sample_invoice.pdf"))
+            .name("sample_invoice.pdf".to_string())
+            .build()
+    }
+}

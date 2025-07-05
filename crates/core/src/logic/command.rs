@@ -118,10 +118,11 @@ impl DecryptedEmailSettings {
     }
 }
 
-pub fn load_email_data_and_send_test_email_at(
+fn load_email_data_and_send_test_email_at_with_send(
     read_path: impl AsRef<Path>,
     ask_for_email_password: impl FnOnce() -> Result<SecretString>,
     render_sample: impl FnOnce() -> Result<NamedPdf>,
+    send_email: impl FnOnce(Email, EmailCredentials) -> Result<()>,
 ) -> Result<()> {
     let read_path = read_path.as_ref();
     info!(
@@ -138,6 +139,20 @@ pub fn load_email_data_and_send_test_email_at(
             })
     })
 }
+
+pub fn load_email_data_and_send_test_email_at(
+    read_path: impl AsRef<Path>,
+    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+    render_sample: impl FnOnce() -> Result<NamedPdf>,
+) -> Result<()> {
+    load_email_data_and_send_test_email_at_with_send(
+        read_path,
+        ask_for_email_password,
+        render_sample,
+        send_email_with_credentials,
+    )
+}
+
 pub fn validate_email_data_at(
     read_path: impl AsRef<Path>,
     ask_for_email_password: impl FnOnce() -> Result<SecretString>,
@@ -377,5 +392,41 @@ mod tests {
         let loaded_email_settings: EncryptedEmailSettings =
             load_data(tempdir.path(), DATA_FILE_NAME_EMAIL_SETTINGS).unwrap();
         assert_eq!(email_settings, loaded_email_settings);
+    }
+
+    #[test]
+    fn test_validate_email_data_at() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let email_settings = EncryptedEmailSettings::sample();
+        input_email_data_at(tempdir.path(), || Ok(email_settings.clone())).unwrap();
+        let result = validate_email_data_at(tempdir.path(), || Ok(SecretString::sample()));
+        assert!(
+            result.is_ok(),
+            "Expected email data validation to succeed, got: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_load_email_data_and_send_test_email_at_with_send() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let email_settings = EncryptedEmailSettings::sample();
+        input_email_data_at(tempdir.path(), || Ok(email_settings.clone())).unwrap();
+
+        let result = load_email_data_and_send_test_email_at_with_send(
+            tempdir.path(),
+            || Ok(SecretString::sample()),
+            || Ok(NamedPdf::sample()),
+            |email, credentials| {
+                assert!(!email.subject().is_empty());
+                assert!(!credentials.account().email().user().is_empty());
+                Ok(())
+            },
+        );
+        assert!(
+            result.is_ok(),
+            "Expected email sending to succeed, got: {:?}",
+            result
+        );
     }
 }

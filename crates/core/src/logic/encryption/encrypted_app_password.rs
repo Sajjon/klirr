@@ -23,11 +23,16 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 #[serde(transparent)]
 pub struct EncryptedAppPassword(#[serde_as(as = "serde_with::hex::Hex")] Vec<u8>);
 
+impl HasSample for SecretString {
+    fn sample() -> Self {
+        Self::from("encryption password")
+    }
+}
 impl HasSample for EncryptedAppPassword {
     fn sample() -> Self {
         Self::new_by_deriving_and_encrypting(
             SecretString::from("super secret"),
-            SecretString::from("encryption password"),
+            SecretString::sample(),
         )
     }
 }
