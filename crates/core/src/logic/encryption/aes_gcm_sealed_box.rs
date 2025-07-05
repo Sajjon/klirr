@@ -52,3 +52,15 @@ impl TryFrom<&[u8]> for AesGcmSealedBox {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_too_few_bytes() {
+        let bytes = [0; AesGcmSealedBox::LOWER_BOUND_LEN - 1];
+        let result = AesGcmSealedBox::try_from(&bytes[..]);
+        assert!(result.is_err());
+    }
+}

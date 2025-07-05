@@ -51,6 +51,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_sample_is_alice() {
+        assert_eq!(EmailAddress::sample(), EmailAddress::sample_alice());
+    }
+
+    #[test]
     fn test_sample_values() {
         assert_eq!(
             HashSet::from([

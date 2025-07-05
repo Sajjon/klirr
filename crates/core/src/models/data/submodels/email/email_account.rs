@@ -31,3 +31,18 @@ impl HasSample for EmailAccount {
         Self::sample_alice()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use super::*;
+
+    #[test]
+    fn test_sample_values_hash() {
+        assert_eq!(
+            HashSet::from([EmailAccount::sample_alice(), EmailAccount::sample_bob()]).len(),
+            2
+        );
+    }
+}

@@ -63,10 +63,8 @@ pub fn save_email_settings_with_base_path(
     base_path: impl AsRef<Path>,
 ) -> Result<()> {
     let base_path = base_path.as_ref();
-    save_to_disk(
-        &email_settings,
-        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EMAIL_SETTINGS),
-    )
+    let path = path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EMAIL_SETTINGS);
+    save_to_disk(&email_settings, path)
 }
 pub fn save_data_with_base_path(data: Data, base_path: impl AsRef<Path>) -> Result<()> {
     let base_path = base_path.as_ref();

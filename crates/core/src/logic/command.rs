@@ -398,7 +398,7 @@ mod tests {
     fn test_validate_email_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         let email_settings = EncryptedEmailSettings::sample();
-        input_email_data_at(tempdir.path(), || Ok(email_settings.clone())).unwrap();
+        init_email_data_at(tempdir.path(), || Ok(email_settings.clone())).unwrap();
         let result = validate_email_data_at(tempdir.path(), || Ok(SecretString::sample()));
         assert!(
             result.is_ok(),
