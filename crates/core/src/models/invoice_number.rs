@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 /// A unique number for the invoice, e.g. `90`
-#[derive(Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq, Eq, From, Deref)]
+#[derive(
+    Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq, Eq, Hash, From, Deref,
+)]
 #[serde(transparent)]
 pub struct InvoiceNumber(u16);
 

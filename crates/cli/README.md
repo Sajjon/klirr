@@ -202,6 +202,12 @@ klirr invoice expenses
 > under the `(Date, FromCurrency, ToCurrency)` triple, to not burden the exchanges
 > API unnecessarily and to make klirr extra fast for you.
 
+## Email
+Klirr can automatically send an email with the invoice for you after it has been generated.
+
+This requires you to setup an App Password with your email service, for information on
+how to set it up for [Gmail see here](https://myaccount.google.com/apppasswords).
+
 # Development
 
 Interested in development? See [development guide](DEVELOPMENT.md)

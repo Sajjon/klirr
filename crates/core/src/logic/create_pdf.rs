@@ -25,12 +25,14 @@ pub fn create_pdf_with_data(
     let output_path = output_path_and_name.path().to_owned();
     let name = output_path_and_name.name().to_owned();
     create_folder_to_parent_of_path_if_needed(&output_path)?;
+    let prepared_data = data.clone();
     let pdf = render(l18n, data, layout)?;
     save_pdf(pdf.clone(), &output_path)?;
     Ok(NamedPdf::builder()
         .pdf(pdf)
         .saved_at(output_path.clone())
         .name(name)
+        .prepared_data(prepared_data)
         .build())
 }
 

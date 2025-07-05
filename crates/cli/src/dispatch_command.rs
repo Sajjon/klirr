@@ -33,15 +33,21 @@ fn record_month_off(month: &YearAndMonth) -> Result<()> {
 
 /// Curry a function that takes two arguments into a function that takes one argument and returns another function.
 /// This is useful for partially applying functions in a functional programming style.
-fn curry<T, U, R>(f: impl FnOnce(T, U) -> R, u: U) -> impl FnOnce(T) -> R {
+pub fn curry2<T, U, R>(f: impl FnOnce(T, U) -> R, u: U) -> impl FnOnce(T) -> R {
     move |t| f(t, u)
+}
+
+/// Curry a function that takes one argument into a function that takes zero argument and returns another function.
+/// This is useful for partially applying functions in a functional programming style.
+pub fn curry1<T, R>(f: impl FnOnce(T) -> R, t: T) -> impl FnOnce() -> R {
+    move || f(t)
 }
 
 pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
     match command {
-        DataAdminInputCommand::Init => init_data(curry(ask_for_data, None)),
+        DataAdminInputCommand::Init => init_data(curry2(ask_for_data, None)),
         DataAdminInputCommand::Validate => validate_data(),
-        DataAdminInputCommand::Edit(input) => edit_data(curry(
+        DataAdminInputCommand::Edit(input) => edit_data(curry2(
             ask_for_data,
             Some(DataSelector::from(*input.selector())),
         )),
@@ -55,11 +61,26 @@ pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
 }
 
 pub fn render_sample() -> Result<NamedPdf> {
+    render_sample_with_nonce(false)
+}
+
+/// The nonce is used to ensure that the PDF is unique each time it is rendered.
+/// This is useful for testing purposes, to avoid email spamming protection mechanisms.
+/// It is not meant to be used in production, where in fact we WANT the PDF to
+/// be identical each time it is rendered.
+pub fn render_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
     let path = dirs_next::home_dir()
         .expect("Expected to be able to find HOME dir")
         .join("klirr_sample.pdf");
+    let mut data = Data::sample();
+    if use_nonce {
+        let vat = format!("VAT{} {}", rand::random::<u64>(), rand::random::<u64>());
+        data = data
+            .clone()
+            .with_client(data.client().clone().with_vat_number(vat));
+    }
     create_pdf_with_data(
-        Data::sample(),
+        data,
         ValidInput::builder()
             .maybe_output_path(path)
             .month(YearAndMonth::last())
@@ -94,14 +115,26 @@ pub fn validate_email_data() -> Result<()> {
     validate_email_data_with(ask_for_email_encryption_password)
 }
 
-pub fn load_email_data_and_send_test_email() -> Result<()> {
-    unimplemented!()
+fn load_email_data_and_send_test_email_with(
+    ask_for_email_password: impl FnOnce() -> Result<String>,
+    render_sample: impl FnOnce() -> Result<NamedPdf>,
+) -> Result<()> {
+    load_email_data_and_send_test_email_at(data_dir(), ask_for_email_password, render_sample)
 }
-pub fn run_email_command(command: &EmailInputCommand) -> Result<()> {
+pub fn load_email_data_and_send_test_email(
+    render_sample: impl FnOnce() -> Result<NamedPdf>,
+) -> Result<()> {
+    load_email_data_and_send_test_email_with(ask_for_email_encryption_password, render_sample)
+}
+
+pub fn run_email_command(
+    command: &EmailInputCommand,
+    render_sample: impl FnOnce() -> Result<NamedPdf>,
+) -> Result<()> {
     match command {
         EmailInputCommand::Init => init_email_data(),
         EmailInputCommand::Validate => validate_email_data(),
-        EmailInputCommand::Test => load_email_data_and_send_test_email(),
+        EmailInputCommand::Test => load_email_data_and_send_test_email(render_sample),
     }
 }
 

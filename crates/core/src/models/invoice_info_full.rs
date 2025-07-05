@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// A full invoice information structure that includes the derived
 /// invoice number, invoice date, due date and other
 /// details from the `ProtoInvoiceInfo`.
-#[derive(Clone, Debug, Serialize, Deserialize, Getters, TypedBuilder)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, Hash, Deserialize, Getters, TypedBuilder)]
 pub struct InvoiceInfoFull {
     /// The unique number of this invoice, typically a number, e.g. `"90"`
     #[builder(setter(into))]

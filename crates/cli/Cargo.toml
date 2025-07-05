@@ -21,6 +21,7 @@ dirs-next.workspace = true
 fern = "0.7.1"
 inquire = { version = "0.7.5", features = ["date"] }
 log.workspace = true
+rand.workspace = true
 ron.workspace = true
 thiserror.workspace = true
 typed-builder.workspace = true

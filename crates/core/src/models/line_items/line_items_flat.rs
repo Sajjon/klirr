@@ -1,12 +1,12 @@
 use crate::prelude::*;
 
-#[derive(Clone, Debug, Serialize, Getters, TypedBuilder)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, Hash, Getters, TypedBuilder)]
 pub struct LineItemsFlat {
     /// True if this invoice is for expenses only.
     #[getset(get = "pub")]
     is_expenses: bool,
 
-    /// Either a single item (Serivec) or one or more expenses
+    /// Either a single item (Service) or one or more expenses
     #[getset(get = "pub")]
     items: Vec<ItemConvertedIntoTargetCurrency>,
 }

@@ -4,7 +4,11 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
 #[serde_as]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone, PartialEq, Eq, Hash, Serialize, Deserialize, derive_more::Display, derive_more::Debug,
+)]
+#[display("{}", hex::encode(&self.0))]
+#[debug("{}", hex::encode(&self.0))]
 #[serde(transparent)]
 pub struct EncryptedAppPassword(#[serde_as(as = "serde_with::hex::Hex")] Vec<u8>);
 

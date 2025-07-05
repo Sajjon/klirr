@@ -15,7 +15,7 @@ pub trait HasSample: Sized {
 
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
-#[derive(Clone, Debug, Serialize, Deserialize, TypedBuilder, Getters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, TypedBuilder, Getters)]
 pub struct DataFromDiskWithItemsOfKind<Items: Serialize + MaybeIsExpenses> {
     /// Information about this specific invoice.
     #[builder(setter(into))]
@@ -113,8 +113,8 @@ impl<Items: Serialize + MaybeIsExpenses + HasSample> HasSample
     fn sample() -> Self {
         Self::builder()
             .information(InvoiceInfoFull::sample())
-            .vendor(CompanyInformation::sample())
-            .client(CompanyInformation::sample())
+            .vendor(CompanyInformation::sample_vendor())
+            .client(CompanyInformation::sample_client())
             .line_items(Items::sample())
             .payment_info(PaymentInformation::sample())
             .output_path(OutputPath::Name("invoice.pdf".into()))

@@ -8,6 +8,9 @@ pub struct Pdf(pub Vec<u8>);
 pub struct NamedPdf {
     #[builder(setter(into))]
     #[getset(get = "pub")]
+    prepared_data: PreparedData,
+    #[builder(setter(into))]
+    #[getset(get = "pub")]
     pdf: Pdf,
     #[builder(setter(into))]
     #[getset(get = "pub")]

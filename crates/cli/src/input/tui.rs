@@ -484,6 +484,7 @@ pub fn ask_for_email() -> Result<EncryptedEmailSettings> {
         .public_recipients(recipients.clone())
         .bcc_recipients(bcc_recipients)
         .cc_recipients(cc_recipients)
+        .proto_email(ProtoEmail::default())
         .build();
 
     info!("Email settings initialized: {:?}", email_settings);

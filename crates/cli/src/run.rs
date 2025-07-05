@@ -21,8 +21,11 @@ fn open_path(path: impl AsRef<std::path::Path>) {
 pub fn run(input: CliArgs) {
     match input.command {
         Command::Email(email_input) => {
-            let _ = run_email_command(email_input.command())
-                .inspect_err(|e| error!("Failed to execute email command: {}", e));
+            let _ = run_email_command(
+                email_input.command(),
+                curry1(render_sample_with_nonce, true),
+            )
+            .inspect_err(|e| error!("Failed to execute email command: {}", e));
         }
         Command::Sample => {
             let _ = render_sample()

@@ -67,22 +67,90 @@ pub fn init_data_at(
     Ok(())
 }
 
+fn decrypt_email_settings_and<T>(
+    read_path: impl AsRef<Path>,
+    ask_for_email_password: impl FnOnce() -> Result<String>,
+    on_decrypt: impl FnOnce(DecryptedEmailSettings) -> Result<T>,
+) -> Result<T> {
+    let read_path = read_path.as_ref();
+    let email_settings: EncryptedEmailSettings =
+        load_data(read_path, DATA_FILE_NAME_EMAIL_SETTINGS)?;
+    let encryption_password = ask_for_email_password()?;
+    let email_settings = email_settings.decrypt_smtp_app_password(encryption_password)?;
+    on_decrypt(email_settings)
+}
+
+impl From<(DecryptedEmailSettings, NamedPdf)> for Email {
+    fn from((settings, pdf): (DecryptedEmailSettings, NamedPdf)) -> Self {
+        let (subject, body) = settings.proto_email().materialize(pdf.prepared_data());
+        Email::builder()
+            .subject(subject)
+            .body(body)
+            .public_recipients(settings.public_recipients().clone())
+            .cc_recipients(settings.cc_recipients().clone())
+            .bcc_recipients(settings.bcc_recipients().clone())
+            .attachments([Attachment::Pdf(pdf)])
+            .build()
+    }
+}
+
+impl From<DecryptedEmailSettings> for EmailCredentials {
+    fn from(settings: DecryptedEmailSettings) -> Self {
+        EmailCredentials::builder()
+            .account(
+                EmailAccount::builder()
+                    .name(settings.sender().name())
+                    .email(settings.sender().email().clone())
+                    .build(),
+            )
+            .password(settings.smtp_app_password())
+            .smtp_server(settings.smtp_server().clone())
+            .build()
+    }
+}
+
+impl DecryptedEmailSettings {
+    pub fn compose(&self, pdf: NamedPdf) -> (Email, EmailCredentials) {
+        let email = Email::from((self.clone(), pdf));
+        let credentials = EmailCredentials::from(self.clone());
+        (email, credentials)
+    }
+}
+
+pub fn load_email_data_and_send_test_email_at(
+    read_path: impl AsRef<Path>,
+    ask_for_email_password: impl FnOnce() -> Result<String>,
+    render_sample: impl FnOnce() -> Result<NamedPdf>,
+) -> Result<()> {
+    let read_path = read_path.as_ref();
+    info!(
+        "Loading email settings for sending test email from: {}",
+        read_path.display()
+    );
+    decrypt_email_settings_and(read_path, ask_for_email_password, |email_settings| {
+        let sample = render_sample()?;
+        let (email, credentials) = email_settings.compose(sample);
+        send_email(email, credentials)
+            .inspect(|_| info!("Email sent successfully!"))
+            .inspect_err(|e| {
+                error!("Error sending email: {}", e);
+            })
+    })
+}
 pub fn validate_email_data_at(
     read_path: impl AsRef<Path>,
     ask_for_email_password: impl FnOnce() -> Result<String>,
 ) -> Result<()> {
     let read_path = read_path.as_ref();
     info!("Validating email settings at: {}", read_path.display());
-    let email_settings: EncryptedEmailSettings =
-        load_data(read_path, DATA_FILE_NAME_EMAIL_SETTINGS)?;
-    let encryption_password = ask_for_email_password()?;
-    let email_settings = email_settings.decrypt_smtp_app_password(encryption_password)?;
-    info!(
-        "✅ Email settings validated successfully, ready to send emails from: {} using #{} characters long app password",
-        email_settings.sender().email(),
-        email_settings.smtp_app_password().len()
-    );
-    Ok(())
+    decrypt_email_settings_and(read_path, ask_for_email_password, |email_settings| {
+        info!(
+            "✅ Email settings validated successfully, ready to send emails from: {} using #{} characters long app password",
+            email_settings.sender().email(),
+            email_settings.smtp_app_password().len()
+        );
+        Ok(())
+    })
 }
 
 pub fn init_email_data_at(

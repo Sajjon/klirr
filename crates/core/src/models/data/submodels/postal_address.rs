@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 /// The postal address of a company
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters, WithSetters)]
+#[derive(
+    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, TypedBuilder, Getters, WithSetters,
+)]
 pub struct PostalAddress {
     /// The street address of a company, e.g.
     /// ```text

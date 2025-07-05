@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 /// Information about a company
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters, WithSetters)]
+#[derive(
+    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, TypedBuilder, Getters, WithSetters,
+)]
 pub struct CompanyInformation {
     /// Name of the person responsible for the invoice, e.g. `"John Doe"`.
     ///
