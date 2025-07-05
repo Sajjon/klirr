@@ -20,3 +20,13 @@ pub struct EmailCredentials {
     #[getset(get = "pub")]
     password: String,
 }
+
+impl HasSample for EmailCredentials {
+    fn sample() -> Self {
+        Self::builder()
+            .smtp_server(SmtpServer::default())
+            .account(EmailAccount::sample_alice())
+            .password("open sesame".to_string())
+            .build()
+    }
+}

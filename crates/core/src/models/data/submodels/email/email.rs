@@ -33,3 +33,18 @@ impl Email {
         self.body.clone().unwrap_or_default()
     }
 }
+
+impl HasSample for Email {
+    fn sample() -> Self {
+        Self::builder()
+            .public_recipients(IndexSet::from_iter(vec![EmailAddress::sample_bob()]))
+            .cc_recipients(IndexSet::from_iter(vec![EmailAddress::sample_carol()]))
+            .bcc_recipients(IndexSet::from_iter(vec![EmailAddress::sample_erin()]))
+            .subject("Sample Email Subject".to_string())
+            .body("This is a sample email body.".to_string())
+            .attachments(IndexSet::from_iter(vec![Attachment::Pdf(
+                NamedPdf::sample(),
+            )]))
+            .build()
+    }
+}

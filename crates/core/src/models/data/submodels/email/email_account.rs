@@ -10,11 +10,24 @@ pub struct EmailAccount {
     email: EmailAddress,
 }
 
+impl EmailAccount {
+    pub fn sample_alice() -> Self {
+        Self::builder()
+            .name("Alice Smith".to_string())
+            .email(EmailAddress::sample_alice())
+            .build()
+    }
+
+    pub fn sample_bob() -> Self {
+        Self::builder()
+            .name("Bob Johnson".to_string())
+            .email(EmailAddress::sample_bob())
+            .build()
+    }
+}
+
 impl HasSample for EmailAccount {
     fn sample() -> Self {
-        Self::builder()
-            .name("Sample Sender".to_string())
-            .email(EmailAddress::sample())
-            .build()
+        Self::sample_alice()
     }
 }

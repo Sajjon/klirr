@@ -6,6 +6,7 @@ mod email_address;
 mod email_atom_template;
 mod email_credentials;
 mod email_settings;
+mod lettre_bridge;
 mod proto_email;
 mod smtp_server;
 
@@ -16,5 +17,6 @@ pub use email_address::*;
 pub use email_atom_template::*;
 pub use email_credentials::*;
 pub use email_settings::*;
+pub use lettre_bridge::*;
 pub use proto_email::*;
 pub use smtp_server::*;

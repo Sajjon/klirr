@@ -35,6 +35,7 @@ typed-builder.workspace = true
 zeroize.workspace = true
 
 [dev-dependencies]
+base64.workspace = true
 httpmock = "0.7.0"
 insta.workspace = true
 pretty_assertions.workspace = true

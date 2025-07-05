@@ -8,6 +8,7 @@ exclude-files = [
     "crates/cli/src/main.rs",
     "crates/cli/src/run.rs",
     "crates/cli/src/dispatch_command.rs",
+    "crates/core/src/logic/send_email.rs",
 ]
 verbose = false
 timeout = "2m"

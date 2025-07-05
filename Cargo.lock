@@ -2443,6 +2443,7 @@ name = "klirr-core"
 version = "0.1.12"
 dependencies = [
  "aes-gcm",
+ "base64 0.22.1",
  "chrono",
  "derive_more",
  "dirs-next",
