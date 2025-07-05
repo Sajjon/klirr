@@ -23,7 +23,7 @@ pub enum Error {
     },
 
     /// Failed to parse the email atom template, e.g. when the template is not valid.
-    #[error("Failed parse email atom template, because: {underlying}")]
+    #[error("Failed to parse email atom template: {underlying}")]
     EmailAtomTemplateError { underlying: String },
 
     /// Invalid email address

@@ -2,12 +2,24 @@ use crate::prelude::*;
 use klirr_render::prelude::render;
 use secrecy::SecretString;
 
+fn init_email_data(
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
+) -> Result<()> {
+    init_email_data_at(data_dir(), provide_data)
+}
+
 fn init_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
     init_data_at(data_dir_create_if(true), provide_data)
 }
 
 fn edit_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
     edit_data_at(data_dir(), provide_data)
+}
+
+fn edit_email_data(
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
+) -> Result<()> {
+    edit_email_data_at(data_dir(), provide_data)
 }
 
 fn validate_data() -> Result<()> {
@@ -101,14 +113,6 @@ fn run_invoice_command_with_base_path(
     Ok(pdf_location)
 }
 
-fn init_email_data_with(
-    provide_data: impl FnOnce() -> Result<EncryptedEmailSettings>,
-) -> Result<()> {
-    init_email_data_at(data_dir(), provide_data)
-}
-pub fn init_email_data() -> Result<()> {
-    init_email_data_with(ask_for_email)
-}
 fn validate_email_data_with(
     ask_for_email_password: impl FnOnce() -> Result<SecretString>,
 ) -> Result<()> {
@@ -135,7 +139,11 @@ pub fn run_email_command(
     render_sample: impl FnOnce() -> Result<NamedPdf>,
 ) -> Result<()> {
     match command {
-        EmailInputCommand::Init => init_email_data(),
+        EmailInputCommand::Edit(input) => edit_email_data(curry2(
+            ask_for_email,
+            Some(EmailSettingsSelector::from(*input.selector())),
+        )),
+        EmailInputCommand::Init => init_email_data(curry2(ask_for_email, None)),
         EmailInputCommand::Validate => validate_email_data(),
         EmailInputCommand::Test => load_email_data_and_send_test_email(render_sample),
     }

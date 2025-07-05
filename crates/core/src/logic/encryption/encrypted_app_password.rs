@@ -52,10 +52,17 @@ impl EncryptedAppPassword {
         Self(combined)
     }
 
-    pub fn decrypt(&self, encryption_key: EncryptionKey) -> Result<String> {
+    pub fn derive_and_decrypt(&self, encryption_password: SecretString) -> Result<SecretString> {
+        let encryption_key = PbHkdfSha256::derive_key_from(encryption_password);
+        self.decrypt(encryption_key)
+    }
+
+    pub fn decrypt(&self, encryption_key: EncryptionKey) -> Result<SecretString> {
         let sealed_box = AesGcmSealedBox::try_from(self.0.as_slice())?;
         let decrypted = AesGcm256::open(sealed_box, encryption_key)?;
-        String::from_utf8(decrypted).map_err(|_| Error::InvalidUtf8)
+        String::from_utf8(decrypted)
+            .map_err(|_| Error::InvalidUtf8)
+            .map(SecretString::from)
     }
 }
 
@@ -75,6 +82,6 @@ mod tests {
             .decrypt(PbHkdfSha256::derive_key_from(encryption_pwd))
             .unwrap();
 
-        assert_eq!(decrypted, app_password.expose_secret());
+        assert_eq!(decrypted.expose_secret(), app_password.expose_secret());
     }
 }

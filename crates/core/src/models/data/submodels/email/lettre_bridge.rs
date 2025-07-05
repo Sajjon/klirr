@@ -3,6 +3,7 @@ use lettre::{
     message::{Mailbox, MultiPart, SinglePart, header::ContentType},
     transport::smtp::authentication::Credentials,
 };
+use secrecy::ExposeSecret;
 
 use crate::prelude::*;
 
@@ -105,7 +106,7 @@ impl From<EmailCredentials> for Credentials {
     fn from(credentials: EmailCredentials) -> Self {
         Credentials::new(
             credentials.account().email().user().to_owned(),
-            credentials.password().clone(),
+            credentials.password().expose_secret().to_owned(),
         )
     }
 }

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use inquire::{
-    Confirm, CustomType, DateSelect, InquireError, Text,
+    Confirm, CustomType, DateSelect, Text,
     error::InquireResult,
     set_global_render_config,
     ui::{RenderConfig, StyleSheet},
@@ -67,6 +67,26 @@ impl<'a, 'o: 'a, T: AsRef<str>> WithOptionalDefault<'o, T> for Text<'a> {
 }
 impl<'a, 'o: 'a, T: Clone> WithOptionalDefault<'o, T> for CustomType<'a, T> {
     fn with_optional_default(self, default: &'o Option<T>) -> Self {
+        match default {
+            Some(value) => self.with_default(value.clone()),
+            None => self,
+        }
+    }
+}
+
+trait WithOptionalRefDefault<'o, T> {
+    fn with_optional_ref_default(self, default: Option<&'o T>) -> Self;
+}
+impl<'a, 'o: 'a, T: AsRef<str>> WithOptionalRefDefault<'o, T> for Text<'a> {
+    fn with_optional_ref_default(self, default: Option<&'o T>) -> Self {
+        match default {
+            Some(value) => self.with_default(value.as_ref()),
+            None => self,
+        }
+    }
+}
+impl<'a, 'o: 'a, T: Clone> WithOptionalRefDefault<'o, T> for CustomType<'a, T> {
+    fn with_optional_ref_default(self, default: Option<&'o T>) -> Self {
         match default {
             Some(value) => self.with_default(value.clone()),
             None => self,
@@ -318,42 +338,42 @@ enum EmailAddressRole {
     Bcc,
 }
 
-fn ask_for_email_address_skippable(role: EmailAddressRole) -> Result<Option<EmailAddress>> {
-    let email = Text::new(&format!("{}'s email address?", role))
+fn ask_for_email_address_skippable(
+    role: EmailAddressRole,
+    default: Option<&EmailAddress>,
+) -> Result<Option<EmailAddress>> {
+    CustomType::<EmailAddress>::new(&format!("{}'s email address?", role))
         .with_help_message(&format_help_skippable(format!(
             "Email address for {}",
             role
         )))
+        .with_optional_ref_default(default)
         .prompt_skippable()
-        .map_err(|e| Error::InvalidEmailAddress {
-            role: role.to_string(),
-            underlying: e.to_string(),
-        })?;
-    let Some(email) = email else {
-        return Ok(None);
-    };
-    EmailAddress::from_str(&email)
-        .map_err(|e| Error::InvalidEmailAddress {
-            role: role.to_string(),
-            underlying: e.to_string(),
-        })
-        .map(Some)
-}
-fn ask_for_email_address(role: EmailAddressRole) -> Result<EmailAddress> {
-    Text::new(&format!("{}'s email address?", role))
-        .with_help_message(&format!("Email address for {}", role))
-        .prompt()
-        .and_then(|s| EmailAddress::from_str(&s).map_err(|e| InquireError::Custom(e.into())))
         .map_err(|e| Error::InvalidEmailAddress {
             role: role.to_string(),
             underlying: e.to_string(),
         })
 }
 
-fn ask_for_many_email_addresses(role: EmailAddressRole) -> Result<IndexSet<EmailAddress>> {
+fn ask_for_email_address(role: EmailAddressRole, default: &EmailAddress) -> Result<EmailAddress> {
+    CustomType::<EmailAddress>::new(&format!("{}'s email address?", role))
+        .with_help_message(&format!("Email address for {}", role))
+        .with_default(default.clone())
+        .prompt()
+        .map_err(|e| Error::InvalidEmailAddress {
+            role: role.to_string(),
+            underlying: e.to_string(),
+        })
+}
+
+fn ask_for_many_email_addresses(
+    role: EmailAddressRole,
+    defaults: &IndexSet<EmailAddress>,
+) -> Result<IndexSet<EmailAddress>> {
     let mut emails = IndexSet::new();
     loop {
-        let Some(email) = ask_for_email_address_skippable(role)? else {
+        let Some(email) = ask_for_email_address_skippable(role, defaults.get_index(emails.len()))?
+        else {
             break;
         };
         if emails.contains(&email) {
@@ -372,31 +392,37 @@ fn ask_for_many_email_addresses(role: EmailAddressRole) -> Result<IndexSet<Email
     Ok(emails)
 }
 
-fn ask_for_email_account(role: EmailAddressRole) -> Result<EmailAccount> {
+fn ask_for_email_account(role: EmailAddressRole, default: &EmailAccount) -> Result<EmailAccount> {
     let name = Text::new(&format!("Email account {} name?", role))
         .with_help_message(&format!("Will show up as the {} name", role))
+        .with_default(default.name())
         .prompt()
         .map_err(|e| Error::InvalidNameForEmail {
             role: role.to_string(),
             underlying: e.to_string(),
         })?;
-    let email = ask_for_email_address(role)?;
+    let email = ask_for_email_address(role, default.email())?;
     Ok(EmailAccount::builder().name(name).email(email).build())
 }
 
-fn ask_for_email_account_skippable(role: EmailAddressRole) -> Result<Option<EmailAccount>> {
+fn ask_for_email_account_skippable(
+    role: EmailAddressRole,
+    default: Option<&EmailAccount>,
+) -> Result<Option<EmailAccount>> {
     let name = Text::new(&format!("Email account {} name?", role))
         .with_help_message(&format_help_skippable(format!(
             "Will show up as the {} name",
             role
         )))
+        .with_optional_ref_default(default.as_ref().map(|d| d.name()))
         .prompt_skippable()
         .map_err(|e| Error::InvalidNameForEmail {
             role: role.to_string(),
             underlying: e.to_string(),
         })?;
     let Some(name) = name else { return Ok(None) };
-    let Some(email) = ask_for_email_address_skippable(role)? else {
+    let Some(email) = ask_for_email_address_skippable(role, default.as_ref().map(|d| d.email()))?
+    else {
         return Ok(None);
     };
     Ok(Some(
@@ -463,65 +489,23 @@ pub fn ask_for_email_encryption_password() -> Result<SecretString> {
     ask_for_email_encryption_password_with_confirmation(false)
 }
 
-fn ask_for_proto_email_atom_template(part: &str) -> Result<EmailAtomTemplate> {
-    CustomType::<EmailAtomTemplate>::new(&format!("Email template for {}", part))
-        .with_help_message(&EmailAtomTemplate::tutorial())
-        .with_default(EmailAtomTemplate::default())
+fn ask_for_proto_email_atom_template(part: &str, default: &TemplatePart) -> Result<TemplatePart> {
+    CustomType::<TemplatePart>::new(&format!("Email template for {}", part))
+        .with_help_message(&TemplatePart::tutorial())
+        .with_default(default.clone())
         .prompt()
         .map_err(|e| Error::EmailAtomTemplateError {
             underlying: e.to_string(),
         })
 }
-fn ask_for_proto_email() -> Result<ProtoEmail> {
-    let subject = ask_for_proto_email_atom_template("subject")?;
-    let body = ask_for_proto_email_atom_template("body")?;
-    Ok(ProtoEmail::builder()
+
+fn ask_for_template(default: &Template) -> Result<Template> {
+    let subject = ask_for_proto_email_atom_template("subject", default.subject_format())?;
+    let body = ask_for_proto_email_atom_template("body", default.body_format())?;
+    Ok(Template::builder()
         .subject_format(subject)
         .body_format(body)
         .build())
-}
-
-pub fn ask_for_email() -> Result<EncryptedEmailSettings> {
-    config_render();
-
-    let smtp_app_password = ask_for_password(true, "SMTP App Password", "Used to send email")?;
-    let smtp_app_password_encryption_password =
-        ask_for_email_encryption_password_with_confirmation(true)?;
-    let smtp_server = CustomType::<SmtpServer>::new("SMTP server?")
-        .with_help_message("The SMTP server to use for sending emails")
-        .with_default(SmtpServer::default())
-        .prompt()
-        .map_err(|e| Error::InvalidSmtpServer {
-            underlying: e.to_string(),
-        })?;
-    let sender = ask_for_email_account(EmailAddressRole::Sender)?;
-    let reply_to = ask_for_email_account_skippable(EmailAddressRole::ReplyTo)?;
-    let proto_email = ask_for_proto_email()?;
-    let recipients = ask_for_many_email_addresses(EmailAddressRole::Recipient)?;
-    if recipients.is_empty() {
-        return Err(Error::RecipientAddressesCannotBeEmpty);
-    }
-    let cc_recipients = ask_for_many_email_addresses(EmailAddressRole::Cc)?;
-    let bcc_recipients = ask_for_many_email_addresses(EmailAddressRole::Bcc)?;
-
-    let encrypted_smtp_app_password = EncryptedAppPassword::new_by_deriving_and_encrypting(
-        smtp_app_password,
-        smtp_app_password_encryption_password,
-    );
-    let email_settings = EncryptedEmailSettings::builder()
-        .sender(sender)
-        .smtp_server(smtp_server)
-        .smtp_app_password(encrypted_smtp_app_password)
-        .reply_to(reply_to)
-        .public_recipients(recipients.clone())
-        .bcc_recipients(bcc_recipients)
-        .cc_recipients(cc_recipients)
-        .proto_email(proto_email)
-        .build();
-
-    info!("Email settings initialized: {:?}", email_settings);
-
-    Ok(email_settings)
 }
 
 fn config_render() {
@@ -533,28 +517,129 @@ fn config_render() {
     );
 }
 
-pub fn ask_for_data(default: Data, data_selector: Option<DataSelector>) -> Result<Data> {
+fn select_or_default<S, T, F>(selector: Option<S>, target: S, default: &T, builder: F) -> Result<T>
+where
+    S: Select,
+    F: FnOnce(&T) -> Result<T>,
+    T: Clone,
+{
+    if selector
+        .as_ref()
+        .map(|s| s.includes(target))
+        .unwrap_or(selector.is_none())
+    {
+        builder(default)
+    } else {
+        Ok(default.clone())
+    }
+}
+
+fn ask_for_smtp_server(default: &SmtpServer) -> Result<SmtpServer> {
+    CustomType::<SmtpServer>::new("SMTP server?")
+        .with_help_message("The SMTP server to use for sending emails")
+        .with_default(default.clone())
+        .prompt()
+        .map_err(|e| Error::InvalidSmtpServer {
+            underlying: e.to_string(),
+        })
+}
+
+pub fn ask_for_email(
+    default: EncryptedEmailSettings,
+    data_selector: Option<EmailSettingsSelector>,
+) -> Result<EncryptedEmailSettings> {
     config_render();
 
-    fn select_or_default<T, F>(
-        selector: Option<DataSelector>,
-        target: DataSelector,
-        default: &T,
-        builder: F,
-    ) -> Result<T>
-    where
-        F: FnOnce(&T) -> Result<T>,
-        T: Clone,
-    {
-        if selector
-            .map(|s| s.includes(target))
-            .unwrap_or(selector.is_none())
-        {
-            builder(default)
-        } else {
-            Ok(default.clone())
-        }
+    let is_editing_but_skip_secrets = data_selector
+        .as_ref()
+        .map(|s| !s.requires_encryption_password())
+        .unwrap_or(false);
+
+    let app_password_encrypted = if is_editing_but_skip_secrets {
+        // not edit secrets
+        default.smtp_app_password().clone()
+    } else {
+        // is init or edit secrets
+        let app_password_decrypted =
+            ask_for_password(true, "SMTP App Password", "Used to send email")?;
+        let encryption_password = ask_for_email_encryption_password_with_confirmation(true)?;
+        EncryptedAppPassword::new_by_deriving_and_encrypting(
+            app_password_decrypted,
+            encryption_password,
+        )
+    };
+
+    let smtp_server = select_or_default(
+        data_selector,
+        EmailSettingsSelector::SmtpServer,
+        default.smtp_server(),
+        ask_for_smtp_server,
+    )?;
+
+    let sender = select_or_default(
+        data_selector,
+        EmailSettingsSelector::Sender,
+        default.sender(),
+        |d| ask_for_email_account(EmailAddressRole::Sender, d),
+    )?;
+
+    let template = select_or_default(
+        data_selector,
+        EmailSettingsSelector::Template,
+        default.template(),
+        ask_for_template,
+    )?;
+
+    let reply_to = select_or_default(
+        data_selector,
+        EmailSettingsSelector::ReplyTo,
+        default.reply_to(),
+        |d| ask_for_email_account_skippable(EmailAddressRole::ReplyTo, d.as_ref()),
+    )?;
+
+    let recipients = select_or_default(
+        data_selector,
+        EmailSettingsSelector::Recipients,
+        default.recipients(),
+        |d| ask_for_many_email_addresses(EmailAddressRole::Recipient, d),
+    )?;
+
+    if recipients.is_empty() {
+        return Err(Error::RecipientAddressesCannotBeEmpty);
     }
+
+    let bcc_recipients = select_or_default(
+        data_selector,
+        EmailSettingsSelector::BccRecipients,
+        default.bcc_recipients(),
+        |d| ask_for_many_email_addresses(EmailAddressRole::Bcc, d),
+    )?;
+
+    let cc_recipients = select_or_default(
+        data_selector,
+        EmailSettingsSelector::CcRecipients,
+        default.cc_recipients(),
+        |d| ask_for_many_email_addresses(EmailAddressRole::Cc, d),
+    )?;
+
+    let email_settings = EncryptedEmailSettings::builder()
+        .sender(sender)
+        .smtp_server(smtp_server)
+        .smtp_app_password(app_password_encrypted)
+        .reply_to(reply_to)
+        .recipients(recipients.clone())
+        .bcc_recipients(bcc_recipients)
+        .cc_recipients(cc_recipients)
+        .template(template)
+        .build();
+
+    info!("Email settings initialized: {:?}", email_settings);
+
+    Ok(email_settings)
+}
+
+pub fn ask_for_data(default: Data, data_selector: Option<DataSelector>) -> Result<Data> {
+    config_render();
 
     let vendor = select_or_default(data_selector, DataSelector::Vendor, default.vendor(), |d| {
         build_company("Your company", d)

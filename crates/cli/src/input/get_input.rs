@@ -41,6 +41,7 @@ pub enum EmailInputCommand {
     Init,
     /// Validates the data related to sending emails in the data directory,
     Validate,
+    Edit(EditEmailInput),
     /// Sends an email with a sample invoice as PDF attachment using the data
     /// in the data directory, which includes email account, SMTP server and
     /// recipient information.
@@ -81,6 +82,13 @@ pub enum DataAdminInputCommand {
 }
 
 #[derive(Debug, Args, Getters, PartialEq)]
+pub struct EditEmailInput {
+    #[arg(value_enum)]
+    #[getset(get = "pub")]
+    selector: EditEmailInputSelector,
+}
+
+#[derive(Debug, Args, Getters, PartialEq)]
 pub struct EditDataInput {
     #[arg(value_enum)]
     #[getset(get = "pub")]
@@ -96,6 +104,38 @@ pub enum EditDataInputSelector {
     Information,
     PaymentInfo,
     ServiceFees,
+}
+
+#[derive(Clone, Copy, Debug, Subcommand, Unwrap, PartialEq, ValueEnum)]
+#[clap(rename_all = "kebab_case")]
+pub enum EditEmailInputSelector {
+    All,
+    AppPassword,
+    EncryptionPassword,
+    Template,
+    Smtp,
+    ReplyTo,
+    Sender,
+    Recipients,
+    Cc,
+    Bcc,
+}
+
+impl From<EditEmailInputSelector> for EmailSettingsSelector {
+    fn from(selector: EditEmailInputSelector) -> Self {
+        match selector {
+            EditEmailInputSelector::All => EmailSettingsSelector::All,
+            EditEmailInputSelector::AppPassword => EmailSettingsSelector::AppPassword,
+            EditEmailInputSelector::EncryptionPassword => EmailSettingsSelector::EncryptionPassword,
+            EditEmailInputSelector::Template => EmailSettingsSelector::Template,
+            EditEmailInputSelector::Smtp => EmailSettingsSelector::SmtpServer,
+            EditEmailInputSelector::ReplyTo => EmailSettingsSelector::ReplyTo,
+            EditEmailInputSelector::Sender => EmailSettingsSelector::Sender,
+            EditEmailInputSelector::Recipients => EmailSettingsSelector::Recipients,
+            EditEmailInputSelector::Cc => EmailSettingsSelector::CcRecipients,
+            EditEmailInputSelector::Bcc => EmailSettingsSelector::BccRecipients,
+        }
+    }
 }
 
 impl From<EditDataInputSelector> for DataSelector {

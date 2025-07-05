@@ -1,12 +1,13 @@
 use crate::prelude::*;
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 use serde::de::DeserializeOwned;
 
 fn input_email_data_at(
+    default_data: EncryptedEmailSettings,
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce() -> Result<EncryptedEmailSettings>,
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
 ) -> Result<()> {
-    let email_settings = provide_data()?;
+    let email_settings = provide_data(default_data)?;
     save_email_settings_with_base_path(email_settings, write_path)?;
     Ok(())
 }
@@ -32,8 +33,26 @@ pub enum DataSelector {
     ServiceFees,
 }
 
-impl DataSelector {
-    pub fn includes(&self, target: DataSelector) -> bool {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EmailSettingsSelector {
+    All,
+    AppPassword,
+    EncryptionPassword,
+    Template,
+    SmtpServer,
+    ReplyTo,
+    Sender,
+    Recipients,
+    CcRecipients,
+    BccRecipients,
+}
+
+pub trait Select {
+    fn includes(&self, target: Self) -> bool;
+}
+
+impl Select for DataSelector {
+    fn includes(&self, target: Self) -> bool {
         match self {
             DataSelector::All => true,
             DataSelector::Vendor => matches!(target, DataSelector::Vendor),
@@ -43,6 +62,59 @@ impl DataSelector {
             DataSelector::ServiceFees => matches!(target, DataSelector::ServiceFees),
         }
     }
+}
+
+impl EmailSettingsSelector {
+    pub fn requires_encryption_password(&self) -> bool {
+        use EmailSettingsSelector::*;
+        match self {
+            All | AppPassword | EncryptionPassword => true,
+            Template | SmtpServer | ReplyTo | Sender | Recipients | CcRecipients
+            | BccRecipients => false,
+        }
+    }
+}
+impl Select for EmailSettingsSelector {
+    fn includes(&self, target: Self) -> bool {
+        match self {
+            EmailSettingsSelector::All => true,
+            EmailSettingsSelector::AppPassword => {
+                matches!(target, EmailSettingsSelector::AppPassword)
+            }
+            EmailSettingsSelector::EncryptionPassword => {
+                matches!(target, EmailSettingsSelector::EncryptionPassword)
+            }
+            EmailSettingsSelector::Template => {
+                matches!(target, EmailSettingsSelector::Template)
+            }
+            EmailSettingsSelector::SmtpServer => {
+                matches!(target, EmailSettingsSelector::SmtpServer)
+            }
+            EmailSettingsSelector::ReplyTo => matches!(target, EmailSettingsSelector::ReplyTo),
+            EmailSettingsSelector::Sender => matches!(target, EmailSettingsSelector::Sender),
+            EmailSettingsSelector::Recipients => {
+                matches!(target, EmailSettingsSelector::Recipients)
+            }
+            EmailSettingsSelector::CcRecipients => {
+                matches!(target, EmailSettingsSelector::CcRecipients)
+            }
+            EmailSettingsSelector::BccRecipients => {
+                matches!(target, EmailSettingsSelector::BccRecipients)
+            }
+        }
+    }
+}
+
+pub fn edit_email_data_at(
+    path: impl AsRef<Path>,
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
+) -> Result<()> {
+    let path = path.as_ref();
+    info!("Editing email data at: {}", path.display());
+    let existing = read_email_data_from_disk_with_base_path(path)?;
+    input_email_data_at(existing, path, provide_data)?;
+    info!("✅ Email data edit done");
+    Ok(())
 }
 
 pub fn edit_data_at(
@@ -68,14 +140,27 @@ pub fn init_data_at(
     Ok(())
 }
 
+pub fn init_email_data_at(
+    write_path: impl AsRef<Path>,
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
+) -> Result<()> {
+    let write_path = write_path.as_ref();
+    info!(
+        "Initializing email settings directory at: {}",
+        write_path.display()
+    );
+    input_email_data_at(EncryptedEmailSettings::sample(), write_path, provide_data)?;
+    info!("✅ Data init done, you're ready: `{} invoice`", BINARY_NAME);
+    Ok(())
+}
+
 fn decrypt_email_settings_and<T>(
     read_path: impl AsRef<Path>,
     ask_for_email_password: impl FnOnce() -> Result<SecretString>,
     on_decrypt: impl FnOnce(DecryptedEmailSettings) -> Result<T>,
 ) -> Result<T> {
     let read_path = read_path.as_ref();
-    let email_settings: EncryptedEmailSettings =
-        load_data(read_path, DATA_FILE_NAME_EMAIL_SETTINGS)?;
+    let email_settings = read_email_data_from_disk_with_base_path(read_path)?;
     let encryption_password = ask_for_email_password()?;
     let email_settings = email_settings.decrypt_smtp_app_password(encryption_password)?;
     on_decrypt(email_settings)
@@ -83,11 +168,11 @@ fn decrypt_email_settings_and<T>(
 
 impl From<(DecryptedEmailSettings, NamedPdf)> for Email {
     fn from((settings, pdf): (DecryptedEmailSettings, NamedPdf)) -> Self {
-        let (subject, body) = settings.proto_email().materialize(pdf.prepared_data());
+        let (subject, body) = settings.template().materialize(pdf.prepared_data());
         Email::builder()
             .subject(subject)
             .body(body)
-            .public_recipients(settings.public_recipients().clone())
+            .public_recipients(settings.recipients().clone())
             .cc_recipients(settings.cc_recipients().clone())
             .bcc_recipients(settings.bcc_recipients().clone())
             .attachments([Attachment::Pdf(pdf)])
@@ -104,7 +189,7 @@ impl From<DecryptedEmailSettings> for EmailCredentials {
                     .email(settings.sender().email().clone())
                     .build(),
             )
-            .password(settings.smtp_app_password())
+            .password(settings.smtp_app_password().expose_secret())
             .smtp_server(settings.smtp_server().clone())
             .build()
     }
@@ -163,24 +248,10 @@ pub fn validate_email_data_at(
         info!(
             "✅ Email settings validated successfully, ready to send emails from: {} using #{} characters long app password",
             email_settings.sender().email(),
-            email_settings.smtp_app_password().len()
+            email_settings.smtp_app_password().expose_secret().len()
         );
         Ok(())
     })
-}
-
-pub fn init_email_data_at(
-    write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce() -> Result<EncryptedEmailSettings>,
-) -> Result<()> {
-    let write_path = write_path.as_ref();
-    info!(
-        "Initializing email settings directory at: {}",
-        write_path.display()
-    );
-    input_email_data_at(write_path, provide_data)?;
-    info!("✅ Data init done, you're ready: `{} invoice`", BINARY_NAME);
-    Ok(())
 }
 
 fn mutate<D: Serialize + DeserializeOwned + Clone>(
@@ -383,7 +454,10 @@ mod tests {
     fn test_input_email_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         let email_settings = EncryptedEmailSettings::sample();
-        let result = input_email_data_at(tempdir.path(), || Ok(email_settings.clone()));
+        let result =
+            input_email_data_at(email_settings.clone(), tempdir.path(), |email_settings| {
+                Ok(email_settings)
+            });
         assert!(
             result.is_ok(),
             "Expected email data input to succeed, got: {:?}",
@@ -397,8 +471,7 @@ mod tests {
     #[test]
     fn test_validate_email_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let email_settings = EncryptedEmailSettings::sample();
-        init_email_data_at(tempdir.path(), || Ok(email_settings.clone())).unwrap();
+        init_email_data_at(tempdir.path(), |email_settings| Ok(email_settings.clone())).unwrap();
         let result = validate_email_data_at(tempdir.path(), || Ok(SecretString::sample()));
         assert!(
             result.is_ok(),
@@ -410,8 +483,12 @@ mod tests {
     #[test]
     fn test_load_email_data_and_send_test_email_at_with_send() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let email_settings = EncryptedEmailSettings::sample();
-        input_email_data_at(tempdir.path(), || Ok(email_settings.clone())).unwrap();
+        input_email_data_at(
+            EncryptedEmailSettings::sample(),
+            tempdir.path(),
+            |email_settings| Ok(email_settings.clone()),
+        )
+        .unwrap();
 
         let result = load_email_data_and_send_test_email_at_with_send(
             tempdir.path(),

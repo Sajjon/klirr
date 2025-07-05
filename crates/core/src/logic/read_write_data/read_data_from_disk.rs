@@ -136,6 +136,11 @@ pub fn expensed_months(base_path: impl AsRef<Path>) -> Result<ExpensedMonths> {
     load_data(base_path, DATA_FILE_NAME_EXPENSES)
 }
 
+pub fn read_email_data_from_disk_with_base_path(
+    base_path: impl AsRef<Path>,
+) -> Result<EncryptedEmailSettings> {
+    load_data(base_path, DATA_FILE_NAME_EMAIL_SETTINGS)
+}
 pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result<Data> {
     let base_path = base_path.as_ref();
     // Read the input data from a file or other source.

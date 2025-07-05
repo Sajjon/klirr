@@ -15,8 +15,8 @@ use crate::prelude::*;
     DeserializeFromStr,
 )]
 #[from(String, &str)]
-pub struct EmailAtomTemplate(String);
-impl EmailAtomTemplate {
+pub struct TemplatePart(String);
+impl TemplatePart {
     const NUMBER: &str = "<INV_NO>";
     const VENDOR: &str = "<FROM_CO>";
     const CLIENT: &str = "<TO_CO>";
@@ -59,7 +59,7 @@ impl EmailAtomTemplate {
     }
 }
 
-impl Default for EmailAtomTemplate {
+impl Default for TemplatePart {
     fn default() -> Self {
         Self(format!("Invoice {} from {}", Self::NUMBER, Self::VENDOR))
     }
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn test_replace() {
-        let template = EmailAtomTemplate::default();
+        let template = TemplatePart::default();
         assert_eq!(template.0, "Invoice <INV_NO> from <FROM_CO>");
         let result = template.materialize(&PreparedData::sample());
         assert_eq!(result, "Invoice 9876 from Lupin et Associés");
@@ -79,16 +79,16 @@ mod tests {
 
     #[test]
     fn test_that_tutorial_contains_all_variables() {
-        let tutorial = EmailAtomTemplate::tutorial();
-        assert!(tutorial.contains(EmailAtomTemplate::NUMBER));
-        assert!(tutorial.contains(EmailAtomTemplate::VENDOR));
-        assert!(tutorial.contains(EmailAtomTemplate::CLIENT));
-        assert!(tutorial.contains(EmailAtomTemplate::INVOICE_DATE));
+        let tutorial = TemplatePart::tutorial();
+        assert!(tutorial.contains(TemplatePart::NUMBER));
+        assert!(tutorial.contains(TemplatePart::VENDOR));
+        assert!(tutorial.contains(TemplatePart::CLIENT));
+        assert!(tutorial.contains(TemplatePart::INVOICE_DATE));
     }
 
     #[test]
     fn test_rng() {
-        let template = EmailAtomTemplate::from("<RNG>");
+        let template = TemplatePart::from("<RNG>");
         let result = template.materialize(&PreparedData::sample());
         let int_parsed = result.parse::<u64>();
         assert!(int_parsed.is_ok(), "Expected a number, got: {}", result);

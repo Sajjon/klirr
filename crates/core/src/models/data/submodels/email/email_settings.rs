@@ -3,9 +3,11 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::prelude::*;
 
-pub type DecryptedEmailSettings = EmailSettings<String>;
+pub type DecryptedEmailSettings = EmailSettings<SecretString>;
 pub type EncryptedEmailSettings = EmailSettings<EncryptedAppPassword>;
 
+/// Represents the settings for sending emails, including SMTP server details,
+/// sender information, and recipient lists.
 #[derive(
     Debug,
     Clone,
@@ -19,40 +21,49 @@ pub type EncryptedEmailSettings = EmailSettings<EncryptedAppPassword>;
     Zeroize,
 )]
 pub struct EmailSettings<AppPassword: Zeroize> {
+    /// The password for the SMTP server, typically an "App Password".
     #[builder(setter(into))]
     #[getset(get = "pub")]
     smtp_app_password: AppPassword,
 
+    /// The template for the email, containing subject and body formats.
     #[builder(setter(into))]
     #[getset(get = "pub")]
     #[zeroize(skip)]
-    proto_email: ProtoEmail,
+    template: Template,
 
+    /// The email address to reply to, if different from the sender, use None
+    /// to indicate that the reply should go to the sender's email address.
     #[builder(setter(into))]
     #[getset(get = "pub")]
     #[zeroize(skip)]
     reply_to: Option<EmailAccount>,
 
+    /// The SMTP server to use for sending the email.
     #[builder(setter(into))]
     #[getset(get = "pub")]
     #[zeroize(skip)]
     smtp_server: SmtpServer,
 
+    /// The email account that will send the email.
     #[builder(setter(into))]
     #[getset(get = "pub")]
     #[zeroize(skip)]
     sender: EmailAccount,
 
+    /// Public recipients of the email.
     #[builder(setter(into))]
     #[getset(get = "pub")]
     #[zeroize(skip)]
-    public_recipients: IndexSet<EmailAddress>,
+    recipients: IndexSet<EmailAddress>,
 
+    // CC recipients of the email.
     #[builder(setter(into))]
     #[getset(get = "pub")]
     #[zeroize(skip)]
     cc_recipients: IndexSet<EmailAddress>,
 
+    /// BCC recipients of the email (Blind Carbon Copy).
     #[builder(setter(into))]
     #[getset(get = "pub")]
     #[zeroize(skip)]
@@ -63,11 +74,11 @@ impl<T: Zeroize + HasSample> HasSample for EmailSettings<T> {
     fn sample() -> Self {
         Self::builder()
             .smtp_app_password(T::sample())
-            .proto_email(ProtoEmail::default())
+            .template(Template::default())
             .reply_to(None)
             .smtp_server(SmtpServer::default())
             .sender(EmailAccount::sample())
-            .public_recipients([EmailAddress::sample_alice(), EmailAddress::sample_bob()])
+            .recipients([EmailAddress::sample_alice(), EmailAddress::sample_bob()])
             .cc_recipients([EmailAddress::sample_carol()])
             .bcc_recipients([EmailAddress::sample_dave(), EmailAddress::sample_erin()])
             .build()
@@ -85,10 +96,10 @@ impl EncryptedEmailSettings {
             .reply_to(self.reply_to.clone())
             .smtp_server(self.smtp_server.clone())
             .sender(self.sender.clone())
-            .public_recipients(self.public_recipients.clone())
+            .recipients(self.recipients.clone())
             .cc_recipients(self.cc_recipients.clone())
             .bcc_recipients(self.bcc_recipients.clone())
-            .proto_email(self.proto_email.clone())
+            .template(self.template.clone())
             .build())
     }
 
