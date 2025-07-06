@@ -475,4 +475,53 @@ mod tests {
         let data_selector: DataSelector = selector.into();
         assert_eq!(data_selector, DataSelector::Client);
     }
+
+    #[test]
+    fn test_email_settings_selector_from_edit_email_input_selector() {
+        let selector = EditEmailInputSelector::All;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::All);
+
+        let selector = EditEmailInputSelector::AppPassword;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::AppPassword);
+
+        let selector = EditEmailInputSelector::EncryptionPassword;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(
+            email_settings_selector,
+            EmailSettingsSelector::EncryptionPassword
+        );
+
+        let selector = EditEmailInputSelector::Template;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::Template);
+
+        let selector = EditEmailInputSelector::Smtp;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::SmtpServer);
+
+        let selector = EditEmailInputSelector::ReplyTo;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::ReplyTo);
+
+        let selector = EditEmailInputSelector::Sender;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::Sender);
+
+        let selector = EditEmailInputSelector::Recipients;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::Recipients);
+
+        let selector = EditEmailInputSelector::Cc;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(email_settings_selector, EmailSettingsSelector::CcRecipients);
+
+        let selector = EditEmailInputSelector::Bcc;
+        let email_settings_selector: EmailSettingsSelector = selector.into();
+        assert_eq!(
+            email_settings_selector,
+            EmailSettingsSelector::BccRecipients
+        );
+    }
 }

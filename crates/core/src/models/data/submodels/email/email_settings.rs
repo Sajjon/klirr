@@ -15,6 +15,7 @@ pub type EncryptedEmailSettings = EmailSettings<EncryptedAppPassword>;
     Eq,
     TypedBuilder,
     Getters,
+    WithSetters,
     Serialize,
     Deserialize,
     ZeroizeOnDrop,
@@ -47,7 +48,7 @@ pub struct EmailSettings<AppPassword: Zeroize> {
 
     /// The email account that will send the email.
     #[builder(setter(into))]
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set_with = "pub")]
     #[zeroize(skip)]
     sender: EmailAccount,
 

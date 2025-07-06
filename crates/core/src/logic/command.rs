@@ -450,6 +450,41 @@ mod tests {
     }
 
     #[test]
+    fn test_edit_email_data_at() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let email_settings = EncryptedEmailSettings::sample();
+        let first_sender = EmailAccount::sample_alice();
+        let second_sender = EmailAccount::sample_bob();
+        assert_ne!(
+            first_sender, second_sender,
+            "Sample sender emails should not be the same"
+        );
+
+        // Save initial email settings with first sender
+        save_email_settings_with_base_path(
+            email_settings.with_sender(first_sender.clone()),
+            tempdir.path(),
+        )
+        .unwrap();
+
+        // Edit the email settings to use second sender
+        let result = edit_email_data_at(tempdir.path(), |email_settings| {
+            Ok(email_settings.with_sender(second_sender.clone()))
+        });
+
+        assert!(
+            result.is_ok(),
+            "Expected email data edit to succeed, got: {:?}",
+            result
+        );
+
+        // Verify that the edit was applied correctly
+        let edited_email_settings =
+            read_email_data_from_disk_with_base_path(tempdir.path()).unwrap();
+        assert_eq!(*edited_email_settings.sender(), second_sender);
+    }
+
+    #[test]
     fn test_input_email_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         let email_settings = EncryptedEmailSettings::sample();
@@ -503,6 +538,158 @@ mod tests {
             result.is_ok(),
             "Expected email sending to succeed, got: {:?}",
             result
+        );
+    }
+
+    #[test]
+    fn test_requires_encryption_password() {
+        assert!(EmailSettingsSelector::AppPassword.requires_encryption_password());
+        assert!(EmailSettingsSelector::EncryptionPassword.requires_encryption_password());
+        assert!(!EmailSettingsSelector::Template.requires_encryption_password());
+        assert!(!EmailSettingsSelector::SmtpServer.requires_encryption_password());
+        assert!(!EmailSettingsSelector::ReplyTo.requires_encryption_password());
+        assert!(!EmailSettingsSelector::Sender.requires_encryption_password());
+        assert!(!EmailSettingsSelector::Recipients.requires_encryption_password());
+        assert!(!EmailSettingsSelector::CcRecipients.requires_encryption_password());
+        assert!(!EmailSettingsSelector::BccRecipients.requires_encryption_password());
+    }
+
+    #[test]
+    fn test_includes_for_email_selector() {
+        let all_selector = EmailSettingsSelector::All;
+        assert!(all_selector.includes(EmailSettingsSelector::All));
+        assert!(all_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(all_selector.includes(EmailSettingsSelector::EncryptionPassword));
+        assert!(all_selector.includes(EmailSettingsSelector::Template));
+        assert!(all_selector.includes(EmailSettingsSelector::SmtpServer));
+        assert!(all_selector.includes(EmailSettingsSelector::ReplyTo));
+        assert!(all_selector.includes(EmailSettingsSelector::Sender));
+        assert!(all_selector.includes(EmailSettingsSelector::Recipients));
+        assert!(all_selector.includes(EmailSettingsSelector::CcRecipients));
+        assert!(all_selector.includes(EmailSettingsSelector::BccRecipients));
+
+        let app_password_selector = EmailSettingsSelector::AppPassword;
+        assert!(app_password_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!app_password_selector.includes(EmailSettingsSelector::EncryptionPassword));
+        assert!(!app_password_selector.includes(EmailSettingsSelector::All));
+
+        let encryption_password_selector = EmailSettingsSelector::EncryptionPassword;
+        assert!(encryption_password_selector.includes(EmailSettingsSelector::EncryptionPassword));
+        assert!(!encryption_password_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!encryption_password_selector.includes(EmailSettingsSelector::All));
+
+        let template_selector = EmailSettingsSelector::Template;
+        assert!(template_selector.includes(EmailSettingsSelector::Template));
+        assert!(!template_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!template_selector.includes(EmailSettingsSelector::All));
+
+        let smtp_server_selector = EmailSettingsSelector::SmtpServer;
+        assert!(smtp_server_selector.includes(EmailSettingsSelector::SmtpServer));
+        assert!(!smtp_server_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!smtp_server_selector.includes(EmailSettingsSelector::All));
+
+        let reply_to_selector = EmailSettingsSelector::ReplyTo;
+        assert!(reply_to_selector.includes(EmailSettingsSelector::ReplyTo));
+        assert!(!reply_to_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!reply_to_selector.includes(EmailSettingsSelector::All));
+
+        let sender_selector = EmailSettingsSelector::Sender;
+        assert!(sender_selector.includes(EmailSettingsSelector::Sender));
+        assert!(!sender_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!sender_selector.includes(EmailSettingsSelector::All));
+
+        let recipients_selector = EmailSettingsSelector::Recipients;
+        assert!(recipients_selector.includes(EmailSettingsSelector::Recipients));
+        assert!(!recipients_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!recipients_selector.includes(EmailSettingsSelector::All));
+
+        let cc_recipients_selector = EmailSettingsSelector::CcRecipients;
+        assert!(cc_recipients_selector.includes(EmailSettingsSelector::CcRecipients));
+        assert!(!cc_recipients_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!cc_recipients_selector.includes(EmailSettingsSelector::All));
+
+        let bcc_recipients_selector = EmailSettingsSelector::BccRecipients;
+        assert!(bcc_recipients_selector.includes(EmailSettingsSelector::BccRecipients));
+        assert!(!bcc_recipients_selector.includes(EmailSettingsSelector::AppPassword));
+        assert!(!bcc_recipients_selector.includes(EmailSettingsSelector::All));
+    }
+
+    #[test]
+    fn test_from_decrypted_email_settings_and_named_pdf_for_email() {
+        let email_settings = DecryptedEmailSettings::sample();
+        let pdf = NamedPdf::sample();
+
+        let email: Email = (email_settings.clone(), pdf.clone()).into();
+
+        // Verify that the email was constructed correctly
+        assert_eq!(email.public_recipients(), email_settings.recipients());
+        assert_eq!(email.cc_recipients(), email_settings.cc_recipients());
+        assert_eq!(email.bcc_recipients(), email_settings.bcc_recipients());
+
+        // Verify that the PDF attachment was added
+        let attachments = email.attachments();
+        assert_eq!(attachments.len(), 1);
+        assert!(
+            matches!(attachments[0], Attachment::Pdf(ref attached_pdf) if attached_pdf == &pdf)
+        );
+
+        // Verify that subject and body are set (template materialization)
+        assert!(!email.subject().is_empty());
+        assert!(!email.body().is_empty());
+    }
+
+    #[test]
+    fn test_from_decrypted_email_settings_for_email_credentials() {
+        let email_settings = DecryptedEmailSettings::sample();
+
+        let credentials: EmailCredentials = email_settings.clone().into();
+
+        // Verify that the credentials were constructed correctly
+        assert_eq!(credentials.account().name(), email_settings.sender().name());
+        assert_eq!(
+            credentials.account().email(),
+            email_settings.sender().email()
+        );
+        assert_eq!(credentials.smtp_server(), email_settings.smtp_server());
+        assert_eq!(
+            credentials.password().expose_secret(),
+            email_settings.smtp_app_password().expose_secret()
+        );
+    }
+
+    #[test]
+    fn test_compose_email_and_credentials() {
+        let email_settings = DecryptedEmailSettings::sample();
+        let pdf = NamedPdf::sample();
+
+        let (email, credentials) = email_settings.compose(&pdf);
+
+        // Verify the email was composed correctly
+        assert_eq!(email.public_recipients(), email_settings.recipients());
+        assert_eq!(email.cc_recipients(), email_settings.cc_recipients());
+        assert_eq!(email.bcc_recipients(), email_settings.bcc_recipients());
+
+        // Verify the PDF attachment was added
+        let attachments = email.attachments();
+        assert_eq!(attachments.len(), 1);
+        assert!(
+            matches!(attachments[0], Attachment::Pdf(ref attached_pdf) if attached_pdf == &pdf)
+        );
+
+        // Verify subject and body are set
+        assert!(!email.subject().is_empty());
+        assert!(!email.body().is_empty());
+
+        // Verify the credentials were created correctly
+        assert_eq!(credentials.account().name(), email_settings.sender().name());
+        assert_eq!(
+            credentials.account().email(),
+            email_settings.sender().email()
+        );
+        assert_eq!(credentials.smtp_server(), email_settings.smtp_server());
+        assert_eq!(
+            credentials.password().expose_secret(),
+            email_settings.smtp_app_password().expose_secret()
         );
     }
 }
