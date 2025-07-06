@@ -446,10 +446,16 @@ fn ask_for_password_once_with_length(
     prompt: &str,
     help: &str,
     min_length: usize,
+    show_min_length: bool,
 ) -> Result<SecretString> {
     // Password from `read_password` will be zeroize at end of this function,
     // see https://github.com/conradkleinespel/rooster/pull/50/files
-    prompt_password(format!("{} (min: #{} chars, {})", prompt, min_length, help))
+    let maybe_min_length_str = if show_min_length {
+        format!(", min: #{} letters.", min_length)
+    } else {
+        "".to_owned()
+    };
+    prompt_password(format!("{} ({}{})", prompt, help, maybe_min_length_str))
         .map(SecretString::from)
         .map_err(|e| Error::InvalidPasswordForEmail {
             purpose: prompt.to_string(),
@@ -458,16 +464,16 @@ fn ask_for_password_once_with_length(
         .and_then(curry2(validate, min_length))
 }
 
-fn ask_for_password_once(prompt: &str, help: &str) -> Result<SecretString> {
-    ask_for_password_once_with_length(prompt, help, 4)
+fn ask_for_password_once(prompt: &str, help: &str, show_min_length: bool) -> Result<SecretString> {
+    ask_for_password_once_with_length(prompt, help, 4, show_min_length)
 }
 
 fn ask_for_password(with_confirmation: bool, prompt: &str, help: &str) -> Result<SecretString> {
-    let first = ask_for_password_once(prompt, help)?;
+    let first = ask_for_password_once(prompt, help, with_confirmation)?;
     if !with_confirmation {
         return Ok(first);
     }
-    let second = ask_for_password_once("Please confirm your password", help)?;
+    let second = ask_for_password_once("Confirm password", help, with_confirmation)?;
     if first.expose_secret() != second.expose_secret() {
         return Err(Error::PasswordDoesNotMatch);
     }
@@ -480,8 +486,8 @@ fn ask_for_email_encryption_password_with_confirmation(
 ) -> Result<SecretString> {
     ask_for_password(
         with_confirmation,
-        "SMTP App Password Encryption",
-        "Used to encrypt the SMTP app password",
+        "Encryption Password",
+        "Used to encrypt the SMTP App Password",
     )
 }
 
@@ -560,8 +566,11 @@ pub fn ask_for_email(
         (default.salt().clone(), default.smtp_app_password().clone())
     } else {
         // is init or edit secrets
-        let app_password_plaintext =
-            ask_for_password(true, "SMTP App Password", "Used to send email")?;
+        let app_password_plaintext = ask_for_password(
+            true,
+            "SMTP App Password",
+            "Used to authenticate sender account",
+        )?;
         // Generate cryptographical salt
         let salt = Salt::generate();
         let encryption_password = ask_for_email_encryption_password_with_confirmation(true)?;
@@ -612,18 +621,18 @@ pub fn ask_for_email(
         return Err(Error::RecipientAddressesCannotBeEmpty);
     }
 
-    let bcc_recipients = select_or_default(
-        data_selector,
-        EmailSettingsSelector::BccRecipients,
-        default.bcc_recipients(),
-        |d| ask_for_many_email_addresses(EmailAddressRole::Bcc, d),
-    )?;
-
     let cc_recipients = select_or_default(
         data_selector,
         EmailSettingsSelector::CcRecipients,
         default.cc_recipients(),
         |d| ask_for_many_email_addresses(EmailAddressRole::Cc, d),
+    )?;
+
+    let bcc_recipients = select_or_default(
+        data_selector,
+        EmailSettingsSelector::BccRecipients,
+        default.bcc_recipients(),
+        |d| ask_for_many_email_addresses(EmailAddressRole::Bcc, d),
     )?;
 
     let email_settings = EncryptedEmailSettings::builder()

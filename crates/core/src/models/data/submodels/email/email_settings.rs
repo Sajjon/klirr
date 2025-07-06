@@ -9,7 +9,7 @@ pub type EncryptedEmailSettings = EmailSettings<EncryptedAppPassword>;
 /// Represents the settings for sending emails, including SMTP server details,
 /// sender information, and recipient lists.
 #[derive(
-    Debug,
+    derive_more::Debug,
     Clone,
     PartialEq,
     Eq,
@@ -18,18 +18,20 @@ pub type EncryptedEmailSettings = EmailSettings<EncryptedAppPassword>;
     WithSetters,
     Serialize,
     Deserialize,
-    ZeroizeOnDrop,
     Zeroize,
+    ZeroizeOnDrop,
 )]
 pub struct EmailSettings<AppPassword: Zeroize> {
     /// The password for the SMTP server, typically an "App Password".
     #[builder(setter(into))]
     #[getset(get = "pub")]
+    #[debug("omitted")]
     smtp_app_password: AppPassword,
 
     /// Salt used to form the encryption key, together with the encryption password
     #[builder(setter(into))]
     #[getset(get = "pub")]
+    #[debug("omitted")]
     salt: Salt,
 
     /// The template for the email, containing subject and body formats.
