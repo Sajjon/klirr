@@ -196,8 +196,8 @@ impl From<DecryptedEmailSettings> for EmailCredentials {
 }
 
 impl DecryptedEmailSettings {
-    pub fn compose(&self, pdf: NamedPdf) -> (Email, EmailCredentials) {
-        let email = Email::from((self.clone(), pdf));
+    pub fn compose(&self, pdf: &NamedPdf) -> (Email, EmailCredentials) {
+        let email = Email::from((self.clone(), pdf.clone()));
         let credentials = EmailCredentials::from(self.clone());
         (email, credentials)
     }
@@ -207,7 +207,7 @@ fn load_email_data_and_send_test_email_at_with_send(
     read_path: impl AsRef<Path>,
     ask_for_email_password: impl FnOnce() -> Result<SecretString>,
     render_sample: impl FnOnce() -> Result<NamedPdf>,
-    send_email: impl FnOnce(Email, EmailCredentials) -> Result<()>,
+    send_email: impl FnOnce(&NamedPdf, &DecryptedEmailSettings) -> Result<()>,
 ) -> Result<()> {
     let read_path = read_path.as_ref();
     info!(
@@ -216,8 +216,7 @@ fn load_email_data_and_send_test_email_at_with_send(
     );
     decrypt_email_settings_and(read_path, ask_for_email_password, |email_settings| {
         let sample = render_sample()?;
-        let (email, credentials) = email_settings.compose(sample);
-        send_email(email, credentials)
+        send_email(&sample, &email_settings)
             .inspect(|_| info!("Email sent successfully!"))
             .inspect_err(|e| {
                 error!("Error sending email: {}", e);
@@ -234,14 +233,14 @@ pub fn load_email_data_and_send_test_email_at(
         read_path,
         ask_for_email_password,
         render_sample,
-        send_email_with_credentials,
+        send_email_with_settings_for_pdf,
     )
 }
 
 pub fn validate_email_data_at(
     read_path: impl AsRef<Path>,
     ask_for_email_password: impl FnOnce() -> Result<SecretString>,
-) -> Result<()> {
+) -> Result<DecryptedEmailSettings> {
     let read_path = read_path.as_ref();
     info!("Validating email settings at: {}", read_path.display());
     decrypt_email_settings_and(read_path, ask_for_email_password, |email_settings| {
@@ -250,7 +249,7 @@ pub fn validate_email_data_at(
             email_settings.sender().email(),
             email_settings.smtp_app_password().expose_secret().len()
         );
-        Ok(())
+        Ok(email_settings)
     })
 }
 
@@ -494,9 +493,9 @@ mod tests {
             tempdir.path(),
             || Ok(SecretString::sample()),
             || Ok(NamedPdf::sample()),
-            |email, credentials| {
-                assert!(!email.subject().is_empty());
-                assert!(!credentials.account().email().user().is_empty());
+            |named_pdf, email_settings| {
+                assert_eq!(named_pdf, &NamedPdf::sample());
+                assert!(!email_settings.sender().email().user().is_empty());
                 Ok(())
             },
         );

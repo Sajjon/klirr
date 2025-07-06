@@ -2,8 +2,16 @@ use crate::prelude::*;
 
 use lettre::{Message, SmtpTransport, Transport, transport::smtp::authentication::Credentials};
 
+pub fn send_email_with_settings_for_pdf(
+    named_pdf: &NamedPdf,
+    email_settings: &DecryptedEmailSettings,
+) -> Result<()> {
+    let (email, credentials) = email_settings.compose(named_pdf);
+    send_email_with_credentials(email, credentials)
+}
+
 /// Sends an email using the provided credentials using lettre crate.
-pub fn send_email_with_credentials(email: Email, credentials: EmailCredentials) -> Result<()> {
+fn send_email_with_credentials(email: Email, credentials: EmailCredentials) -> Result<()> {
     let email_with_sender = EmailWithSender::builder()
         .email(email)
         .sender(credentials.account().clone())

@@ -44,18 +44,6 @@ fn record_month_off(month: &YearAndMonth) -> Result<()> {
     record_month_off_with_base_path(month, data_dir())
 }
 
-/// Curry a function that takes two arguments into a function that takes one argument and returns another function.
-/// This is useful for partially applying functions in a functional programming style.
-pub fn curry2<T, U, R>(f: impl FnOnce(T, U) -> R, u: U) -> impl FnOnce(T) -> R {
-    move |t| f(t, u)
-}
-
-/// Curry a function that takes one argument into a function that takes zero argument and returns another function.
-/// This is useful for partially applying functions in a functional programming style.
-pub fn curry1<T, R>(f: impl FnOnce(T) -> R, t: T) -> impl FnOnce() -> R {
-    move || f(t)
-}
-
 pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
     match command {
         DataAdminInputCommand::Init => init_data(curry2(ask_for_data, None)),
@@ -108,17 +96,21 @@ fn run_invoice_command_with_base_path(
 ) -> Result<NamedPdf> {
     let input = input.parsed()?;
     info!("🔮 Starting PDF creation, input: {}...", input);
-    let pdf_location = create_pdf_with_data_base_path(data_path, input, render)?;
-    save_pdf_location_to_tmp_file(pdf_location.saved_at().clone())?;
-    Ok(pdf_location)
+    let email_settings = input.email().clone();
+    let named_pdf = create_pdf_with_data_base_path(data_path, input, render)?;
+    save_pdf_location_to_tmp_file(named_pdf.saved_at().clone())?;
+    if let Some(email_settings) = email_settings {
+        send_email_with_settings_for_pdf(&named_pdf, &email_settings)?
+    }
+    Ok(named_pdf)
 }
 
 fn validate_email_data_with(
     ask_for_email_password: impl FnOnce() -> Result<SecretString>,
-) -> Result<()> {
+) -> Result<DecryptedEmailSettings> {
     validate_email_data_at(data_dir(), ask_for_email_password)
 }
-pub fn validate_email_data() -> Result<()> {
+pub fn validate_email_data() -> Result<DecryptedEmailSettings> {
     validate_email_data_with(ask_for_email_encryption_password)
 }
 
@@ -144,7 +136,7 @@ pub fn run_email_command(
             Some(EmailSettingsSelector::from(*input.selector())),
         )),
         EmailInputCommand::Init => init_email_data(curry2(ask_for_email, None)),
-        EmailInputCommand::Validate => validate_email_data(),
+        EmailInputCommand::Validate => validate_email_data().map_to_void(),
         EmailInputCommand::Test => load_email_data_and_send_test_email(render_sample),
     }
 }

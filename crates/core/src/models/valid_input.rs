@@ -29,9 +29,16 @@ pub struct ValidInput {
     layout: Layout,
 
     /// An optional override of where to save the output PDF file.
-    #[builder(default, setter(into))]
+    #[builder(setter(into), default)]
     #[getset(get = "pub")]
     maybe_output_path: Option<PathBuf>,
+
+    /// If set, the invoice will be sent via email after generation.
+    ///
+    /// If set to true but email is not configured, an error will be thrown later.
+    #[builder(setter(into), default)]
+    #[getset(get = "pub")]
+    email: Option<DecryptedEmailSettings>,
 }
 
 impl HasSample for ValidInput {

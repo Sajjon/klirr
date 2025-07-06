@@ -223,6 +223,12 @@ pub struct InvoiceInput {
     #[arg(long, short = 'o')]
     #[builder(setter(into, strip_option), default = None)]
     out: Option<PathBuf>,
+
+    /// Whether to send the invoice via email after generating it - if
+    /// the email settings are configured.
+    #[arg(long, short = 'e')]
+    #[builder(setter(into), default = false)]
+    email: bool,
 }
 
 impl InvoiceInput {
@@ -259,6 +265,11 @@ impl InvoiceInput {
                 })?;
             }
         }
+        let email_config = if self.email {
+            validate_email_data().map(Some)
+        } else {
+            Ok(None)
+        }?;
         let items = self._invoiced_items()?;
         let valid = ValidInput::builder()
             .month(self.month.year_and_month())
@@ -266,6 +277,7 @@ impl InvoiceInput {
             .items(items)
             .language(*self.language())
             .maybe_output_path(self.out)
+            .email(email_config)
             .build();
         Ok(valid)
     }
