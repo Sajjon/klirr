@@ -555,18 +555,22 @@ pub fn ask_for_email(
         .map(|s| !s.requires_encryption_password())
         .unwrap_or(false);
 
-    let app_password_encrypted = if is_editing_but_skip_secrets {
+    let (salt, app_password_encrypted) = if is_editing_but_skip_secrets {
         // not edit secrets
-        default.smtp_app_password().clone()
+        (default.salt().clone(), default.smtp_app_password().clone())
     } else {
         // is init or edit secrets
-        let app_password_decrypted =
+        let app_password_plaintext =
             ask_for_password(true, "SMTP App Password", "Used to send email")?;
+        // Generate cryptographical salt
+        let salt = Salt::generate();
         let encryption_password = ask_for_email_encryption_password_with_confirmation(true)?;
-        EncryptedAppPassword::new_by_deriving_and_encrypting(
-            app_password_decrypted,
+        let encryption_key = EncryptedAppPassword::new_by_deriving_and_encrypting(
+            app_password_plaintext,
             encryption_password,
-        )
+            &salt,
+        );
+        (salt, encryption_key)
     };
 
     let smtp_server = select_or_default(
@@ -631,6 +635,7 @@ pub fn ask_for_email(
         .bcc_recipients(bcc_recipients)
         .cc_recipients(cc_recipients)
         .template(template)
+        .salt(salt)
         .build();
 
     info!("Email settings initialized: {:?}", email_settings);

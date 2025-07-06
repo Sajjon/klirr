@@ -33,6 +33,7 @@ impl HasSample for EncryptedAppPassword {
         Self::new_by_deriving_and_encrypting(
             SecretString::from("super secret"),
             SecretString::sample(),
+            &Salt::sample(),
         )
     }
 }
@@ -41,8 +42,9 @@ impl EncryptedAppPassword {
     pub fn new_by_deriving_and_encrypting(
         app_password: SecretString,
         encryption_password: SecretString,
+        salt: &Salt,
     ) -> Self {
-        let encryption_key = PbHkdfSha256::derive_key_from(encryption_password);
+        let encryption_key = PbHkdfSha256::derive_key_from(encryption_password, salt);
         Self::new_by_encrypting(app_password, encryption_key)
     }
 
@@ -52,8 +54,12 @@ impl EncryptedAppPassword {
         Self(combined)
     }
 
-    pub fn derive_and_decrypt(&self, encryption_password: SecretString) -> Result<SecretString> {
-        let encryption_key = PbHkdfSha256::derive_key_from(encryption_password);
+    pub fn derive_and_decrypt(
+        &self,
+        encryption_password: SecretString,
+        salt: &Salt,
+    ) -> Result<SecretString> {
+        let encryption_key = PbHkdfSha256::derive_key_from(encryption_password, salt);
         self.decrypt(encryption_key)
     }
 
@@ -74,11 +80,13 @@ mod tests {
     fn test_encrypted_app_password() {
         let app_password = SecretString::from("my_secret_app_password");
         let encryption_pwd = SecretString::from("open sesame");
+        let salt = Salt::sample();
         let encrypted = EncryptedAppPassword::new_by_deriving_and_encrypting(
             app_password.clone(),
             encryption_pwd.clone(),
+            &salt,
         );
-        let decrypted = encrypted.derive_and_decrypt(encryption_pwd).unwrap();
+        let decrypted = encrypted.derive_and_decrypt(encryption_pwd, &salt).unwrap();
 
         assert_eq!(decrypted.expose_secret(), app_password.expose_secret());
     }
@@ -87,7 +95,8 @@ mod tests {
     fn test_decrypt_invalid_utf8() {
         // Create encryption key
         let encryption_pwd = SecretString::from("key");
-        let encryption_key = PbHkdfSha256::derive_key_from(encryption_pwd);
+        let salt = Salt::generate();
+        let encryption_key = PbHkdfSha256::derive_key_from(encryption_pwd, &salt);
 
         // Encrypt some invalid UTF-8 bytes directly
         let invalid_utf8_bytes = vec![0xFF, 0xFE, 0xFD]; // Invalid UTF-8 sequence
@@ -95,7 +104,7 @@ mod tests {
         let malformed_encrypted = EncryptedAppPassword(sealed_box.combined());
 
         // Create a new key for decryption (since the first one was moved)
-        let decryption_key = PbHkdfSha256::derive_key_from(SecretString::from("key"));
+        let decryption_key = PbHkdfSha256::derive_key_from(SecretString::from("key"), &salt);
 
         // Try to decrypt - should fail with InvalidUtf8
         let result = malformed_encrypted.decrypt(decryption_key);

@@ -27,6 +27,11 @@ pub struct EmailSettings<AppPassword: Zeroize> {
     #[getset(get = "pub")]
     smtp_app_password: AppPassword,
 
+    /// Salt used to form the encryption key, together with the encryption password
+    #[builder(setter(into))]
+    #[getset(get = "pub")]
+    salt: Salt,
+
     /// The template for the email, containing subject and body formats.
     #[builder(setter(into))]
     #[getset(get = "pub")]
@@ -75,6 +80,7 @@ impl<T: Zeroize + HasSample> HasSample for EmailSettings<T> {
     fn sample() -> Self {
         Self::builder()
             .smtp_app_password(T::sample())
+            .salt(Salt::sample())
             .template(Template::default())
             .reply_to(None)
             .smtp_server(SmtpServer::default())
@@ -101,6 +107,7 @@ impl EncryptedEmailSettings {
             .cc_recipients(self.cc_recipients.clone())
             .bcc_recipients(self.bcc_recipients.clone())
             .template(self.template.clone())
+            .salt(self.salt().clone())
             .build())
     }
 
@@ -108,7 +115,7 @@ impl EncryptedEmailSettings {
         &self,
         encryption_password: SecretString,
     ) -> Result<DecryptedEmailSettings> {
-        let encryption_key = PbHkdfSha256::derive_key_from(encryption_password);
+        let encryption_key = PbHkdfSha256::derive_key_from(encryption_password, self.salt());
         self.derive_and_decrypt_smtp_app_password(encryption_key)
     }
 }
