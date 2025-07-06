@@ -24,3 +24,20 @@ impl Template {
         (subject, body)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_template_materialization() {
+        let template = Template {
+            subject_format: TemplatePart::from("Invoice <INV_NO>"),
+            body_format: TemplatePart::from("Please pay invoice <INV_NO>"),
+        };
+        let data = PreparedData::sample();
+        let (subject, body) = template.materialize(&data);
+        assert_eq!(subject, "Invoice 9876");
+        assert_eq!(body, "Please pay invoice 9876");
+    }
+}

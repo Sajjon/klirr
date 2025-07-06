@@ -192,4 +192,45 @@ mod tests {
         assert!(decoded.contains("application/pdf"));
         assert!(decoded.contains(&BASE64_STANDARD.encode(Pdf::sample().as_ref())))
     }
+
+    #[test]
+    fn test_message_from_email_with_sender_without_attachment() {
+        let email = Email::builder()
+            .public_recipients(IndexSet::from_iter(vec![EmailAddress::sample_bob()]))
+            .cc_recipients(IndexSet::from_iter(vec![EmailAddress::sample_carol()]))
+            .bcc_recipients(IndexSet::from_iter(vec![EmailAddress::sample_erin()]))
+            .subject("Sample Email Subject".to_string())
+            .body("This is a sample email body.".to_string())
+            .build();
+        let sender = EmailAccount::sample_alice();
+        let email_with_sender = EmailWithSender::builder()
+            .email(email.clone())
+            .sender(sender.clone())
+            .build();
+        let message = Message::try_from(email_with_sender).unwrap();
+        let encoded = message.formatted();
+        let decoded = String::from_utf8(encoded).unwrap();
+        assert!(decoded.contains(&sender.email().to_string()));
+        assert!(decoded.contains(&sender.name().to_string()));
+        assert!(decoded.contains(&email.subject().to_string()));
+        assert!(decoded.contains(&email.body().to_string()));
+        for recipient in email
+            .public_recipients()
+            .into_iter()
+            .chain(email.cc_recipients())
+        {
+            assert!(
+                decoded.contains(&recipient.to_string()),
+                "Expected recipient {} to be in the email",
+                recipient
+            );
+        }
+
+        for recipient in email.bcc_recipients() {
+            // BCC recipients should not be in the formatted email
+            assert!(!decoded.contains(&recipient.to_string()));
+        }
+
+        assert!(!decoded.contains("application/pdf"));
+    }
 }

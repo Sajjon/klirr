@@ -78,10 +78,28 @@ mod tests {
             app_password.clone(),
             encryption_pwd.clone(),
         );
-        let decrypted = encrypted
-            .decrypt(PbHkdfSha256::derive_key_from(encryption_pwd))
-            .unwrap();
+        let decrypted = encrypted.derive_and_decrypt(encryption_pwd).unwrap();
 
         assert_eq!(decrypted.expose_secret(), app_password.expose_secret());
+    }
+
+    #[test]
+    fn test_decrypt_invalid_utf8() {
+        // Create encryption key
+        let encryption_pwd = SecretString::from("key");
+        let encryption_key = PbHkdfSha256::derive_key_from(encryption_pwd);
+
+        // Encrypt some invalid UTF-8 bytes directly
+        let invalid_utf8_bytes = vec![0xFF, 0xFE, 0xFD]; // Invalid UTF-8 sequence
+        let sealed_box = AesGcm256::seal(&invalid_utf8_bytes, encryption_key);
+        let malformed_encrypted = EncryptedAppPassword(sealed_box.combined());
+
+        // Create a new key for decryption (since the first one was moved)
+        let decryption_key = PbHkdfSha256::derive_key_from(SecretString::from("key"));
+
+        // Try to decrypt - should fail with InvalidUtf8
+        let result = malformed_encrypted.decrypt(decryption_key);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), Error::InvalidUtf8));
     }
 }
