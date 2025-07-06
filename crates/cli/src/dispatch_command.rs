@@ -106,24 +106,24 @@ fn run_invoice_command_with_base_path(
 }
 
 fn validate_email_data_with(
-    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+    get_email_password: impl FnOnce() -> Result<SecretString>,
 ) -> Result<DecryptedEmailSettings> {
-    validate_email_data_at(data_dir(), ask_for_email_password)
+    validate_email_data_at(data_dir(), get_email_password)
 }
 pub fn validate_email_data() -> Result<DecryptedEmailSettings> {
-    validate_email_data_with(ask_for_email_encryption_password)
+    validate_email_data_with(get_email_encryption_password)
 }
 
 fn load_email_data_and_send_test_email_with(
-    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+    get_email_password: impl FnOnce() -> Result<SecretString>,
     render_sample: impl FnOnce() -> Result<NamedPdf>,
 ) -> Result<()> {
-    load_email_data_and_send_test_email_at(data_dir(), ask_for_email_password, render_sample)
+    load_email_data_and_send_test_email_at(data_dir(), get_email_password, render_sample)
 }
 pub fn load_email_data_and_send_test_email(
     render_sample: impl FnOnce() -> Result<NamedPdf>,
 ) -> Result<()> {
-    load_email_data_and_send_test_email_with(ask_for_email_encryption_password, render_sample)
+    load_email_data_and_send_test_email_with(get_email_encryption_password, render_sample)
 }
 
 pub fn run_email_command(

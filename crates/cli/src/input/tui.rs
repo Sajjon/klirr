@@ -463,9 +463,9 @@ fn ask_for_password_once_with_length(
         })
         .and_then(curry2(validate, min_length))
 }
-
+const PASSWORD_MIN_LENGTH: usize = 4;
 fn ask_for_password_once(prompt: &str, help: &str, show_min_length: bool) -> Result<SecretString> {
-    ask_for_password_once_with_length(prompt, help, 4, show_min_length)
+    ask_for_password_once_with_length(prompt, help, PASSWORD_MIN_LENGTH, show_min_length)
 }
 
 fn ask_for_password(with_confirmation: bool, prompt: &str, help: &str) -> Result<SecretString> {
@@ -481,9 +481,18 @@ fn ask_for_password(with_confirmation: bool, prompt: &str, help: &str) -> Result
     Ok(first)
 }
 
+const ENV_VAR_KLIRR_EMAIL_ENCRYPTION_PASSWORD: &str = "KLIRR_EMAIL_ENCRYPTION_PASSWORD";
+
+/// Tries to read `KLIRR_EMAIL_ENCRYPTION_PASSWORD` env variable first, if not
+/// set or not at least 4 chars fallback to TUI
 fn ask_for_email_encryption_password_with_confirmation(
     with_confirmation: bool,
 ) -> Result<SecretString> {
+    if let Ok(env_pw) = std::env::var(ENV_VAR_KLIRR_EMAIL_ENCRYPTION_PASSWORD) {
+        if env_pw.len() >= PASSWORD_MIN_LENGTH {
+            return Ok(SecretString::from(env_pw));
+        }
+    }
     ask_for_password(
         with_confirmation,
         "Encryption Password",
@@ -491,7 +500,7 @@ fn ask_for_email_encryption_password_with_confirmation(
     )
 }
 
-pub fn ask_for_email_encryption_password() -> Result<SecretString> {
+pub fn get_email_encryption_password() -> Result<SecretString> {
     ask_for_email_encryption_password_with_confirmation(false)
 }
 

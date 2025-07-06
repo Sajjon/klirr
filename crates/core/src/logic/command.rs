@@ -156,12 +156,12 @@ pub fn init_email_data_at(
 
 fn decrypt_email_settings_and<T>(
     read_path: impl AsRef<Path>,
-    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+    get_email_password: impl FnOnce() -> Result<SecretString>,
     on_decrypt: impl FnOnce(DecryptedEmailSettings) -> Result<T>,
 ) -> Result<T> {
     let read_path = read_path.as_ref();
     let email_settings = read_email_data_from_disk_with_base_path(read_path)?;
-    let encryption_password = ask_for_email_password()?;
+    let encryption_password = get_email_password()?;
     let email_settings = email_settings.decrypt_smtp_app_password(encryption_password)?;
     on_decrypt(email_settings)
 }
@@ -205,7 +205,7 @@ impl DecryptedEmailSettings {
 
 fn load_email_data_and_send_test_email_at_with_send(
     read_path: impl AsRef<Path>,
-    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+    get_email_password: impl FnOnce() -> Result<SecretString>,
     render_sample: impl FnOnce() -> Result<NamedPdf>,
     send_email: impl FnOnce(&NamedPdf, &DecryptedEmailSettings) -> Result<()>,
 ) -> Result<()> {
@@ -214,7 +214,7 @@ fn load_email_data_and_send_test_email_at_with_send(
         "Loading email settings for sending test email from: {}",
         read_path.display()
     );
-    decrypt_email_settings_and(read_path, ask_for_email_password, |email_settings| {
+    decrypt_email_settings_and(read_path, get_email_password, |email_settings| {
         let sample = render_sample()?;
         send_email(&sample, &email_settings)
             .inspect(|_| info!("Email sent successfully!"))
@@ -226,12 +226,12 @@ fn load_email_data_and_send_test_email_at_with_send(
 
 pub fn load_email_data_and_send_test_email_at(
     read_path: impl AsRef<Path>,
-    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+    get_email_password: impl FnOnce() -> Result<SecretString>,
     render_sample: impl FnOnce() -> Result<NamedPdf>,
 ) -> Result<()> {
     load_email_data_and_send_test_email_at_with_send(
         read_path,
-        ask_for_email_password,
+        get_email_password,
         render_sample,
         send_email_with_settings_for_pdf,
     )
@@ -239,11 +239,11 @@ pub fn load_email_data_and_send_test_email_at(
 
 pub fn validate_email_data_at(
     read_path: impl AsRef<Path>,
-    ask_for_email_password: impl FnOnce() -> Result<SecretString>,
+    get_email_password: impl FnOnce() -> Result<SecretString>,
 ) -> Result<DecryptedEmailSettings> {
     let read_path = read_path.as_ref();
     info!("Validating email settings at: {}", read_path.display());
-    decrypt_email_settings_and(read_path, ask_for_email_password, |email_settings| {
+    decrypt_email_settings_and(read_path, get_email_password, |email_settings| {
         info!(
             "✅ Email settings validated successfully, ready to send emails from: {} using #{} characters long app password",
             email_settings.sender().email(),

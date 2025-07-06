@@ -224,6 +224,14 @@ Similarly to `klirr data init` you will now be prompted for a series of inputs r
 
 Later, when using this email sending feature you will always be prompted to input the encryption password, so that klirr can decrypt the *App Password* to be able to send emails.
 
+> [!TIP]
+> Optionally, if you don't want to have to input the encryption password every
+> time you invoice you can export it in an environment variable named
+> `KLIRR_EMAIL_ENCRYPTION_PASSWORD`, we recommend you use `direnv` and source
+> it from a hidden file, typically `.envrc.secret` place in a directory you 
+> will run `klirr` from, which is safer than exporting the password in your
+> `.zshrc`.
+
 ### Send Test email
 You can try sending a test email using `klirr email test` (you will be prompted for you encryption password).
 
