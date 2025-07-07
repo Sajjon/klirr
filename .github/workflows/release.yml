@@ -174,7 +174,7 @@ jobs:
           SHA_MACOS="${{ steps.sha256.outputs.sha_macos }}"
 
           # Generate the formula content
-          cat > "$FORMULA_FILE" <<EOF
+          cat > "$FORMULA_FILE" <<~EOF
           class Klirr < Formula
             desc "Generate invoice with auto invoice number setting & working days calc."
             homepage "https://github.com/Sajjon/klirr"
