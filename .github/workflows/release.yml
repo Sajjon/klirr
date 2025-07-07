@@ -115,8 +115,15 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           default: true
-      - name: Install cross
-        uses: taiki-e/setup-cross@v1
+      - name: Restore cross cache
+        id: cross-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin/cross
+          key: ${{ runner.os }}-cross-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install cross if not cached
+        if: steps.cross-cache.outputs.cache-hit != 'true'
+        run: cargo install cross
       - name: Build for ${{ matrix.target }}
         run: cross build --release --target ${{ matrix.target }}
       - name: Upload binary for ${{ matrix.target }}
