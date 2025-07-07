@@ -30,6 +30,20 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - name: Install sccache
+              uses: mozilla-actions/sccache-action@v0.0.3
+
+            - name: Configure sccache
+              run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+            - name: Cache sccache
+              uses: actions/cache@v3
+              with:
+                path: ~/.cache/sccache
+                key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+                restore-keys: |
+                  ${{ runner.os }}-sccache-
+
             - name: Install Rust Toolchain
               uses: actions-rs/toolchain@v1
               with:
@@ -45,6 +59,20 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
+
+            - name: Install sccache
+              uses: mozilla-actions/sccache-action@v0.0.3
+
+            - name: Configure sccache
+              run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+            - name: Cache sccache
+              uses: actions/cache@v3
+              with:
+                path: ~/.cache/sccache
+                key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+                restore-keys: |
+                  ${{ runner.os }}-sccache-
 
             - name: Install Rust Toolchain
               uses: actions-rs/toolchain@v1
@@ -62,6 +90,20 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+
+            - name: Install sccache
+              uses: mozilla-actions/sccache-action@v0.0.3
+
+            - name: Configure sccache
+              run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+            - name: Cache sccache
+              uses: actions/cache@v3
+              with:
+                path: ~/.cache/sccache
+                key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+                restore-keys: |
+                  ${{ runner.os }}-sccache-
 
             - name: Install Rust Toolchain
               uses: actions-rs/toolchain@v1
