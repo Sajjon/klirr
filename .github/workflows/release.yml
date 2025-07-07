@@ -129,7 +129,7 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           default: true
       - name: Install cross
-        run: cargo install cross
+        uses: taiki-e/setup-cross@v1
       - name: Build for ${{ matrix.target }}
         run: cross build --release --target ${{ matrix.target }}
       - name: Upload binary for ${{ matrix.target }}
