@@ -87,7 +87,7 @@ jobs:
       - name: Extract version from Cargo.toml
         id: extract_version
         run: |
-          version=$(grep '^version' Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/')
+          version=$(cargo metadata --no-deps --format-version 1 --manifest-path crates/cli/Cargo.toml | jq -r '.packages[0].version')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
