@@ -1,0 +1,17 @@
+name: "Setup sccache"
+description: "Install and configure sccache for Rust compilation caching"
+runs:
+    using: "composite"
+    steps:
+        - name: Install sccache
+          uses: mozilla-actions/sccache-action@v0.0.3
+        - name: Configure sccache
+          run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          shell: bash
+        - name: Cache sccache
+          uses: actions/cache@v3
+          with:
+              path: ~/.cache/sccache
+              key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+              restore-keys: |
+                  ${{ runner.os }}-sccache-
