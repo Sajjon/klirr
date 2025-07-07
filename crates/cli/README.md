@@ -10,49 +10,50 @@ Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomat
 
 > [!TIP]
 > Scroll down to example invoice in the bottom to see what the invoice looks like.
-> 
+>
 > Or try it out with `cargo install klirr && klirr sample`
 
 # Table Of Contents <a href="#thetoc" id="thetoc"/>
+
 <!-- disabledMarkdownTOC autolink="false" markdown_preview="github" -->
 
-- [Description](#description)
-- [Installation](#installation)
-    - [Pre-built binaries](#prebuilt-binaries)
-        - [brew](#brew)
-    - [Build](#manual-install)
-	    - [Install Rust](#install-rust)
-	    - [Install `klirr`](#install-klirr)
-- [Usage](#usage)
-	- [Init](#init)
-	- [Edit Data](#edit-data)
-		- [Manually](#data-edit-manual)
-	- [Generate Invoice](#generate-invoice)
-		- [Out of office for some days?](#ooo)
-		- [Took vacation a whole month or parental leave?](#month-off)
-	- [Invoice for expenses](#expenses)
-		- [Add expenses](#expenses-add)
-		- [Generate expenses invoice](#expenses-generate)
-	- [Email](#email)
-		- [Init](#email-init)
-		- [Send Test email](#email-test)
-		- [Security](#email-security)
-- [Development](#development)
-- [How it works](#how-it-works)
-- [Etymology](#etymology)
-- [Example](#example)
+-   [Description](#description)
+-   [Installation](#installation)
+    -   [Pre-built binaries](#prebuilt-binaries)
+        -   [brew](#brew)
+    -   [Build](#manual-install)
+        -   [Install Rust](#install-rust)
+        -   [Install `klirr`](#install-klirr)
+-   [Usage](#usage)
+    -   [Init](#init)
+    -   [Edit Data](#edit-data)
+        -   [Manually](#data-edit-manual)
+    -   [Generate Invoice](#generate-invoice)
+        -   [Out of office for some days?](#ooo)
+        -   [Took vacation a whole month or parental leave?](#month-off)
+    -   [Invoice for expenses](#expenses)
+        -   [Add expenses](#expenses-add)
+        -   [Generate expenses invoice](#expenses-generate)
+    -   [Email](#email)
+        -   [Init](#email-init)
+        -   [Send Test email](#email-test)
+        -   [Security](#email-security)
+-   [Development](#development)
+-   [How it works](#how-it-works)
+-   [Etymology](#etymology)
+-   [Example](#example)
 
 <!-- /MarkdownTOC -->
 
 # Description<a href="#description" id="description"/>[ ^](#thetoc)
 
-- **A**esthetic – **Produces polished, professional invoices**. Klirr uses Typst templates to generate a beautiful invoice PDF for your services and expenses, so the final result looks as good as a hand-crafted invoice, with consistent styling and formatting.
-- **M**ultiple layouts & languages – **Localized and dynamic with support for multiple layouts**. Klirr dynamically loads invoice labels in different languages via i18n, and currently supports English and Swedish (adding more languages is trivial). This means your invoices can easily be generated in the language that suits you or your client. The invoice format is powered by Typst, and while Klirr comes with one elegant layout by default, the code is prepared to very easily support additional layouts. You can extend or customize the template system to suit different styling needs, ensuring the solution can grow with your business.
-- **A**utomatic – **Automatically accounts for dates and work days**. Klirr uses your system’s calendar to determine the target month’s working days and sets the invoice date to the last day of the month, with the due date calculated based on your specified payment terms. It even allows you to mark any days you were off work, subtracting those from the billable days – all handled automatically so that your invoice reflects the correct time worked.
-- **Z**ero-Maintenance – **One-time configuration** via an interactive Terminal UI captures all company, client, and project info. After this initial setup, no manual editing is required, and no coding or format knowledge (Rust/Typst/[RON][ron]) is needed
-- **I**nter-month Idempotent – **Inter-month idempotence** ensures consistent invoice numbering. No matter how many times you build an invoice in a given month, it will reuse the same invoice number. When a new month begins, Klirr automatically increments to the next number. This guarantees a stable, chronological sequence of invoices without duplicates or gaps.
-- **N**imble - **Quickly and effortlessly generates invoices in no-time**
-- **G**ratis – **Free and open source forever**.
+-   **A**esthetic – **Produces polished, professional invoices**. Klirr uses Typst templates to generate a beautiful invoice PDF for your services and expenses, so the final result looks as good as a hand-crafted invoice, with consistent styling and formatting.
+-   **M**ultiple layouts & languages – **Localized and dynamic with support for multiple layouts**. Klirr dynamically loads invoice labels in different languages via i18n, and currently supports English and Swedish (adding more languages is trivial). This means your invoices can easily be generated in the language that suits you or your client. The invoice format is powered by Typst, and while Klirr comes with one elegant layout by default, the code is prepared to very easily support additional layouts. You can extend or customize the template system to suit different styling needs, ensuring the solution can grow with your business.
+-   **A**utomatic – **Automatically accounts for dates and work days**. Klirr uses your system’s calendar to determine the target month’s working days and sets the invoice date to the last day of the month, with the due date calculated based on your specified payment terms. It even allows you to mark any days you were off work, subtracting those from the billable days – all handled automatically so that your invoice reflects the correct time worked.
+-   **Z**ero-Maintenance – **One-time configuration** via an interactive Terminal UI captures all company, client, and project info. After this initial setup, no manual editing is required, and no coding or format knowledge (Rust/Typst/[RON][ron]) is needed
+-   **I**nter-month Idempotent – **Inter-month idempotence** ensures consistent invoice numbering. No matter how many times you build an invoice in a given month, it will reuse the same invoice number. When a new month begins, Klirr automatically increments to the next number. This guarantees a stable, chronological sequence of invoices without duplicates or gaps.
+-   **N**imble - **Quickly and effortlessly generates invoices in no-time**
+-   **G**ratis – **Free and open source forever**.
 
 If that was not enough, klirr also supports generation of expense invoices which automatically fetched currency exchange rates and translates them into your currency at the date of transaction for all your purchases (see below).
 
@@ -64,11 +65,17 @@ You can either install `klirr` from a prebuilt binary or you can build it yourse
 
 ## Pre-built binaries<a href="#prebuilt-binaries" id="prebuilt-binaries"/>[ ^](#thetoc)
 
+All prebuilt binaries are cryptographically signed and include build attestations for security verification. See [SECURITY.md](SECURITY.md) for details on verifying downloads.
+
 ### brew<a href="#brew" id="brew"/>[ ^](#thetoc)
 
 ```bash
 brew install Sajjon/klirr/klirr
 ```
+
+### Direct Download<a href="#direct-download" id="direct-download"/>[ ^](#thetoc)
+
+You can download signed binaries directly from [GitHub Releases](https://github.com/Sajjon/klirr/releases). All releases are marked as "Verified" by GitHub and include build attestations.
 
 ## Build<a href="#manual-install" id="manual-install"/>[ ^](#thetoc)
 
@@ -115,13 +122,17 @@ After setup is complete, you should have the following files in `$DATA_PATH/klir
 These files use [`RON` ("Rusty Object Notation")][ron] file format, a modern object notation superior to JSON/YAML/TOML.
 
 ## Edit Data<a href="#edit-data" id="edit-data"/>[ ^](#thetoc)
+
 If you later want to edit the data you input during init you can do so with another command:
+
 ```bash
 klirr data edit all
 ```
+
 Will start a flow similar to `init` flow, but loading in all your existing data, hit ENTER to keep using existing data, or input a new value.
 
 Alternatively you can edit individual files using:
+
 ```bash
 klirr data edit vendor
 ```
@@ -131,6 +142,7 @@ klirr data edit client
 ```
 
 You can see the possible values with:
+
 ```bash
 klirr data edit --help
 ```
@@ -226,7 +238,7 @@ klirr data expenses --month 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lun
 
 > [!TIP]
 > There is currently no support for subtracting/removing expenses using Cli, if you made a mistake
-> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/expenses.ron` 
+> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/expenses.ron`
 > where `$DATA_PATH` depends [on OS][data_path], but
 > typically `$HOME/Library/Application Support` on macOS
 > using your favourite text editor.
@@ -237,7 +249,7 @@ klirr data expenses --month 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lun
 >
 > You cannot edit expenses using `klirr data edit` as mentioned above.
 
-### Generate expenses invoice <a href="#expenses-generate" id="expenses-generate"/>  [ ^](#thetoc)
+### Generate expenses invoice <a href="#expenses-generate" id="expenses-generate"/> [ ^](#thetoc)
 
 Then generate the expenses invoice:
 
@@ -251,13 +263,14 @@ klirr invoice expenses
 > API unnecessarily and to make klirr extra fast for you.
 
 ## Email<a href="#email" id="email"/>[ ^](#thetoc)
+
 Klirr can automatically send an email with the invoice for you after it has been generated.
 
-This requires you to setup an *App Password* with your email service, for information on
-how to set it up for [Gmail see here](https://myaccount.google.com/apppasswords). 
-If you setup klirr to be able to send emails you will be prompted for this *App Password* 
-and you will be prompted for an encryption password which will be used to encrypt 
-the *App Password*. The encryption password can be anything as long as it adheres to
+This requires you to setup an _App Password_ with your email service, for information on
+how to set it up for [Gmail see here](https://myaccount.google.com/apppasswords).
+If you setup klirr to be able to send emails you will be prompted for this _App Password_
+and you will be prompted for an encryption password which will be used to encrypt
+the _App Password_. The encryption password can be anything as long as it adheres to
 minimum length requirement (typically 4 chars min).
 
 ### Init<a href="#email-init" id="email-init"/>[ ^](#thetoc)
@@ -268,33 +281,35 @@ Get started with email sending of your invoices by setting up the email configur
 klirr email init
 ```
 
-Similarly to `klirr data init` you will now be prompted for a series of inputs required to send your email, including sender email, sender *App Password*, encryption password (see Security below for more info), recipients email address and more. 
+Similarly to `klirr data init` you will now be prompted for a series of inputs required to send your email, including sender email, sender _App Password_, encryption password (see Security below for more info), recipients email address and more.
 
-Later, when using this email sending feature you will always be prompted to input the encryption password, so that klirr can decrypt the *App Password* to be able to send emails.
+Later, when using this email sending feature you will always be prompted to input the encryption password, so that klirr can decrypt the _App Password_ to be able to send emails.
 
 > [!TIP]
 > Optionally, if you don't want to have to input the encryption password every
 > time you invoice you can export it in an environment variable named
 > `KLIRR_EMAIL_ENCRYPTION_PASSWORD`, we recommend you use `direnv` and source
-> it from a hidden file, typically `.envrc.secret` place in a directory you 
+> it from a hidden file, typically `.envrc.secret` place in a directory you
 > will run `klirr` from, which is safer than exporting the password in your
 > `.zshrc`.
 
 ### Send Test email<a href="#email-test" id="email-test"/>[ ^](#thetoc)
+
 You can try sending a test email using `klirr email test` (you will be prompted for you encryption password).
 
 ### Security<a href="#email-security" id="email-security"/>[ ^](#thetoc)
-> [!IMPORTANT]
-> Klirr's email feature is safe to use. Klirr uses strong encryption and employes 
-> all IT security best practices to keep your *App Password* safe. 
-It is crucual that an attack does not get access to your *App Password* since email 
-services does not allow users to limit the scope and permission of the *App Password*, with it
-and attacker can read all your emails and send emails to anyone impersonating you!
 
-Therefor, klirr employes these best practices to keep your *App Password* safe:
-0. Key-Derivation: Klirr does not use your encryption password directly, first it's run through a [Hash based Key-Derivation-Function](https://en.wikipedia.org/wiki/HKDF) using a application unique `INFO` (see 'How Should You Introduce Randomness into HKDF?' section of [this blog post](https://soatok.blog/2021/11/17/understanding-hkdf/)) and cryptographically secure random generated [`SALT`](https://en.wikipedia.org/wiki/Salt_(cryptography)), this forms a strong and unique `EncryptionKey`
-0. Advanced Encryption: Klirr uses [AES (Advanced Encryption Standard)] encryption with 256 bits strength, encrypted using the `EncryptionKey` from last step.
-0. Zeroisation: Klirr uses [Zeroisation](https://en.wikipedia.org/wiki/Zeroisation) to eagerly erase sensitive secrets from memory.
+> [!IMPORTANT]
+> Klirr's email feature is safe to use. Klirr uses strong encryption and employes
+> all IT security best practices to keep your _App Password_ safe.
+> It is crucual that an attack does not get access to your _App Password_ since email
+> services does not allow users to limit the scope and permission of the _App Password_, with it
+> and attacker can read all your emails and send emails to anyone impersonating you!
+
+Therefor, klirr employes these best practices to keep your _App Password_ safe: 
+1. Key-Derivation: Klirr does not use your encryption password directly, first it's run through a [Hash based Key-Derivation-Function](https://en.wikipedia.org/wiki/HKDF) using a application unique `INFO` (see 'How Should You Introduce Randomness into HKDF?' section of [this blog post](https://soatok.blog/2021/11/17/understanding-hkdf/)) and cryptographically secure random generated [`SALT`](https://en.wikipedia.org/wiki/Salt\_(cryptography)), this forms a strong and unique `EncryptionKey` 
+2. Advanced Encryption: Klirr uses [AES (Advanced Encryption Standard)] encryption with 256 bits strength, encrypted using the `EncryptionKey` from last step. 
+3. Zeroisation: Klirr uses [Zeroisation](https://en.wikipedia.org/wiki/Zeroisation) to eagerly erase sensitive secrets from memory.
 
 You can review how klirr employes these safety measures in the [encryption folder of the code](crates/core/src/logic/encryption).
 
