@@ -16,6 +16,19 @@ jobs:
     steps:
       - name: Checkout Actions Repository
         uses: actions/checkout@v4
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Configure sccache
+        run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+      - name: Cache sccache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/sccache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
       - name: Spell Check Repo
         uses: crate-ci/typos@v1.33.1
 
@@ -23,6 +36,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Configure sccache
+        run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+      - name: Cache sccache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/sccache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
       - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -36,6 +62,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Configure sccache
+        run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+      - name: Cache sccache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/sccache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
       - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -58,6 +97,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # required by cargo-release to get tags
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.3
+
+      - name: Configure sccache
+        run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+      - name: Cache sccache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/sccache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -88,6 +140,7 @@ jobs:
           tag_name: "v${{ steps.extract_version.outputs.version }}"
           name: "klirr v${{ steps.extract_version.outputs.version }}"
           body_path: CHANGELOG.md
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
