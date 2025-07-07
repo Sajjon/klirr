@@ -1,14 +1,11 @@
 name: Release
-
 on:
   push:
     branches:
       - main
-
 env:
   CARGO_TERM_COLOR: always
   RUST_TOOLCHAIN: 1.85.0
-
 jobs:
   spelling:
     name: Spell Check with Typos
@@ -18,7 +15,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Spell Check Repo
         uses: crate-ci/typos@v1.33.1
-
   check-formatting:
     runs-on: ubuntu-latest
     steps:
@@ -33,7 +29,6 @@ jobs:
           components: rustfmt
       - name: Check formatting
         run: cargo fmt --check
-
   test-rust:
     runs-on: ubuntu-latest
     steps:
@@ -47,15 +42,15 @@ jobs:
           default: true
       - name: Run rust tests
         run: cargo test --locked -- --test-threads=1
-
   create-release:
-    needs: [spelling, check-formatting, test-rust]
+    needs:
+      - spelling
+      - check-formatting
+      - test-rust
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
       id-token: write
-
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     outputs:
       version: ${{ steps.extract_version.outputs.version }}
@@ -73,40 +68,33 @@ jobs:
           default: true
       - name: Install cargo-release
         run: cargo install cargo-release
-
       - name: Configure Git identity
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
       - name: Run cargo release patch
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: cargo release patch --execute --no-confirm
-
       - name: Extract version from Cargo.toml
         id: extract_version
         run: |
           version=$(cargo metadata --no-deps --format-version 1 --manifest-path crates/cli/Cargo.toml | jq -r '.packages[0].version')
           echo "version=$version" >> "$GITHUB_OUTPUT"
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ steps.extract_version.outputs.version }}"
-          name: "klirr v${{ steps.extract_version.outputs.version }}"
+          tag_name: v${{ steps.extract_version.outputs.version }}
+          name: klirr v${{ steps.extract_version.outputs.version }}
           body_path: CHANGELOG.md
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-and-upload:
     needs: create-release
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-
     strategy:
       matrix:
         target:
@@ -117,7 +105,6 @@ jobs:
             asset_name: klirr-x86_64-unknown-linux-gnu
           - target: aarch64-apple-darwin
             asset_name: klirr-aarch64-apple-darwin
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -135,19 +122,18 @@ jobs:
       - name: Upload binary for ${{ matrix.target }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ needs.create-release.outputs.version }}"
+          tag_name: v${{ needs.create-release.outputs.version }}
           files: target/${{ matrix.target }}/release/klirr
           asset_name: ${{ matrix.asset_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   update-homebrew:
-    needs: [create-release, build-and-upload]
+    needs:
+      - create-release
+      - build-and-upload
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -160,7 +146,6 @@ jobs:
         run: |
           echo "sha_linux=$(shasum -a 256 klirr-x86_64-unknown-linux-gnu | awk '{ print $1 }')" >> $GITHUB_OUTPUT
           echo "sha_macos=$(shasum -a 256 klirr-aarch64-apple-darwin | awk '{ print $1 }')" >> $GITHUB_OUTPUT
-
       - name: Update Homebrew Formula
         run: |
           # Clone the tap repository
