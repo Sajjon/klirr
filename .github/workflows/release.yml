@@ -1,77 +1,160 @@
 name: Release
 
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
 
 env:
-    CARGO_TERM_COLOR: always
-    RUST_TOOLCHAIN: 1.85.0
+  CARGO_TERM_COLOR: always
+  RUST_TOOLCHAIN: 1.85.0
 
 jobs:
-    spelling:
-        name: Spell Check with Typos
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Actions Repository
-              uses: actions/checkout@v4
-            - name: Spell Check Repo
-              uses: crate-ci/typos@v1.33.1
+  spelling:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions Repository
+        uses: actions/checkout@v4
+      - name: Spell Check Repo
+        uses: crate-ci/typos@v1.33.1
 
-    check-formatting:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - name: Install Rust Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  toolchain: ${{ env.RUST_TOOLCHAIN }}
-                  default: true
-                  components: rustfmt
-            - name: Check formatting
-              run: cargo fmt --check
+  check-formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          default: true
+          components: rustfmt
+      - name: Check formatting
+        run: cargo fmt --check
 
-    test-rust:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - name: Install Rust Toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  toolchain: ${{ env.RUST_TOOLCHAIN }}
-                  default: true
-            - name: Run rust tests
-              run: cargo test --locked -- --test-threads=1
+  test-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          default: true
+      - name: Run rust tests
+        run: cargo test --locked -- --test-threads=1
 
-    release:
-        needs: [spelling, check-formatting, test-rust]
-        runs-on: ubuntu-latest
+  release:
+    needs: [spelling, check-formatting, test-rust]
+    runs-on: ubuntu-latest
 
-        permissions:
-            contents: write
-            id-token: write
+    permissions:
+      contents: write
+      id-token: write
 
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0 # required by cargo-release to get tags
-            - name: Set up Rust
-              uses: actions-rs/toolchain@v1
-              with:
-                  toolchain: ${{ env.RUST_TOOLCHAIN }}
-                  default: true
-            - name: Install cargo-release
-              run: cargo install cargo-release
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # required by cargo-release to get tags
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          default: true
+      - name: Install cargo-release
+        run: cargo install cargo-release
 
-            - name: Configure Git identity
-              run: |
-                  git config --global user.name "github-actions[bot]"
-                  git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-            - name: Run cargo release patch
-              env:
-                  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-              run: cargo release patch --execute --no-confirm
+      - name: Run cargo release patch
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo release patch --execute --no-confirm
+
+      - name: Extract version from Cargo.toml
+        id: extract_version
+        run: |
+          version=$(grep '^version' Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.extract_version.outputs.version }}"
+          name: "klirr v${{ steps.extract_version.outputs.version }}"
+          body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Build for Linux (x86_64)
+        run: cross build --release --target x86_64-unknown-linux-gnu
+
+      - name: Build for macOS (Apple Silicon)
+        run: cross build --release --target aarch64-apple-darwin
+
+      - name: Upload Linux binary
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/x86_64-unknown-linux-gnu/release/klirr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS Apple Silicon binary
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/aarch64-apple-darwin/release/klirr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate SHA256 checksums
+        id: sha256
+        run: |
+          echo "sha_linux=$(shasum -a 256 target/x86_64-unknown-linux-gnu/release/klirr | awk '{ print $1 }')" >> $GITHUB_OUTPUT
+          echo "sha_macos=$(shasum -a 256 target/aarch64-apple-darwin/release/klirr | awk '{ print $1 }')" >> $GITHUB_OUTPUT
+
+      - name: Update Homebrew Formula
+        run: |
+          git clone https://x-access-token:${{ secrets.HOMEBREW_TAP_PUSH_TOKEN }}@github.com/Sajjon/homebrew-klirr.git
+          cd homebrew-klirr
+          formula="klirr.rb"
+          version="${{ steps.extract_version.outputs.version }}"
+          sha_linux="${{ steps.sha256.outputs.sha_linux }}"
+          sha_macos="${{ steps.sha256.outputs.sha_macos }}"
+          cat > $formula <<EOF
+          class Klirr < Formula
+            desc "Generate invoice with auto invoice number setting & working days calc."
+            homepage "https://github.com/Sajjon/klirr"
+            version "$version"
+
+            on_macos do
+              url "https://github.com/Sajjon/klirr/releases/download/v$version/klirr-aarch64-apple-darwin"
+              sha256 "$sha_macos"
+            end
+
+            on_linux do
+              url "https://github.com/Sajjon/klirr/releases/download/v$version/klirr-x86_64-unknown-linux-gnu"
+              sha256 "$sha_linux"
+            end
+
+            def install
+              bin.install "klirr"
+            end
+
+            test do
+              system "#{bin}/klirr", "--help"
+            end
+          end
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add $formula
+          git commit -m "Update klirr formula to v$version"
+          git push
