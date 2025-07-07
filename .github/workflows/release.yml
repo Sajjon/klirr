@@ -48,7 +48,7 @@ jobs:
       - name: Run rust tests
         run: cargo test --locked -- --test-threads=1
 
-  release:
+  create-release:
     needs: [spelling, check-formatting, test-rust]
     runs-on: ubuntu-latest
 
@@ -57,6 +57,8 @@ jobs:
       id-token: write
 
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,45 +100,73 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build-and-upload:
+    needs: create-release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-apple-darwin
+        include:
+          - target: x86_64-unknown-linux-gnu
+            asset_name: klirr-x86_64-unknown-linux-gnu
+          - target: aarch64-apple-darwin
+            asset_name: klirr-aarch64-apple-darwin
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup sccache
+        uses: ./.github/actions/setup-sccache
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          default: true
       - name: Install cross
         run: cargo install cross
-
-      - name: Build for Linux (x86_64)
-        run: cross build --release --target x86_64-unknown-linux-gnu
-
-      - name: Build for macOS (Apple Silicon)
-        run: cross build --release --target aarch64-apple-darwin
-
-      - name: Upload Linux binary
+      - name: Build for ${{ matrix.target }}
+        run: cross build --release --target ${{ matrix.target }}
+      - name: Upload binary for ${{ matrix.target }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ steps.extract_version.outputs.version }}"
-          files: target/x86_64-unknown-linux-gnu/release/klirr
-          asset_name: klirr-x86_64-unknown-linux-gnu
+          tag_name: "v${{ needs.create-release.outputs.version }}"
+          files: target/${{ matrix.target }}/release/klirr
+          asset_name: ${{ matrix.asset_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload macOS Apple Silicon binary
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "v${{ steps.extract_version.outputs.version }}"
-          files: target/aarch64-apple-darwin/release/klirr
-          asset_name: klirr-aarch64-apple-darwin
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  update-homebrew:
+    needs: [create-release, build-and-upload]
+    runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download binaries for checksums
+        run: |
+          wget -O klirr-x86_64-unknown-linux-gnu "https://github.com/Sajjon/klirr/releases/download/v${{ needs.create-release.outputs.version }}/klirr-x86_64-unknown-linux-gnu"
+          wget -O klirr-aarch64-apple-darwin "https://github.com/Sajjon/klirr/releases/download/v${{ needs.create-release.outputs.version }}/klirr-aarch64-apple-darwin"
       - name: Generate SHA256 checksums
         id: sha256
         run: |
-          echo "sha_linux=$(shasum -a 256 target/x86_64-unknown-linux-gnu/release/klirr | awk '{ print $1 }')" >> $GITHUB_OUTPUT
-          echo "sha_macos=$(shasum -a 256 target/aarch64-apple-darwin/release/klirr | awk '{ print $1 }')" >> $GITHUB_OUTPUT
+          echo "sha_linux=$(shasum -a 256 klirr-x86_64-unknown-linux-gnu | awk '{ print $1 }')" >> $GITHUB_OUTPUT
+          echo "sha_macos=$(shasum -a 256 klirr-aarch64-apple-darwin | awk '{ print $1 }')" >> $GITHUB_OUTPUT
 
       - name: Update Homebrew Formula
         run: |
           git clone https://x-access-token:${{ secrets.HOMEBREW_TAP_PUSH_TOKEN }}@github.com/Sajjon/homebrew-klirr.git
           cd homebrew-klirr
           formula="klirr.rb"
-          version="${{ steps.extract_version.outputs.version }}"
+          version="${{ needs.create-release.outputs.version }}"
           sha_linux="${{ steps.sha256.outputs.sha_linux }}"
           sha_macos="${{ steps.sha256.outputs.sha_macos }}"
           cat <<-EOF > $formula
