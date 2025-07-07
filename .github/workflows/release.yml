@@ -54,13 +54,12 @@ jobs:
       id-token: write
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     outputs:
-      version: ${{ steps.extract_new_version.outputs.version }}
+      version: ${{ steps.extract_version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          # Use the built-in GITHUB_TOKEN which enables signed commits when used with certain actions
+          fetch-depth: 0 # required by cargo-release to get tags
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup sccache
         uses: ./.github/actions/setup-sccache
@@ -71,33 +70,39 @@ jobs:
           default: true
       - name: Install cargo-release
         run: cargo install cargo-release
-      - name: Extract current version
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Run cargo release patch (version bump only)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo release patch --execute --no-confirm
+      - name: Extract version from Cargo.toml
         id: extract_version
         run: |
           version=$(cargo metadata --no-deps --format-version 1 --manifest-path crates/cli/Cargo.toml | jq -r '.packages[0].version')
           echo "version=$version" >> "$GITHUB_OUTPUT"
-      - name: Bump version and create release commit
+      - name: Commit and push version bump
         run: |
-          # Run cargo release but skip publishing to crates.io for now (we'll do that separately)
-          cargo release patch --execute --no-confirm --no-publish
-      - name: Extract new version after bump
-        id: extract_new_version
-        run: |
-          version=$(cargo metadata --no-deps --format-version 1 --manifest-path crates/cli/Cargo.toml | jq -r '.packages[0].version')
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+          git add -A
+          git commit -m "chore: release v${{ steps.extract_version.outputs.version }}"
+          git push origin main
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --manifest-path crates/core/Cargo.toml && cargo publish --manifest-path crates/render/Cargo.toml && cargo publish --manifest-path crates/cli/Cargo.toml
-      - name: Create GitHub Release with signed tag
+        run: |
+          cargo publish --manifest-path crates/core/Cargo.toml
+          cargo publish --manifest-path crates/render/Cargo.toml  
+          cargo publish --manifest-path crates/cli/Cargo.toml
+      - name: Create GitHub Release with verified tag
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.extract_new_version.outputs.version }}
-          name: klirr v${{ steps.extract_new_version.outputs.version }}
+          tag_name: v${{ steps.extract_version.outputs.version }}
+          name: klirr v${{ steps.extract_version.outputs.version }}
           body_path: CHANGELOG.md
           generate_release_notes: true
           make_latest: true
-          # This creates a signed tag when using GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-and-upload:

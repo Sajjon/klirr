@@ -1,28 +1,18 @@
 # Apply settings to the whole workspace
 workspace = true
 
-# General settings
+# General settings - only for version bumping, GitHub workflow handles the rest
 consolidate-commits = true
-sign-commit = false
-sign-tag = false
-push = true
-tag = true
-publish = true
+push = false                  # We handle pushing in GitHub workflow
+tag = false                   # We handle tagging in GitHub workflow
+publish = false               # We handle publishing in GitHub workflow
 allow-branch = ["main"]
-generate-release-notes = true
 dependent-version = "upgrade" # upgrade version for dependent crates
 
 [release]
 changelog = "CHANGELOG.md"
 update-workspace-dependencies = true
 
-[git]
-push-remote = "origin"
-enable-github-release = true
-github-token = "${GITHUB_TOKEN}"
-
-[packages.klirr-render]
-tag-name = ""
-
-[packages.klirr-core]
-tag-name = ""
+# Remove git and github settings since we handle releases in workflow
+# [git] - removed
+# [packages.*] tag-name settings - removed since we don't create tags here
