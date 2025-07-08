@@ -2,7 +2,7 @@
 workspace = true
 
 # General settings - only for version bumping, GitHub workflow handles the rest
-consolidate-commits = true
+consolidate-commits = false   # Don't consolidate since we're not pushing
 push = false                  # We handle pushing in GitHub workflow
 tag = false                   # We handle tagging in GitHub workflow
 publish = false               # We handle publishing in GitHub workflow
@@ -12,7 +12,3 @@ dependent-version = "upgrade" # upgrade version for dependent crates
 [release]
 changelog = "CHANGELOG.md"
 update-workspace-dependencies = true
-
-# Remove git and github settings since we handle releases in workflow
-# [git] - removed
-# [packages.*] tag-name settings - removed since we don't create tags here
