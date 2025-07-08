@@ -59,7 +59,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # required by cargo-release to get tags
+          fetch-depth: 0 # required for git write-tree and GitHub API commit operations
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup sccache
         uses: ./.github/actions/setup-sccache
@@ -103,9 +103,10 @@ jobs:
             echo "Tree SHA: $TREE_SHA"
             
             # Create commit via GitHub API (this will be automatically signed/verified)
-            COMMIT_RESPONSE=$(curl -s -X POST \
+            COMMIT_RESPONSE=$(curl -s -f -X POST \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "https://api.github.com/repos/${{ github.repository }}/git/commits" \
               -d "{
@@ -138,9 +139,10 @@ jobs:
             echo "New commit SHA: $NEW_SHA"
             
             # Update main branch to point to new commit
-            UPDATE_RESPONSE=$(curl -s -X PATCH \
+            UPDATE_RESPONSE=$(curl -s -f -X PATCH \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/main" \
               -d "{\"sha\": \"$NEW_SHA\"}")
