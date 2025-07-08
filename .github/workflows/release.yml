@@ -73,7 +73,7 @@ jobs:
       - name: Bump version patch
         run: |
           # Bump version in all workspace crates
-          cargo set-version --bump patch
+          cargo set-version --workspace --bump patch
       - name: Extract new version from Cargo.toml
         id: extract_version
         run: |
