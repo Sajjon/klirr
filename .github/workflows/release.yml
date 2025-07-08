@@ -68,28 +68,26 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           default: true
-      - name: Install cargo-release
-        run: cargo install cargo-release
-      - name: Configure Git identity
+      - name: Install cargo-edit for version bumping
+        run: cargo install cargo-edit
+      - name: Bump version patch
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Run cargo release patch (version bump only)
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo release patch --execute --no-confirm # commits but we dont want to commit using cargo-release, so we will git reset soft HEAD~1
-      - name: Extract version from Cargo.toml
+          # Bump version in all workspace crates
+          cargo set-version --bump patch
+      - name: Extract new version from Cargo.toml
         id: extract_version
         run: |
           version=$(cargo metadata --no-deps --format-version 1 --manifest-path crates/cli/Cargo.toml | jq -r '.packages[0].version')
           echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Commit and push version bump # We first reset the last commit to avoid the commit made by cargo-release
+      - name: Commit and push version bump
         run: |
-          git reset --soft HEAD~1
           git add -A
-          git commit -m "chore: release v${{ steps.extract_version.outputs.version }}"
-          git push origin main
+          if git diff --staged --quiet; then
+            echo "No changes to commit - version might already be bumped"
+          else
+            git commit -m "chore: release v${{ steps.extract_version.outputs.version }}"
+            git push origin main
+          fi
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
