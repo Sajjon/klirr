@@ -68,7 +68,14 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           default: true
+      - name: Cache cargo-edit
+        id: cache-cargo-edit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-set-version
+          key: cargo-edit-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}
       - name: Install cargo-edit for version bumping
+        if: steps.cache-cargo-edit.outputs.cache-hit != 'true'
         run: cargo install cargo-edit
       - name: Bump version patch
         run: |
