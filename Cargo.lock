@@ -2388,6 +2388,7 @@ dependencies = [
 name = "klirr"
 version = "0.1.26"
 dependencies = [
+ "bon",
  "chrono",
  "clap",
  "colored",

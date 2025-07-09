@@ -190,44 +190,42 @@ pub struct ExpensesInput {
 }
 
 /// The CLI arguments for generating an invoice PDF.
-#[derive(Debug, Clone, TypedBuilder, Getters, Parser)]
+#[derive(Debug, Clone, Builder, Getters, Parser)]
 #[command(name = "invoice")]
 #[command(about = "Generate an invoice PDF", long_about = None)]
 pub struct InvoiceInput {
     /// The month for which the invoice is generated.
     #[arg(long, short = 'm', default_value_t)]
-    #[builder(setter(into), default)]
+    #[builder(default)]
     #[getset(get = "pub")]
     month: TargetMonth,
 
     /// The language for which the invoice is generated.
     #[arg(long, short = 'l', default_value_t)]
-    #[builder(setter(into), default)]
+    #[builder(default)]
     #[getset(get = "pub")]
     language: Language,
 
     /// The layout of the invoice to use
     #[arg(long, short = 't', default_value_t)]
-    #[builder(setter(into), default)]
+    #[builder(default)]
     #[getset(get = "pub")]
     layout: Layout,
 
     /// The items to be invoiced, either expenses our consulting services
     /// with an optional number of days off.
     #[command(subcommand)]
-    #[builder(setter(into, strip_option), default = None)]
     #[getset(get = "pub")]
     items: Option<TargetItems>,
 
     /// An optional override of where to save the output PDF file.
     #[arg(long, short = 'o')]
-    #[builder(setter(into, strip_option), default = None)]
     out: Option<PathBuf>,
 
     /// Whether to send the invoice via email after generating it - if
     /// the email settings are configured.
     #[arg(long, short = 'e')]
-    #[builder(setter(into), default = false)]
+    #[builder(default = false)]
     email: bool,
 }
 
@@ -432,7 +430,9 @@ mod tests {
 
             #[test]
             fn test_input_parsing_out() {
-                let input = InvoiceInput::builder().out("/tmp/invoice.pdf").build();
+                let input = InvoiceInput::builder()
+                    .out(PathBuf::from("/tmp/invoice.pdf"))
+                    .build();
                 let input = input.parsed().unwrap();
                 assert_eq!(
                     *input.maybe_output_path(),
@@ -443,7 +443,7 @@ mod tests {
             #[test]
             #[should_panic]
             fn test_input_parsing_out_at_root_crashes() {
-                let input = InvoiceInput::builder().out("/").build();
+                let input = InvoiceInput::builder().out(PathBuf::from("/")).build();
                 let _ = input.parsed();
             }
         }
