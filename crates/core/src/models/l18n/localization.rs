@@ -2,18 +2,16 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 /// The language used and the content of the localization file.
-#[derive(Debug, Clone, Serialize, Deserialize, Getters, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 pub struct L18n {
     /// Which language this localization file is for, e.g.
     /// "EN" for English
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     language: Language,
 
     /// The content of the localization file, which includes
     /// client information, invoice information, vendor information,
     /// and line items.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     content: L18nContent,
 }

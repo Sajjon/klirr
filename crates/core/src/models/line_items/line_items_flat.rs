@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(Clone, Debug, Serialize, PartialEq, Eq, Hash, Getters, TypedBuilder)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, Hash, Getters, Builder)]
 pub struct LineItemsFlat {
     /// True if this invoice is for expenses only.
     #[getset(get = "pub")]

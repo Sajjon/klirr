@@ -38,13 +38,13 @@ impl MonthsOffRecord {
     /// use klirr_core::prelude::*;
     ///
     /// let periods = [
-    ///     YearAndMonth::builder().year(2023).month(Month::January).build(),
-    ///     YearAndMonth::builder().year(2024).month(Month::May).build(),
+    ///     YearAndMonth::builder().year(2023.into()).month(Month::January).build(),
+    ///     YearAndMonth::builder().year(2024.into()).month(Month::May).build(),
     /// ];
     /// let record = MonthsOffRecord::new(periods);
     ///
-    /// let included = YearAndMonth::builder().year(2024).month(Month::May).build();
-    /// let not_included = YearAndMonth::builder().year(2022).month(Month::October).build();
+    /// let included = YearAndMonth::builder().year(2024.into()).month(Month::May).build();
+    /// let not_included = YearAndMonth::builder().year(2022.into()).month(Month::October).build();
     ///
     /// assert!(record.contains(&included));
     /// assert!(!record.contains(&not_included));
@@ -58,11 +58,11 @@ impl HasSample for MonthsOffRecord {
     fn sample() -> Self {
         Self::new([
             YearAndMonth::builder()
-                .year(2020)
+                .year(2020.into())
                 .month(Month::December)
                 .build(),
             YearAndMonth::builder()
-                .year(2021)
+                .year(2021.into())
                 .month(Month::March)
                 .build(),
         ])

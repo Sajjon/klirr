@@ -72,7 +72,7 @@ pub(super) fn _get_exchange_rate_with_fetcher<T: DeserializableResponse>(
 pub type ExchangeRatesMap = IndexMap<Currency, UnitPrice>;
 
 /// A fetcher for exchange rates, which caches rates in a local file
-#[derive(TypedBuilder)]
+#[derive(Builder)]
 pub struct ExchangeRatesFetcher<T = ()> {
     path_to_cache: PathBuf,
     /// Useful for testing, allows to use a temporary directory for caching
@@ -435,10 +435,10 @@ mod tests {
 
         // Create an item that uses this rate
         let item = Item::builder()
-            .name("Test Item")
+            .name("Test Item".into())
             .transaction_date(date)
-            .quantity(dec!(10.0))
-            .unit_price(dec!(100.0))
+            .quantity(dec!(10.0).into())
+            .unit_price(dec!(100.0).into())
             .currency(from)
             .build();
 

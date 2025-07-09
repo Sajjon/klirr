@@ -150,7 +150,7 @@ impl ValidInput {
 /// ```
 /// extern crate klirr_core;
 /// use klirr_core::prelude::*;
-/// let offset = TimestampedInvoiceNumber::builder().offset(100).month(YearAndMonth::january(2024)).build();
+/// let offset = TimestampedInvoiceNumber::builder().offset(100.into()).month(YearAndMonth::january(2024)).build();
 /// let target_month = YearAndMonth::august(2024);
 /// let is_expenses = true;
 /// let months_off_record = MonthsOffRecord::new([
@@ -324,11 +324,11 @@ mod tests {
             })
             .build();
         let information = ProtoInvoiceInfo::builder()
-            .purchase_order(Some(PurchaseOrder::from("PO")))
+            .purchase_order(PurchaseOrder::from("PO"))
             .months_off_record(MonthsOffRecord::new(months_off))
             .offset(
                 TimestampedInvoiceNumber::builder()
-                    .offset(offset_no)
+                    .offset(offset_no.into())
                     .month(offset_month)
                     .build(),
             )
@@ -633,7 +633,7 @@ mod tests {
             .offset(
                 TimestampedInvoiceNumber::builder()
                     .month(month)
-                    .offset(237)
+                    .offset(237.into())
                     .build(),
             )
             .months_off_record(MonthsOffRecord::new([month]))

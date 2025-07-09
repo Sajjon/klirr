@@ -251,9 +251,9 @@ fn build_invoice_info(default: &ProtoInvoiceInfo) -> Result<ProtoInvoiceInfo> {
 
         let info = ProtoInvoiceInfo::builder()
             .offset(offset)
-            .purchase_order(purchase_order)
-            .footer_text(footer_text)
-            .emphasize_color_hex(emphasize_color_hex)
+            .maybe_purchase_order(purchase_order)
+            .maybe_footer_text(footer_text)
+            .maybe_emphasize_color_hex(emphasize_color_hex)
             .months_off_record(default.months_off_record().clone())
             .build();
 
@@ -310,14 +310,33 @@ fn build_service_fees(default: &ServiceFees) -> Result<ServiceFees> {
             .with_default(default.name())
             .prompt()?;
 
-        let unit_price = CustomType::<UnitPrice>::new("Unit price?")
-            .with_help_message("The price per day, e.g. '1000'")
-            .with_default(*default.unit_price())
+        let cadence = CustomType::<Cadence>::new("How often do you invoice?")
+            .with_help_message("E.g. 'Monthly' or 'BiWeekly'")
+            .with_default(*default.cadence())
             .prompt()?;
 
-        let service_fees = default.clone().with_name(name).with_unit_price(unit_price);
+        let granularity = CustomType::<Granularity>::new("Do you invoice per month, day or hour? Next question will be the rate which is per time unit you provide here")
+            .with_help_message("E.g. 'Month', 'Day' or 'Hour'")
+            .with_default(default.rate().granularity())
+            .prompt()?;
 
-        Ok(service_fees)
+        let unit_price = CustomType::<UnitPrice>::new("Unit price?")
+            .with_help_message(&format!(
+                "Price per {}, e.g. {}",
+                granularity,
+                granularity.example_rate()
+            ))
+            .with_default(default.unit_price())
+            .prompt()?;
+
+        let rate = Rate::from((unit_price, granularity));
+
+        Ok(ServiceFees::builder()
+            .name(name)
+            .cadence(cadence)
+            .rate(rate)
+            .build()
+            .unwrap())
     }
     inner(default).map_err(|e| Error::InvalidServiceFees {
         reason: format!("{:?}", e),
@@ -648,7 +667,7 @@ pub fn ask_for_email(
         .sender(sender)
         .smtp_server(smtp_server)
         .smtp_app_password(app_password_encrypted)
-        .reply_to(reply_to)
+        .maybe_reply_to(reply_to)
         .recipients(recipients.clone())
         .bcc_recipients(bcc_recipients)
         .cc_recipients(cc_recipients)

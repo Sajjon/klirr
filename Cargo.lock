@@ -528,6 +528,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "bon"
+version = "3.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f61138465baf186c63e8d9b6b613b508cd832cba4ce93cf37ce5f096f91ac1a6"
+dependencies = [
+ "bon-macros",
+ "rustversion",
+]
+
+[[package]]
+name = "bon-macros"
+version = "3.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40d1dad34aa19bf02295382f08d9bc40651585bd497266831d40ee6296fb49ca"
+dependencies = [
+ "darling",
+ "ident_case",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.101",
+]
+
+[[package]]
 name = "borsh"
 version = "1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2363,6 +2388,7 @@ dependencies = [
 name = "klirr"
 version = "0.1.27"
 dependencies = [
+ "bon",
  "chrono",
  "clap",
  "colored",
@@ -2382,7 +2408,6 @@ dependencies = [
  "tempfile",
  "test-log",
  "thiserror 2.0.12",
- "typed-builder",
 ]
 
 [[package]]
@@ -2391,6 +2416,7 @@ version = "0.1.27"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",
+ "bon",
  "chrono",
  "derive_more",
  "dirs-next",
@@ -2419,7 +2445,6 @@ dependencies = [
  "test-log",
  "thiserror 2.0.12",
  "ttf-parser 0.25.1",
- "typed-builder",
  "zeroize",
 ]
 
@@ -2427,6 +2452,7 @@ dependencies = [
 name = "klirr-render"
 version = "0.1.27"
 dependencies = [
+ "bon",
  "chrono",
  "dirs-next",
  "getset",
@@ -2437,7 +2463,6 @@ dependencies = [
  "serde_json",
  "tempfile",
  "test-log",
- "typed-builder",
  "typst",
  "typst-kit",
  "typst-pdf",
@@ -3143,6 +3168,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "prettyplease"
+version = "0.2.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6837b9e10d61f45f987d50808f83d1ee3d206c66acf650c3e4ae2e1f6ddedf55"
+dependencies = [
+ "proc-macro2",
+ "syn 2.0.101",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3294,7 +3329,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4703,26 +4738,6 @@ name = "typed-arena"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a"
-
-[[package]]
-name = "typed-builder"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce63bcaf7e9806c206f7d7b9c1f38e0dce8bb165a80af0898161058b19248534"
-dependencies = [
- "typed-builder-macro",
-]
-
-[[package]]
-name = "typed-builder-macro"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60d8d828da2a3d759d3519cdf29a5bac49c77d039ad36d0782edadbf9cd5415b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
 
 [[package]]
 name = "typenum"

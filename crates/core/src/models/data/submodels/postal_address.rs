@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 /// The postal address of a company
 #[derive(
-    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, TypedBuilder, Getters, WithSetters,
+    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Builder, Getters, WithSetters,
 )]
 pub struct PostalAddress {
     /// The street address of a company, e.g.
@@ -11,19 +11,15 @@ pub struct PostalAddress {
     /// "C/o Other company"
     /// "2nd floor"
     /// ```
-    #[builder(setter(into))]
     #[getset(get = "pub", set_with = "pub")]
     street_address: StreetAddress,
     /// The zip code of the company, e.g. `"EC1A 1BB"`.
-    #[builder(setter(into))]
     #[getset(get = "pub", set_with = "pub")]
     zip: String,
     /// The country of the company, e.g. `"England"`.
-    #[builder(setter(into))]
     #[getset(get = "pub", set_with = "pub")]
     country: String,
     /// The city of the company, e.g. `"London"`.
-    #[builder(setter(into))]
     #[getset(get = "pub", set_with = "pub")]
     city: String,
 }
@@ -37,24 +33,28 @@ impl HasSample for PostalAddress {
 impl PostalAddress {
     pub fn sample_client() -> Self {
         Self::builder()
-            .city("London")
-            .country("England")
-            .street_address(StreetAddress::builder().line_1("221B Baker Street").build())
-            .zip("NW1 6XE")
+            .city("London".into())
+            .country("England".into())
+            .street_address(
+                StreetAddress::builder()
+                    .line_1("221B Baker Street".into())
+                    .build(),
+            )
+            .zip("NW1 6XE".into())
             .build()
     }
 
     pub fn sample_vendor() -> Self {
         Self::builder()
-            .city("Paris")
-            .country("France")
+            .city("Paris".into())
+            .country("France".into())
             .street_address(
                 StreetAddress::builder()
-                    .line_1("5 Avenue Henri-Martin")
-                    .line_2("Appartement 24")
+                    .line_1("5 Avenue Henri-Martin".into())
+                    .line_2("Appartement 24".into())
                     .build(),
             )
-            .zip("75116")
+            .zip("75116".into())
             .build()
     }
 }

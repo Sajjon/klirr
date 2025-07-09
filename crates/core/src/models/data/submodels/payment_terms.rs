@@ -58,14 +58,13 @@ impl HasSample for PaymentTerms {
     Hash,
     SerializeDisplay,
     DeserializeFromStr,
-    TypedBuilder,
+    Builder,
     Getters,
     Display,
 )]
 #[display("Net {}", due_in)]
 pub struct NetDays {
     /// The number of days until payment is due
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     due_in: Day,
 }

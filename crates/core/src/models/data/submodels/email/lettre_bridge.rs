@@ -9,12 +9,10 @@ use crate::prelude::*;
 
 /// An ephemeral helper struct to hold an email and its sender.
 /// This is used to convert the email into a `lettre::Message`.
-#[derive(Debug, Clone, TypedBuilder, Getters)]
+#[derive(Debug, Clone, Builder, Getters)]
 pub struct EmailWithSender {
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     email: Email,
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     sender: EmailAccount,
 }

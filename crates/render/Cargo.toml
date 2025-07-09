@@ -12,13 +12,13 @@ repository = "https://github.com/Sajjon/klirr"
 klirr-core.workspace = true
 
 # External dependencies
+bon.workspace = true
 chrono.workspace = true
 typst = "0.13.1"
 typst-kit = "0.13.1"
 typst-pdf = "0.13.1"
 log.workspace = true
 serde_json.workspace = true
-typed-builder.workspace = true
 getset.workspace = true
 dirs-next.workspace = true
 

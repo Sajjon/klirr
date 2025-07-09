@@ -14,7 +14,7 @@ use crate::prelude::*;
     Hash,
     SerializeDisplay,
     DeserializeFromStr,
-    TypedBuilder,
+    Builder,
     Getters,
     Constructor,
 )]
@@ -22,12 +22,10 @@ use crate::prelude::*;
 #[debug("{year:04}-{month:02}")]
 pub struct YearAndMonth {
     /// e.g. 2025
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     year: Year,
 
     /// e.g. 5 for May
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     month: Month,
 }
@@ -38,7 +36,7 @@ impl From<Date> for YearAndMonth {
     /// ```
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
-    /// let date = Date::builder().year(2025).month(Month::May).day(Day::try_from(23).unwrap()).build();
+    /// let date = Date::builder().year(2025.into()).month(Month::May).day(Day::try_from(23).unwrap()).build();
     /// let year_and_month: YearAndMonth = date.into();
     /// assert_eq!(year_and_month.year(), &Year::new(2025));
     /// assert_eq!(year_and_month.month(), &Month::May);
@@ -360,7 +358,7 @@ mod tests {
     #[test]
     fn test_from_date() {
         let date = Date::builder()
-            .year(2025)
+            .year(2025.into())
             .month(Month::May)
             .day(Day::try_from(23).unwrap())
             .build();

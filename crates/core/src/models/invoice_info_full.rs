@@ -3,37 +3,32 @@ use crate::prelude::*;
 /// A full invoice information structure that includes the derived
 /// invoice number, invoice date, due date and other
 /// details from the `ProtoInvoiceInfo`.
-#[derive(Clone, Debug, Serialize, PartialEq, Eq, Hash, Deserialize, Getters, TypedBuilder)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, Hash, Deserialize, Getters, Builder)]
 pub struct InvoiceInfoFull {
     /// The unique number of this invoice, typically a number, e.g. `"90"`
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     number: InvoiceNumber,
 
     /// When the payment is due, calculated from the invoice date and payment terms.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     invoice_date: Date,
 
     /// When the payment is due, calculated from the invoice date and payment terms.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     due_date: Date,
 
     /// A purchase order number associated with this invoice, e.g. `"PO-12345"`
     /// Typically agreed upon between the vendor and client before the
     /// invoice is issued.
-    #[builder(setter(into), default)]
     #[getset(get = "pub")]
     purchase_order: Option<PurchaseOrder>,
 
     /// E.g. "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     footer_text: Option<FooterText>,
 
     /// Hex color code for the color emphasis of the invoice, e.g. `"#e6007a"`.
-    #[builder(setter(into), default)]
+    #[builder(default)]
     #[getset(get = "pub")]
     emphasize_color_hex: HexColor,
 }

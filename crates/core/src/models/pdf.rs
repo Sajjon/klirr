@@ -10,18 +10,14 @@ impl HasSample for Pdf {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, TypedBuilder, Getters)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Builder, Getters)]
 pub struct NamedPdf {
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     prepared_data: PreparedData,
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     pdf: Pdf,
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     saved_at: PathBuf,
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     name: String,
 }
