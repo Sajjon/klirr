@@ -310,14 +310,33 @@ fn build_service_fees(default: &ServiceFees) -> Result<ServiceFees> {
             .with_default(default.name())
             .prompt()?;
 
-        let unit_price = CustomType::<UnitPrice>::new("Unit price?")
-            .with_help_message("The price per day, e.g. '1000'")
-            .with_default(*default.unit_price())
+        let cadence = CustomType::<Cadence>::new("How often do you invoice?")
+            .with_help_message("E.g. 'Monthly' or 'BiWeekly'")
+            .with_default(*default.cadence())
             .prompt()?;
 
-        let service_fees = default.clone().with_name(name).with_unit_price(unit_price);
+        let granularity = CustomType::<Granularity>::new("Do you invoice per month, day or hour? Next question will be the rate which is per time unit you provide here")
+            .with_help_message("E.g. 'Month', 'Day' or 'Hour'")
+            .with_default(default.rate().granularity())
+            .prompt()?;
 
-        Ok(service_fees)
+        let unit_price = CustomType::<UnitPrice>::new("Unit price?")
+            .with_help_message(&format!(
+                "Price per {}, e.g. {}",
+                granularity,
+                granularity.example_rate()
+            ))
+            .with_default(default.unit_price())
+            .prompt()?;
+
+        let rate = Rate::from((unit_price, granularity));
+
+        Ok(ServiceFees::builder()
+            .name(name)
+            .cadence(cadence)
+            .rate(rate)
+            .build()
+            .unwrap())
     }
     inner(default).map_err(|e| Error::InvalidServiceFees {
         reason: format!("{:?}", e),

@@ -13,6 +13,7 @@ pub mod prelude {
         str::FromStr,
     };
 
+    pub use bon::{Builder, bon, builder};
     pub use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveDateTime, Weekday};
     pub use derive_more::{AsRef, Deref, Display, From};
     pub use derive_more::{IsVariant, TryUnwrap};

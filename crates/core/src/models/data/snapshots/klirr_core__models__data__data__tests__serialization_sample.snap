@@ -55,7 +55,8 @@ Data(
   ),
   service_fees: ServiceFees(
     name: "Discreet Investigative Services",
-    unit_price: UnitPrice(777.0),
+    rate: Daily(UnitPrice(777.0)),
+    cadence: Monthly,
   ),
   expensed_months: ExpensedMonths(
     explanation: "Expenses for months",
