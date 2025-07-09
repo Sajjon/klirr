@@ -2,37 +2,31 @@ use crate::prelude::*;
 
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TypedBuilder, Getters, WithSetters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, WithSetters)]
 pub struct Data {
     /// Information about this specific invoice.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     information: ProtoInvoiceInfo,
 
     /// The company that issued the invoice, the vendor/seller/supplier/issuer.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     vendor: CompanyInformation,
 
     /// The company that pays the invoice, the customer/buyer.
-    #[builder(setter(into))]
     #[getset(get = "pub", set_with = "pub")]
     client: CompanyInformation,
 
     /// Payment information for the vendor, used for international transfers.
     /// This includes the IBAN, bank name, and BIC.
     /// This is used to ensure that the client can pay the invoice correctly.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     payment_info: PaymentInformation,
 
     /// Price of service, if applicable.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     service_fees: ServiceFees,
 
     /// Any expenses that you might have incurred.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     expensed_months: ExpensedMonths,
 }
@@ -105,9 +99,9 @@ impl Data {
                     .clone()
                     .unwrap_or_default(),
             )
-            .footer_text(self.information().footer_text().clone())
+            .maybe_footer_text(self.information().footer_text().clone())
             .number(number)
-            .purchase_order(self.information().purchase_order().clone())
+            .maybe_purchase_order(self.information().purchase_order().clone())
             .build();
 
         let input_unpriced =
@@ -123,10 +117,10 @@ impl Data {
                         let worked_days = working_days - days_off.map(|d| *d).unwrap_or(0);
 
                         let service = Item::builder()
-                            .name(self.service_fees.name())
+                            .name(self.service_fees.name().clone())
                             .transaction_date(invoice_date)
                             .quantity(Quantity::from(Decimal::from(worked_days)))
-                            .unit_price(*self.service_fees.unit_price())
+                            .unit_price(self.service_fees.unit_price())
                             .currency(*self.payment_info.currency())
                             .build();
                         LineItemsPricedInSourceCurrency::Service(service)

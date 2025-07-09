@@ -12,23 +12,20 @@ use crate::prelude::*;
     Hash,
     SerializeDisplay,
     DeserializeFromStr,
-    TypedBuilder,
+    Builder,
     Getters,
 )]
 #[display("{year:04}-{month:02}-{day:02}")]
 pub struct Date {
     /// e.g. 2025
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     year: Year,
 
     /// e.g. 5 for May
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     month: Month,
 
     /// e.g. 31 for the last day of May
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     day: Day,
 }
@@ -68,7 +65,7 @@ impl std::str::FromStr for Date {
 
 fn from_ymd_parts(year: i32, month: u32, day: u32) -> Date {
     Date::builder()
-        .year(year)
+        .year(year.into())
         .month(Month::try_from(month).expect("Invalid month"))
         .day(Day::try_from(day).expect("Invalid day"))
         .build()
@@ -116,7 +113,7 @@ impl Date {
 impl Date {
     pub fn sample() -> Self {
         Self::builder()
-            .year(2025)
+            .year(2025.into())
             .month(Month::May)
             .day(Day::try_from(31).expect("LEQ 31 days"))
             .build()

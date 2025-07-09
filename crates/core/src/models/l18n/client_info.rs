@@ -1,14 +1,12 @@
 use crate::prelude::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Getters, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 pub struct L18nClientInfo {
     /// EN: "To:"
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     to_company: String,
 
     /// EN: "VAT:"
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     vat_number: String,
 }

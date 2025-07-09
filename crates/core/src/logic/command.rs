@@ -175,7 +175,7 @@ impl From<(DecryptedEmailSettings, NamedPdf)> for Email {
             .public_recipients(settings.recipients().clone())
             .cc_recipients(settings.cc_recipients().clone())
             .bcc_recipients(settings.bcc_recipients().clone())
-            .attachments([Attachment::Pdf(pdf)])
+            .attachments(IndexSet::from([Attachment::Pdf(pdf)]))
             .build()
     }
 }
@@ -185,11 +185,11 @@ impl From<DecryptedEmailSettings> for EmailCredentials {
         EmailCredentials::builder()
             .account(
                 EmailAccount::builder()
-                    .name(settings.sender().name())
+                    .name(settings.sender().name().clone())
                     .email(settings.sender().email().clone())
                     .build(),
             )
-            .password(settings.smtp_app_password().expose_secret())
+            .password(settings.smtp_app_password().clone())
             .smtp_server(settings.smtp_server().clone())
             .build()
     }

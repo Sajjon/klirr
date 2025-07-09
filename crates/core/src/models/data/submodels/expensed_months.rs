@@ -57,7 +57,7 @@ impl ExpensesForMonth {
         self.0.retain(|_| false);
         for (marker, quantity) in map {
             let item = Item::builder()
-                .name(marker.name())
+                .name(marker.name().clone())
                 .transaction_date(*marker.transaction_date())
                 .unit_price(*marker.unit_price())
                 .currency(*marker.currency())
@@ -222,14 +222,14 @@ mod tests {
         let mut expensed_months = ExpensedMonths::new(IndexMap::new());
         let month = YearAndMonth::january(2024);
         let item1 = Item::builder()
-            .name("Coffee")
+            .name("Coffee".into())
             .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
             .quantity(Quantity::from(dec!(3.0)))
             .transaction_date(Date::from_str("2024-01-01").unwrap())
             .build();
         let item2 = Item::builder()
-            .name("Coffee")
+            .name("Coffee".into())
             .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
             .quantity(Quantity::from(dec!(4.0)))
@@ -247,14 +247,14 @@ mod tests {
         let mut expensed_months = ExpensedMonths::new(IndexMap::new());
         let month = YearAndMonth::january(2024);
         let item1 = Item::builder()
-            .name("Coffee")
+            .name("Coffee".into())
             .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
             .quantity(Quantity::from(dec!(3.0)))
             .transaction_date(Date::from_str("2024-01-01").unwrap())
             .build();
         let item2 = Item::builder()
-            .name("Coffee")
+            .name("Coffee".into())
             .unit_price(UnitPrice::from(dec!(2.5)))
             .currency(Currency::EUR)
             .quantity(Quantity::from(dec!(4.0)))

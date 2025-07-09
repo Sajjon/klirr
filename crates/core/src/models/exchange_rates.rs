@@ -3,10 +3,9 @@ use std::ops::Mul;
 use crate::prelude::*;
 
 /// Represents exchange rates for a specific target currency in relation to other currencies.
-#[derive(Clone, Debug, Serialize, TypedBuilder, Getters)]
+#[derive(Clone, Debug, Serialize, Builder, Getters)]
 pub struct ExchangeRates {
     /// MUST Match the currency of the invoice, e.g. `"EUR"`.
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     target_currency: Currency,
 
@@ -21,7 +20,6 @@ pub struct ExchangeRates {
     /// ```
     /// then 1 USD is 1.2 EUR, 1 GBP is 0.85 EUR, and 1 SEK is 11.0 EUR.
     ///
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     rates: ExchangeRatesMap,
 }

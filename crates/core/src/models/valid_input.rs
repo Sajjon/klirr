@@ -4,12 +4,12 @@ use crate::prelude::*;
 /// Controls which language to use, the month for which to generate the invoice,
 /// the items to be invoiced, the layout of the invoice, and an optional output path
 /// for the generated PDF file.
-#[derive(Debug, Clone, Display, TypedBuilder, Getters)]
+#[derive(Debug, Clone, Display, Builder, Getters)]
 #[display("Layout: {}, Month: {}, out: {:?}, items: {}, language: {}", layout, month, maybe_output_path.as_ref().map(|d|d.display()), items, language)]
 pub struct ValidInput {
     /// The language to use for the invoice, used on labels, headers etc.
     /// Defaults to English (`Language::EN`).
-    #[builder(setter(into), default)]
+    #[builder(default)]
     #[getset(get = "pub")]
     language: Language,
 
@@ -19,24 +19,22 @@ pub struct ValidInput {
     month: YearAndMonth,
 
     /// The items to be invoiced, either services or expenses.
-    #[builder(setter(into), default)]
+    #[builder(default)]
     #[getset(get = "pub")]
     items: InvoicedItems,
 
     /// The layout of the invoice to use
-    #[builder(setter(into), default)]
+    #[builder(default)]
     #[getset(get = "pub")]
     layout: Layout,
 
     /// An optional override of where to save the output PDF file.
-    #[builder(setter(into), default)]
     #[getset(get = "pub")]
     maybe_output_path: Option<PathBuf>,
 
     /// If set, the invoice will be sent via email after generation.
     ///
     /// If set to true but email is not configured, an error will be thrown later.
-    #[builder(setter(into), default)]
     #[getset(get = "pub")]
     email: Option<DecryptedEmailSettings>,
 }
@@ -46,7 +44,7 @@ impl HasSample for ValidInput {
         Self::builder()
             .month(YearAndMonth::current())
             .items(InvoicedItems::sample())
-            .maybe_output_path(Some(PathBuf::from("invoice.pdf")))
+            .maybe_output_path(PathBuf::from("invoice.pdf"))
             .build()
     }
 }

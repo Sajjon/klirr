@@ -27,7 +27,6 @@ rpassword.workspace = true
 ron.workspace = true
 secrecy.workspace = true
 thiserror.workspace = true
-typed-builder.workspace = true
 
 [dev-dependencies]
 serde.workspace = true

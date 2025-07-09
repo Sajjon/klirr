@@ -251,9 +251,9 @@ fn build_invoice_info(default: &ProtoInvoiceInfo) -> Result<ProtoInvoiceInfo> {
 
         let info = ProtoInvoiceInfo::builder()
             .offset(offset)
-            .purchase_order(purchase_order)
-            .footer_text(footer_text)
-            .emphasize_color_hex(emphasize_color_hex)
+            .maybe_purchase_order(purchase_order)
+            .maybe_footer_text(footer_text)
+            .maybe_emphasize_color_hex(emphasize_color_hex)
             .months_off_record(default.months_off_record().clone())
             .build();
 
@@ -667,7 +667,7 @@ pub fn ask_for_email(
         .sender(sender)
         .smtp_server(smtp_server)
         .smtp_app_password(app_password_encrypted)
-        .reply_to(reply_to)
+        .maybe_reply_to(reply_to)
         .recipients(recipients.clone())
         .bcc_recipients(bcc_recipients)
         .cc_recipients(cc_recipients)

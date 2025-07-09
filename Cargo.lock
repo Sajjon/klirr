@@ -2408,7 +2408,6 @@ dependencies = [
  "tempfile",
  "test-log",
  "thiserror 2.0.12",
- "typed-builder",
 ]
 
 [[package]]
@@ -2446,7 +2445,6 @@ dependencies = [
  "test-log",
  "thiserror 2.0.12",
  "ttf-parser 0.25.1",
- "typed-builder",
  "zeroize",
 ]
 
@@ -2454,6 +2452,7 @@ dependencies = [
 name = "klirr-render"
 version = "0.1.26"
 dependencies = [
+ "bon",
  "chrono",
  "dirs-next",
  "getset",
@@ -2464,7 +2463,6 @@ dependencies = [
  "serde_json",
  "tempfile",
  "test-log",
- "typed-builder",
  "typst",
  "typst-kit",
  "typst-pdf",
@@ -4740,26 +4738,6 @@ name = "typed-arena"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a"
-
-[[package]]
-name = "typed-builder"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce63bcaf7e9806c206f7d7b9c1f38e0dce8bb165a80af0898161058b19248534"
-dependencies = [
- "typed-builder-macro",
-]
-
-[[package]]
-name = "typed-builder-macro"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60d8d828da2a3d759d3519cdf29a5bac49c77d039ad36d0782edadbf9cd5415b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
 
 [[package]]
 name = "typenum"

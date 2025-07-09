@@ -2,7 +2,7 @@ use crate::prelude::*;
 use typst::syntax::Source;
 
 /// The typst source files used to render the invoices layout and data.
-#[derive(Debug, Getters, TypedBuilder)]
+#[derive(Debug, Getters, Builder)]
 pub struct Content {
     /// The main typst file that contains calls the render function of layout, with the data and l18n files.
     #[getset(get = "pub")]

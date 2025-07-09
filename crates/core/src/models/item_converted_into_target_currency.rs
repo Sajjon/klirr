@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 /// An item with a total cost, calculated as `unit_price * quantity`.
 #[derive(
-    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Deref, From, Getters, TypedBuilder,
+    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Deref, From, Getters, Builder,
 )]
 pub struct ItemConvertedIntoTargetCurrency {
     /// An item in the currency it was paid in.
@@ -11,7 +11,6 @@ pub struct ItemConvertedIntoTargetCurrency {
     in_source_currency: Item,
 
     /// The total cost of the item, calculated as `unit_price * quantity`
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     total_cost: Cost,
 }

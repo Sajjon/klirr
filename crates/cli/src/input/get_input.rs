@@ -274,8 +274,8 @@ impl InvoiceInput {
             .layout(*self.layout())
             .items(items)
             .language(*self.language())
-            .maybe_output_path(self.out)
-            .email(email_config)
+            .maybe_maybe_output_path(self.out)
+            .maybe_email(email_config)
             .build();
         Ok(valid)
     }

@@ -24,7 +24,11 @@ hex = "0.4.3"
 hkdf = { version = "=0.12.4", default-features = false }
 indexmap = { version = "2.9.0", features = ["serde"] }
 insta = { version = "1.43.1", features = ["ron"] }
-lettre = { version = "0.11", default-features = false, features = ["tokio1-rustls-tls", "smtp-transport", "builder"] }
+lettre = { version = "0.11", default-features = false, features = [
+    "tokio1-rustls-tls",
+    "smtp-transport",
+    "builder",
+] }
 log = "0.4.27"
 pretty_assertions = "1.4.1"
 rand = "0.9.1"
@@ -39,7 +43,6 @@ strum = { version = "0.27", features = ["derive"] }
 tempfile = { version = "3.20.0" }
 test-log = { version = "0.2.17" }
 thiserror = "2.0.12"
-typed-builder = "0.21.0"
 zeroize = { version = "1.7.0", default-features = false, features = [
     "zeroize_derive",
     "derive",

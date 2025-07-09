@@ -26,7 +26,6 @@ pub mod prelude {
     pub use serde_with::{DeserializeFromStr, SerializeDisplay};
     pub use strum::{EnumIter, IntoEnumIterator};
     pub use thiserror::Error as ThisError;
-    pub use typed_builder::TypedBuilder;
 }
 
 pub use prelude::*;

@@ -2,15 +2,13 @@ use crate::prelude::*;
 
 pub type AesNonce = [u8; 12];
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, TypedBuilder, Getters)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Builder, Getters)]
 pub struct AesGcmSealedBox {
     /// Nonce is 12 bytes
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     nonce: AesNonce,
 
     /// Auth tag and encrypted payload
-    #[builder(setter(into))]
     #[getset(get = "pub")]
     cipher_text: Vec<u8>,
 }
