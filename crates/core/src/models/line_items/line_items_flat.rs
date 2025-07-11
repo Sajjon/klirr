@@ -56,6 +56,7 @@ impl HasSample for LineItemsFlat {
             .items(vec![ItemConvertedIntoTargetCurrency::sample()])
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .is_expenses(true)
@@ -69,6 +70,19 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = LineItemsFlat;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_line_items_flat_conversion() {
         let line_items = LineItemsPricedInSourceCurrency::sample();
@@ -79,7 +93,7 @@ mod tests {
             )]))
             .target_currency(Currency::EUR)
             .build();
-        let result = LineItemsFlat::try_from((line_items, exchange_rates));
+        let result = Sut::try_from((line_items, exchange_rates));
         assert!(
             result.is_ok(),
             "Expected conversion to succeed, got: {:?}",
@@ -89,6 +103,6 @@ mod tests {
 
     #[test]
     fn test_is_expenses() {
-        assert!(!MaybeIsExpenses::is_expenses(&LineItemsFlat::sample()));
+        assert!(!MaybeIsExpenses::is_expenses(&Sut::sample()));
     }
 }

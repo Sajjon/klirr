@@ -58,6 +58,7 @@ impl<Period: IsPeriod + HasSample> HasSample for ProtoInvoiceInfo<Period> {
             .record_of_periods_off(RecordOfPeriodsOff::default())
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .purchase_order(PurchaseOrder::sample_other())
@@ -97,6 +98,19 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = ProtoInvoiceInfo<YearAndMonth>;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_advance() {
         let date = Date::from_str("2025-05-31").unwrap();
@@ -106,14 +120,14 @@ mod tests {
 
     #[test]
     fn test_proto_invoice_info_validate_valid() {
-        let invoice_info = ProtoInvoiceInfo::<YearAndMonth>::sample();
+        let invoice_info = Sut::sample();
         assert!(invoice_info.validate().is_ok());
     }
 
     #[test]
     fn test_proto_invoice_info_validate_invalid() {
         let month = YearAndMonth::may(2025);
-        let invoice_info = ProtoInvoiceInfo::builder()
+        let invoice_info = Sut::builder()
             .offset(
                 TimestampedInvoiceNumber::builder()
                     .period(month)
@@ -129,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_insert_period_off() {
-        let mut invoice_info = ProtoInvoiceInfo::sample();
+        let mut invoice_info = Sut::sample();
         let period = YearAndMonth::may(2025);
         invoice_info.insert_period_off(period);
         assert!(invoice_info.record_of_periods_off().contains(&period));

@@ -47,6 +47,7 @@ impl<Period: IsPeriod + HasSample> HasSample for ValidInput<Period> {
             .maybe_output_path(PathBuf::from("invoice.pdf"))
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .period(Period::sample_other())
@@ -61,9 +62,11 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = ValidInput<YearAndMonth>;
+
     #[test]
     fn valid_input_sample() {
-        let sample = ValidInput::<YearAndMonth>::sample();
+        let sample = Sut::sample();
         assert!(sample.maybe_output_path.is_some());
     }
 }

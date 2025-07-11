@@ -36,10 +36,23 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = InvoicedItems;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn is_expenses() {
-        assert!(MaybeIsExpenses::is_expenses(&InvoicedItems::Expenses));
-        assert!(!MaybeIsExpenses::is_expenses(&InvoicedItems::Service {
+        assert!(MaybeIsExpenses::is_expenses(&Sut::Expenses));
+        assert!(!MaybeIsExpenses::is_expenses(&Sut::Service {
             days_off: None
         }));
     }

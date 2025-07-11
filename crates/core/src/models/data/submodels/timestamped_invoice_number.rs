@@ -19,10 +19,29 @@ impl<Period: IsPeriod + HasSample> HasSample for TimestampedInvoiceNumber<Period
             .period(Period::sample_other())
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .offset(InvoiceNumber::from(42u16))
             .period(Period::sample())
             .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = TimestampedInvoiceNumber<YearAndMonth>;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

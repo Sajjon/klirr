@@ -22,6 +22,7 @@ impl HasSample for ItemConvertedIntoTargetCurrency {
             .total_cost(Cost::sample())
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .in_source_currency(Item::sample_other())
@@ -35,9 +36,22 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = ItemConvertedIntoTargetCurrency;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn item_converted_into_target_currency_sample() {
-        let sample = ItemConvertedIntoTargetCurrency::sample();
+        let sample = Sut::sample();
         assert_eq!(*sample.total_cost(), Cost::sample());
     }
 }

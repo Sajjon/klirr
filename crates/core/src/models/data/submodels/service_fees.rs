@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+/// Represents the fees for a consulting service, including the name, rate,
+/// and billing cadence.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Getters, WithSetters)]
 pub struct ServiceFees {
     /// Description of the consulting service, e.g. `"Agreed Consulting Fees"`
@@ -44,6 +46,7 @@ impl HasSample for ServiceFees {
             .build()
             .expect("Sample should be valid")
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .name("Consulting Services".to_string())
@@ -60,8 +63,21 @@ mod tests {
     use insta::assert_ron_snapshot;
     use test_log::test;
 
+    type Sut = ServiceFees;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_serde() {
-        assert_ron_snapshot!(ServiceFees::sample())
+        assert_ron_snapshot!(Sut::sample())
     }
 }

@@ -34,6 +34,7 @@ impl HasSample for HexColor {
     fn sample() -> Self {
         Self::from_str("#8b008b").expect("Failed to create sample HexColor")
     }
+
     fn sample_other() -> Self {
         Self::from_str("#ff4500").expect("Failed to create sample HexColor")
     }
@@ -84,9 +85,22 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = HexColor;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_hex_color_from_str() {
-        let color: HexColor = "#e6007a".parse().unwrap();
+        let color: Sut = "#e6007a".parse().unwrap();
         assert_eq!(*color.red(), 230);
         assert_eq!(*color.green(), 0);
         assert_eq!(*color.blue(), 122);
@@ -102,13 +116,13 @@ mod tests {
             "#e6007a ", // trailing space
         ];
         for &s in &invalid_strings {
-            assert!(HexColor::from_str(s).is_err(), "Expected error for '{}'", s);
+            assert!(Sut::from_str(s).is_err(), "Expected error for '{}'", s);
         }
     }
 
     #[test]
     fn test_hex_color_default_is_black() {
-        let default_color = HexColor::default();
+        let default_color = Sut::default();
         assert_eq!(*default_color.red(), 0);
         assert_eq!(*default_color.green(), 0);
         assert_eq!(*default_color.blue(), 0);

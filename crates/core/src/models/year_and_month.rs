@@ -199,6 +199,7 @@ impl HasSample for YearAndMonth {
     fn sample() -> Self {
         Self::may(2025)
     }
+
     fn sample_other() -> Self {
         Self::january(2024)
     }
@@ -257,105 +258,130 @@ mod tests {
     use insta::assert_debug_snapshot;
     use test_log::test;
 
+    type Sut = YearAndMonth;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_january() {
-        let january = YearAndMonth::january(2025);
+        let january = Sut::january(2025);
         assert_eq!(january.year(), &Year::new(2025));
         assert_eq!(january.month(), &Month::January);
     }
 
     #[test]
     fn test_february() {
-        let february = YearAndMonth::february(2025);
+        let february = Sut::february(2025);
         assert_eq!(february.year(), &Year::new(2025));
         assert_eq!(february.month(), &Month::February);
     }
 
     #[test]
     fn test_march() {
-        let march = YearAndMonth::march(2025);
+        let march = Sut::march(2025);
         assert_eq!(march.year(), &Year::new(2025));
         assert_eq!(march.month(), &Month::March);
     }
 
     #[test]
     fn test_april() {
-        let april = YearAndMonth::april(2025);
+        let april = Sut::april(2025);
         assert_eq!(april.year(), &Year::new(2025));
         assert_eq!(april.month(), &Month::April);
     }
 
     #[test]
     fn test_may() {
-        let may = YearAndMonth::may(2025);
+        let may = Sut::may(2025);
         assert_eq!(may.year(), &Year::new(2025));
         assert_eq!(may.month(), &Month::May);
     }
 
     #[test]
     fn test_june() {
-        let june = YearAndMonth::june(2025);
+        let june = Sut::june(2025);
         assert_eq!(june.year(), &Year::new(2025));
         assert_eq!(june.month(), &Month::June);
     }
 
     #[test]
     fn test_july() {
-        let july = YearAndMonth::july(2025);
+        let july = Sut::july(2025);
         assert_eq!(july.year(), &Year::new(2025));
         assert_eq!(july.month(), &Month::July);
     }
 
     #[test]
     fn test_august() {
-        let august = YearAndMonth::august(2025);
+        let august = Sut::august(2025);
         assert_eq!(august.year(), &Year::new(2025));
         assert_eq!(august.month(), &Month::August);
     }
 
     #[test]
     fn test_september() {
-        let september = YearAndMonth::september(2025);
+        let september = Sut::september(2025);
         assert_eq!(september.year(), &Year::new(2025));
         assert_eq!(september.month(), &Month::September);
     }
 
     #[test]
     fn test_october() {
-        let october = YearAndMonth::october(2025);
+        let october = Sut::october(2025);
         assert_eq!(october.year(), &Year::new(2025));
         assert_eq!(october.month(), &Month::October);
     }
     #[test]
     fn test_november() {
-        let november = YearAndMonth::november(2025);
+        let november = Sut::november(2025);
         assert_eq!(november.year(), &Year::new(2025));
         assert_eq!(november.month(), &Month::November);
     }
 
     #[test]
     fn test_december() {
-        let december = YearAndMonth::december(2025);
+        let december = Sut::december(2025);
         assert_eq!(december.year(), &Year::new(2025));
         assert_eq!(december.month(), &Month::December);
     }
 
     #[test]
     fn test_from_str_valid() {
-        let year_and_month: YearAndMonth = "2025-05".parse().unwrap();
+        let year_and_month: Sut = "2025-05".parse().unwrap();
         assert_eq!(year_and_month.year(), &Year::new(2025));
         assert_eq!(year_and_month.month(), &Month::May);
     }
 
     #[test]
     fn test_from_str_invalid_format() {
-        let result: Result<YearAndMonth, _> = "2025/05".parse();
+        let result: Result<Sut, _> = "2025/05".parse();
         assert!(result.is_err());
     }
 
     #[test]
     fn test_debug() {
-        assert_debug_snapshot!(YearAndMonth::new(Year::new(2025), Month::May), @"2025-05");
+        assert_debug_snapshot!(Sut::new(Year::new(2025), Month::May), @"2025-05");
+    }
+
+    #[test]
+    fn test_compare_year_and_month() {
+        let date1 = Sut::from_str("2025-05").unwrap();
+        let date2 = Sut::from_str("2025-06").unwrap();
+        let date3 = Sut::from_str("2024-12").unwrap();
+
+        assert!(date1 < date2);
+        assert!(date2 > date1);
+        assert!(date1 > date3);
+        assert!(date3 < date1);
     }
 
     #[test]
@@ -365,7 +391,7 @@ mod tests {
             .month(Month::May)
             .day(Day::try_from(23).unwrap())
             .build();
-        let year_and_month: YearAndMonth = date.into();
+        let year_and_month: Sut = date.into();
         assert_eq!(year_and_month.year(), &Year::new(2025));
         assert_eq!(year_and_month.month(), &Month::May);
     }

@@ -44,6 +44,7 @@ impl HasSample for InvoiceInfoFull {
             .emphasize_color_hex(HexColor::sample())
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .number(InvoiceNumber::sample_other())
@@ -61,9 +62,22 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = InvoiceInfoFull;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_invoice_info_full_sample() {
-        let sample = InvoiceInfoFull::sample();
+        let sample = Sut::sample();
         assert!(sample.footer_text().is_some());
     }
 }

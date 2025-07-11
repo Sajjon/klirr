@@ -1,4 +1,4 @@
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 
 use crate::prelude::*;
 
@@ -21,6 +21,14 @@ pub struct EmailCredentials {
     password: SecretString,
 }
 
+impl PartialEq for EmailCredentials {
+    fn eq(&self, other: &Self) -> bool {
+        self.smtp_server == other.smtp_server
+            && self.account == other.account
+            && self.password.expose_secret() == other.password.expose_secret()
+    }
+}
+
 impl HasSample for EmailCredentials {
     fn sample() -> Self {
         Self::builder()
@@ -29,11 +37,30 @@ impl HasSample for EmailCredentials {
             .password("open sesame".into())
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .smtp_server(SmtpServer::default())
             .account(EmailAccount::sample_bob())
             .password("super_secret".into())
             .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = EmailCredentials;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

@@ -13,7 +13,7 @@ impl MaybeIsExpenses for LineItemsPricedInSourceCurrency {
 }
 
 /// Services or expenses included in this invoice to be paid by the client.
-#[derive(Clone, Debug, Serialize, Deserialize, From, TryUnwrap, IsVariant)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, From, TryUnwrap, IsVariant)]
 #[from(Vec<Item>, Item)]
 pub enum LineItemsPricedInSourceCurrency {
     /// Service sold by the vendor to the client, e.g. `"Agreed Consulting Fees"`
@@ -27,6 +27,7 @@ impl HasSample for LineItemsPricedInSourceCurrency {
     fn sample() -> Self {
         Self::Service(Item::sample())
     }
+
     fn sample_other() -> Self {
         Self::Expenses(vec![Item::sample_other()])
     }
@@ -36,6 +37,19 @@ impl HasSample for LineItemsPricedInSourceCurrency {
 mod tests {
     use super::*;
     use test_log::test;
+
+    type Sut = LineItemsPricedInSourceCurrency;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
 
     #[test]
     fn is_expenses() {

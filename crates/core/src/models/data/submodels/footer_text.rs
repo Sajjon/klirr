@@ -21,6 +21,7 @@ impl HasSample for FooterText {
     fn sample() -> Self {
         Self::from("Billed with the utmost discretion—your secrets are safe, for a price.")
     }
+
     fn sample_other() -> Self {
         Self::from("Thank you for your business! We appreciate your trust in our services.")
     }
@@ -31,10 +32,23 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = FooterText;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn default_neq_sample() {
-        let default = FooterText::default();
-        let sample = FooterText::sample();
+        let default = Sut::default();
+        let sample = Sut::sample();
         assert_ne!(default, sample);
     }
 }

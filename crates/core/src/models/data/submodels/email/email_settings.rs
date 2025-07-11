@@ -88,6 +88,7 @@ impl<T: Zeroize + HasSample> HasSample for EmailSettings<T> {
             ]))
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .smtp_app_password(T::sample_other())
@@ -133,5 +134,23 @@ impl EncryptedEmailSettings {
     ) -> Result<DecryptedEmailSettings> {
         let encryption_key = PbHkdfSha256::derive_key_from(encryption_password, self.salt());
         self.derive_and_decrypt_smtp_app_password(encryption_key)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = EncryptedEmailSettings;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

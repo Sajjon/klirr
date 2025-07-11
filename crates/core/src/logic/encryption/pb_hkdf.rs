@@ -1,49 +1,11 @@
-use crate::prelude::*;
+use crate::{logic::Salt, prelude::*};
 use hkdf::Hkdf;
 use secrecy::{ExposeSecret, SecretString};
-use serde_with::serde_as;
 use sha2::Sha256;
-use zeroize::{Zeroize, ZeroizeOnDrop};
 
 /// A simple `HKDF` based scheme using UTF8 encoding of the password as input.
 #[derive(Clone, Default, PartialEq, Eq, Hash)]
 pub struct PbHkdfSha256;
-
-#[serde_as]
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    From,
-    Deref,
-    AsRef,
-    Serialize,
-    Deserialize,
-    Zeroize,
-    ZeroizeOnDrop,
-)]
-#[serde(transparent)]
-pub struct Salt(#[serde_as(as = "serde_with::hex::Hex")] [u8; 16]);
-impl Salt {
-    /// Uses CSPRNG (safe) to generate a salt.
-    pub fn generate() -> Self {
-        use rand::RngCore;
-        let mut salt = [0u8; 16];
-        rand::rng().fill_bytes(&mut salt);
-        Self(salt)
-    }
-}
-
-impl HasSample for Salt {
-    fn sample() -> Self {
-        Self([0xab; 16])
-    }
-    fn sample_other() -> Self {
-        Self([0xcd; 16])
-    }
-}
 
 impl PbHkdfSha256 {
     const INFO: &'static [u8] = b"klirr email encryption";
@@ -74,27 +36,16 @@ mod tests {
     use super::*;
     use hex::encode as hex_encode;
 
+    type Sut = PbHkdfSha256;
+
     #[test]
     fn test_kdf() {
         let ikm = "open sesame";
-        let salt = Salt([0u8; 16]); // Use a fixed salt for deterministic test
-        let derived = PbHkdfSha256::derive_key(ikm, &salt);
+        let salt = Salt::from([0u8; 16]); // Use a fixed salt for deterministic test
+        let derived = Sut::derive_key(ikm, &salt);
         assert_eq!(
             hex_encode(*derived),
             "ce81a9fdee0e4db76e31d9b49ad2d5b09b45647bc56682d62110fbf32c2903b1"
         );
-    }
-
-    #[test]
-    fn test_salt_generate() {
-        let salt1 = Salt::generate();
-        let salt2 = Salt::generate();
-
-        // Generated salts should be different
-        assert_ne!(salt1, salt2);
-
-        // Salt should not be all zeros
-        assert_ne!(salt1.0, [0u8; 16]);
-        assert_ne!(salt2.0, [0u8; 16]);
     }
 }

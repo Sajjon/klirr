@@ -44,27 +44,40 @@ impl HasSample for InvoiceNumber {
 mod tests {
     use super::*;
 
+    type Sut = InvoiceNumber;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_invoice_number_sample() {
-        let sample = InvoiceNumber::sample();
+        let sample = Sut::sample();
         assert_eq!(*sample, 9876);
     }
 
     #[test]
     fn test_invoice_number_default_is_zero() {
-        let default = InvoiceNumber::default();
+        let default = Sut::default();
         assert_eq!(*default, 0);
     }
 
     #[test]
     fn test_from_str_valid() {
-        let invoice_number = InvoiceNumber::from_str("1234").unwrap();
+        let invoice_number = Sut::from_str("1234").unwrap();
         assert_eq!(*invoice_number, 1234);
     }
 
     #[test]
     fn test_from_str_invalid() {
-        let result = InvoiceNumber::from_str("invalid");
+        let result = Sut::from_str("invalid");
         assert!(
             result.is_err(),
             "Expected error for invalid string, got: {:?}",

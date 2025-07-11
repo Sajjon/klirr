@@ -132,9 +132,22 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = Date;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_date_from_str() {
-        let sut = Date::from_str("2025-05-23").unwrap();
+        let sut = Sut::from_str("2025-05-23").unwrap();
         assert_eq!(sut.year(), &Year::from(2025));
         assert_eq!(sut.month(), &Month::May);
         assert_eq!(sut.day(), &Day::try_from(23).unwrap());
@@ -162,20 +175,8 @@ mod tests {
         ];
 
         for date in invalid_dates {
-            assert!(Date::from_str(date).is_err());
+            assert!(Sut::from_str(date).is_err());
         }
-    }
-
-    #[test]
-    fn test_compare_year_and_month() {
-        let date1 = YearAndMonth::from_str("2025-05").unwrap();
-        let date2 = YearAndMonth::from_str("2025-06").unwrap();
-        let date3 = YearAndMonth::from_str("2024-12").unwrap();
-
-        assert!(date1 < date2);
-        assert!(date2 > date1);
-        assert!(date1 > date3);
-        assert!(date3 < date1);
     }
 
     #[test]

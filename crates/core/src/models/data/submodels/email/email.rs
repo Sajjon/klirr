@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 /// An email message that can be sent using an SMTP server.
-#[derive(Debug, Clone, Builder, Getters)]
+#[derive(Debug, Clone, Builder, Getters, PartialEq)]
 pub struct Email {
     /// The public recipients of the email
     #[builder(default)]
@@ -56,6 +56,7 @@ impl HasSample for Email {
             )]))
             .build()
     }
+
     fn sample_other() -> Self {
         Self::builder()
             .public_recipients(IndexSet::from_iter(vec![EmailAddress::sample_alice()]))
@@ -66,5 +67,23 @@ impl HasSample for Email {
                 NamedPdf::sample_other(),
             )]))
             .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = Email;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

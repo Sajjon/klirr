@@ -153,6 +153,7 @@ impl<Period: IsPeriod + HasSample> HasSample for Data<Period> {
             .expensed_periods(ExpensedPeriods::sample())
             .build()
     }
+
     fn sample_other() -> Self {
         Data::builder()
             .information(ProtoInvoiceInfo::sample_other())
@@ -172,14 +173,27 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = Data<YearAndMonth>;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_serialization_sample() {
-        assert_ron_snapshot!(Data::<YearAndMonth>::sample())
+        assert_ron_snapshot!(Sut::sample())
     }
 
     #[test]
     fn test_worked_days_when_ooo_is_greater_than_0() {
-        let sut = Data::sample();
+        let sut = Sut::sample();
         let partial = sut
             .to_partial(
                 ValidInput::builder()

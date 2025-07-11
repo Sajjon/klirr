@@ -25,6 +25,7 @@ impl UnitPrice {
     pub const ZERO: Self = Self(Decimal::ZERO);
     pub const ONE: Self = Self(Decimal::ONE);
 }
+
 impl HasSample for UnitPrice {
     fn sample() -> Self {
         Self::from(Decimal::from(dec!(350.0)))
@@ -39,6 +40,19 @@ mod tests {
     use super::*;
     use insta::assert_ron_snapshot;
     use test_log::test;
+
+    type Sut = UnitPrice;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
 
     #[test]
     fn unit_price_sample() {

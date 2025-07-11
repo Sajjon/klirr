@@ -67,18 +67,31 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = Day;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_day_conversion() {
-        assert_eq!(Day::try_from(1).unwrap(), Day(1));
-        assert_eq!(Day::try_from(15).unwrap(), Day(15));
-        assert_eq!(Day::try_from(31).unwrap(), Day(31));
-        assert!(Day::try_from(0).is_err());
-        assert!(Day::try_from(32).is_err());
+        assert_eq!(Sut::try_from(1).unwrap(), Day(1));
+        assert_eq!(Sut::try_from(15).unwrap(), Day(15));
+        assert_eq!(Sut::try_from(31).unwrap(), Day(31));
+        assert!(Sut::try_from(0).is_err());
+        assert!(Sut::try_from(32).is_err());
     }
 
     #[test]
     fn test_day_from_str() {
-        let day: Day = "15".parse().unwrap();
+        let day: Sut = "15".parse().unwrap();
         assert_eq!(day, Day(15));
     }
 
@@ -93,7 +106,7 @@ mod tests {
         ];
 
         for &s in &invalid_strings {
-            assert!(Day::from_str(s).is_err(), "Expected error for input: {}", s);
+            assert!(Sut::from_str(s).is_err(), "Expected error for input: {}", s);
         }
     }
 }
