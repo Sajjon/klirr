@@ -29,6 +29,9 @@ impl HasSample for UnitPrice {
     fn sample() -> Self {
         Self::from(Decimal::from(dec!(350.0)))
     }
+    fn sample_other() -> Self {
+        Self::from(Decimal::from(dec!(150.0))) // Example of a different unit price
+    }
 }
 
 #[cfg(test)]

@@ -54,6 +54,9 @@ impl HasSample for Item {
     fn sample() -> Self {
         Self::sample_expense_coffee()
     }
+    fn sample_other() -> Self {
+        Self::sample_expense_sandwich()
+    }
 }
 
 impl Item {

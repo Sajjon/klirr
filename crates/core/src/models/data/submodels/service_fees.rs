@@ -44,6 +44,14 @@ impl HasSample for ServiceFees {
             .build()
             .expect("Sample should be valid")
     }
+    fn sample_other() -> Self {
+        Self::builder()
+            .name("Consulting Services".to_string())
+            .rate(Rate::hourly(dec!(150.0)))
+            .cadence(Cadence::BiWeekly)
+            .build()
+            .expect("Sample should be valid")
+    }
 }
 
 #[cfg(test)]

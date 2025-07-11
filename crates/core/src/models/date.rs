@@ -110,12 +110,19 @@ impl Date {
     }
 }
 
-impl Date {
-    pub fn sample() -> Self {
+impl HasSample for Date {
+    fn sample() -> Self {
         Self::builder()
             .year(2025.into())
             .month(Month::May)
             .day(Day::try_from(31).expect("LEQ 31 days"))
+            .build()
+    }
+    fn sample_other() -> Self {
+        Self::builder()
+            .year(2024.into())
+            .month(Month::December)
+            .day(Day::try_from(15).expect("LEQ 31 days"))
             .build()
     }
 }

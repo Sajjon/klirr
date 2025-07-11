@@ -22,6 +22,12 @@ impl HasSample for ItemConvertedIntoTargetCurrency {
             .total_cost(Cost::sample())
             .build()
     }
+    fn sample_other() -> Self {
+        Self::builder()
+            .in_source_currency(Item::sample_other())
+            .total_cost(Cost::sample_other())
+            .build()
+    }
 }
 
 #[cfg(test)]

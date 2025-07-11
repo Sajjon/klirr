@@ -56,6 +56,12 @@ impl HasSample for LineItemsFlat {
             .items(vec![ItemConvertedIntoTargetCurrency::sample()])
             .build()
     }
+    fn sample_other() -> Self {
+        Self::builder()
+            .is_expenses(true)
+            .items(vec![ItemConvertedIntoTargetCurrency::sample_other()])
+            .build()
+    }
 }
 
 #[cfg(test)]

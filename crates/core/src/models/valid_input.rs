@@ -5,18 +5,18 @@ use crate::prelude::*;
 /// the items to be invoiced, the layout of the invoice, and an optional output path
 /// for the generated PDF file.
 #[derive(Debug, Clone, Display, Builder, Getters)]
-#[display("Layout: {}, Month: {}, out: {:?}, items: {}, language: {}", layout, month, maybe_output_path.as_ref().map(|d|d.display()), items, language)]
-pub struct ValidInput {
+#[display("Layout: {}, Month: {}, out: {:?}, items: {}, language: {}", layout, period, maybe_output_path.as_ref().map(|d|d.display()), items, language)]
+pub struct ValidInput<Period: IsPeriod> {
     /// The language to use for the invoice, used on labels, headers etc.
     /// Defaults to English (`Language::EN`).
     #[builder(default)]
     #[getset(get = "pub")]
     language: Language,
 
-    /// The month for which to generate the invoice, this affects the invoice
+    /// The period for which to generate the invoice, this affects the invoice
     /// number as well as the invoice date and due date.
     #[getset(get = "pub")]
-    month: YearAndMonth,
+    period: Period,
 
     /// The items to be invoiced, either services or expenses.
     #[builder(default)]
@@ -39,12 +39,19 @@ pub struct ValidInput {
     email: Option<DecryptedEmailSettings>,
 }
 
-impl HasSample for ValidInput {
+impl<Period: IsPeriod + HasSample> HasSample for ValidInput<Period> {
     fn sample() -> Self {
         Self::builder()
-            .month(YearAndMonth::current())
+            .period(Period::sample())
             .items(InvoicedItems::sample())
             .maybe_output_path(PathBuf::from("invoice.pdf"))
+            .build()
+    }
+    fn sample_other() -> Self {
+        Self::builder()
+            .period(Period::sample_other())
+            .items(InvoicedItems::sample_other())
+            .maybe_output_path(PathBuf::from("other_invoice.pdf"))
             .build()
     }
 }
@@ -56,7 +63,7 @@ mod tests {
 
     #[test]
     fn valid_input_sample() {
-        let sample = ValidInput::sample();
+        let sample = ValidInput::<YearAndMonth>::sample();
         assert!(sample.maybe_output_path.is_some());
     }
 }

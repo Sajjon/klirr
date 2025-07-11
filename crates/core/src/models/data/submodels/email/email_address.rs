@@ -21,6 +21,9 @@ impl HasSample for EmailAddress {
     fn sample() -> Self {
         Self::sample_alice()
     }
+    fn sample_other() -> Self {
+        Self::sample_bob()
+    }
 }
 impl EmailAddress {
     pub fn sample_alice() -> Self {

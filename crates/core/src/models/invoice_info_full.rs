@@ -33,8 +33,8 @@ pub struct InvoiceInfoFull {
     emphasize_color_hex: HexColor,
 }
 
-impl InvoiceInfoFull {
-    pub fn sample() -> Self {
+impl HasSample for InvoiceInfoFull {
+    fn sample() -> Self {
         Self::builder()
             .number(InvoiceNumber::sample())
             .invoice_date(Date::sample())
@@ -42,6 +42,16 @@ impl InvoiceInfoFull {
             .purchase_order(PurchaseOrder::sample())
             .footer_text(FooterText::sample())
             .emphasize_color_hex(HexColor::sample())
+            .build()
+    }
+    fn sample_other() -> Self {
+        Self::builder()
+            .number(InvoiceNumber::sample_other())
+            .invoice_date(Date::sample_other())
+            .due_date(Date::sample_other())
+            .purchase_order(PurchaseOrder::sample_other())
+            .footer_text(FooterText::sample_other())
+            .emphasize_color_hex(HexColor::sample_other())
             .build()
     }
 }

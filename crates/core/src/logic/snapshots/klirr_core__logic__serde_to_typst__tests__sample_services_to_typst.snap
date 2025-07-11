@@ -24,7 +24,7 @@ expression: typst
     emphasize_color_hex: "#8b008b",
     footer_text: "Billed with the utmost discretion—your secrets are safe, for a price.",
     invoice_date: "2025-05-31",
-    number: 1450,
+    number: 33,
     purchase_order: "PO-12345",
   ),
   line_items: (
@@ -41,7 +41,7 @@ expression: typst
     ),
   ),
   output_path: (
-    name: "2025-05-31_Lupin_et_Associés_invoice_1450.pdf",
+    name: "2025-05-31_Lupin_et_Associés_invoice_33.pdf",
   ),
   payment_info: (
     bank_name: "Banque de Paris",

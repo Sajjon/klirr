@@ -26,6 +26,9 @@ impl HasSample for InvoicedItems {
             days_off: Some(Day::sample()),
         }
     }
+    fn sample_other() -> Self {
+        Self::Expenses
+    }
 }
 
 #[cfg(test)]

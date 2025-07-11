@@ -27,6 +27,9 @@ impl HasSample for LineItemsPricedInSourceCurrency {
     fn sample() -> Self {
         Self::Service(Item::sample())
     }
+    fn sample_other() -> Self {
+        Self::Expenses(vec![Item::sample_other()])
+    }
 }
 
 #[cfg(test)]

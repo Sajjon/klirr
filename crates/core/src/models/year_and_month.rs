@@ -199,6 +199,9 @@ impl HasSample for YearAndMonth {
     fn sample() -> Self {
         Self::may(2025)
     }
+    fn sample_other() -> Self {
+        Self::january(2024)
+    }
 }
 
 impl PartialOrd for YearAndMonth {

@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use klirr_render::prelude::render;
 use secrecy::SecretString;
+use serde::de::DeserializeOwned;
 
 fn init_email_data(
     provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
@@ -8,11 +9,15 @@ fn init_email_data(
     init_email_data_at(data_dir(), provide_data)
 }
 
-fn init_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
+fn init_data<Period: IsPeriod + Serialize + DeserializeOwned + HasSample>(
+    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
+) -> Result<()> {
     init_data_at(data_dir_create_if(true), provide_data)
 }
 
-fn edit_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
+fn edit_data<Period: IsPeriod + Serialize + DeserializeOwned>(
+    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
+) -> Result<()> {
     edit_data_at(data_dir(), provide_data)
 }
 
@@ -26,7 +31,7 @@ fn validate_data() -> Result<()> {
     let base_path = data_dir();
     info!("Validating data directory at: {}", base_path.display());
 
-    read_data_from_disk_with_base_path(base_path)
+    read_data_from_disk_with_base_path::<YearAndMonth>(base_path)
         .map(|_| ())
         .inspect(|_| {
             info!("✅ Data directory is valid");
@@ -41,12 +46,12 @@ fn record_expenses(month: &YearAndMonth, expenses: &[Item]) -> Result<()> {
 }
 
 fn record_month_off(month: &YearAndMonth) -> Result<()> {
-    record_month_off_with_base_path(month, data_dir())
+    record_period_off_with_base_path(month, data_dir())
 }
 
 pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
     match command {
-        DataAdminInputCommand::Init => init_data(curry2(ask_for_data, None)),
+        DataAdminInputCommand::Init => init_data::<PeriodAnno>(curry2(ask_for_data, None)),
         DataAdminInputCommand::Validate => validate_data(),
         DataAdminInputCommand::Edit(input) => edit_data(curry2(
             ask_for_data,
@@ -84,7 +89,7 @@ pub fn render_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
         data,
         ValidInput::builder()
             .maybe_output_path(path)
-            .month(YearAndMonth::last())
+            .period(YearAndMonth::last())
             .build(),
         render,
     )
@@ -95,7 +100,7 @@ fn run_invoice_command_with_base_path(
     data_path: impl AsRef<Path>,
 ) -> Result<NamedPdf> {
     let input = input.parsed()?;
-    info!("🔮 Starting PDF creation, input: {}...", input);
+    info!("🔮 Starting PDF creation, input: {:?}...", input);
     let email_settings = input.email().clone();
     let named_pdf = create_pdf_with_data_base_path(data_path, input, render)?;
     save_pdf_location_to_tmp_file(named_pdf.saved_at().clone())?;
@@ -155,7 +160,7 @@ mod tests {
     fn test_run_invoice_command() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         let tempfile = tempdir.path().join("out.pdf");
-        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
+        save_data_with_base_path(Data::<YearAndMonth>::sample(), tempdir.path()).unwrap();
         let input = InvoiceInput::parse_from([
             "invoice",
             "--out",

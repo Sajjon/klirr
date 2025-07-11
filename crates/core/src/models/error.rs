@@ -128,9 +128,14 @@ pub enum Error {
     #[error("Failed to build ServiceFees from Terminal UI input, because: {reason}")]
     InvalidServiceFees { reason: String },
 
-    /// The offset month must not be in the record of months off.
-    #[error("Offset month must not be in the record of months off: {offset_month}")]
-    OffsetMonthMustNotBeInRecordOfMonthsOff { offset_month: YearAndMonth },
+    /// The offset period must not be in the record of periods off.
+    #[error(
+        "Offset period must not be in the record of periods off: {offset_period}, period kind: {period_kind}"
+    )]
+    OffsetPeriodMustNotBeInRecordOfPeriodsOff {
+        offset_period: String,
+        period_kind: String,
+    },
 
     /// The manually specified output path does not exist.
     #[error("Specified output path does not exist: {path}")]
@@ -140,12 +145,12 @@ pub enum Error {
     #[error("Failed to create output directory: {underlying}")]
     FailedToCreateOutputDirectory { underlying: String },
 
-    /// Target month must have expenses, but it does not.
+    /// Target period must have expenses, but it does not.
     #[error(
-        "Target month {target_month} must have expenses, but it does not. Fill 
-    in the `input/data/expenses.json` file with expenses for this month."
+        "Target period {target_period} must have expenses, but it does not. Fill 
+    in the `input/data/expenses.json` file with expenses for this period."
     )]
-    TargetMonthMustHaveExpenses { target_month: YearAndMonth },
+    TargetPeriodMustHaveExpenses { target_period: String },
 
     /// Failed to parse year
     #[error("Failed to parse year: {invalid_string}")]
@@ -193,9 +198,9 @@ pub enum Error {
         reason: String,
     },
 
-    /// The target month is in the record of months off, but it must not be.
-    #[error("Target month {target_month} is in the record of months off, but it must not be.")]
-    TargetMonthMustNotBeInRecordOfMonthsOff { target_month: YearAndMonth },
+    /// The target period is in the record of periods off, but it must not be.
+    #[error("Target period {target_period} is in the record of periods off, but it must not be.")]
+    TargetPeriodMustNotBeInRecordOfPeriodsOff { target_period: String },
 
     /// Failed to parse PaymentTerms NetDays from a string, e.g. when the format is incorrect.
     #[error("Failed to PaymentTerms NetDays from string: {invalid_string}")]

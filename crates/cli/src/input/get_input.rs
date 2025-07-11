@@ -252,7 +252,7 @@ impl InvoiceInput {
     /// # Errors
     /// Returns an error if the input is invalid, e.g. if the output path does not
     /// exist or if the items are not specified correctly.
-    pub fn parsed(self) -> Result<ValidInput> {
+    pub fn parsed(self) -> Result<ValidInput<PeriodAnno>> {
         if let Some(path) = &self.out {
             let parent = path
                 .parent()
@@ -270,7 +270,7 @@ impl InvoiceInput {
         }?;
         let items = self._invoiced_items()?;
         let valid = ValidInput::builder()
-            .month(self.month.year_and_month())
+            .period(PeriodAnno::from(self.month.year_and_month()))
             .layout(*self.layout())
             .items(items)
             .language(*self.language())

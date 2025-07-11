@@ -27,12 +27,22 @@ impl HasSample for SecretString {
     fn sample() -> Self {
         Self::from("encryption password")
     }
+    fn sample_other() -> Self {
+        Self::from("another encryption password")
+    }
 }
 impl HasSample for EncryptedAppPassword {
     fn sample() -> Self {
         Self::new_by_deriving_and_encrypting(
             SecretString::from("super secret"),
             SecretString::sample(),
+            &Salt::sample(),
+        )
+    }
+    fn sample_other() -> Self {
+        Self::new_by_deriving_and_encrypting(
+            SecretString::from("another super secret"),
+            SecretString::sample_other(),
             &Salt::sample(),
         )
     }

@@ -35,6 +35,9 @@ impl HasSample for InvoiceNumber {
     fn sample() -> Self {
         Self::from(9876)
     }
+    fn sample_other() -> Self {
+        Self::from(1234)
+    }
 }
 
 #[cfg(test)]

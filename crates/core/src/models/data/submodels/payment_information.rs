@@ -38,4 +38,13 @@ impl HasSample for PaymentInformation {
             .terms(PaymentTerms::sample())
             .build()
     }
+    fn sample_other() -> Self {
+        Self::builder()
+            .bank_name("Bank of London".into())
+            .iban("GB29 NWBK 6016 1331 9268 19".into())
+            .bic("NWBKGB2L".into())
+            .currency(Currency::USD)
+            .terms(PaymentTerms::sample_other())
+            .build()
+    }
 }

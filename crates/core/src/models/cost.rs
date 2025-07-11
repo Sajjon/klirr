@@ -13,4 +13,7 @@ impl HasSample for Cost {
     fn sample() -> Self {
         Self::from(dec!(350.0))
     }
+    fn sample_other() -> Self {
+        Self::from(dec!(500.0))
+    }
 }

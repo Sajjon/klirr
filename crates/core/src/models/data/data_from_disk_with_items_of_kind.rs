@@ -11,6 +11,7 @@ impl ToTypst for PreparedData {}
 pub trait HasSample: Sized {
     /// Returns a sample instance of the type.
     fn sample() -> Self;
+    fn sample_other() -> Self;
 }
 
 /// The input data for the invoice, which includes information about the invoice,
@@ -110,6 +111,16 @@ impl<Items: Serialize + MaybeIsExpenses + HasSample> HasSample
             .line_items(Items::sample())
             .payment_info(PaymentInformation::sample())
             .output_path(OutputPath::Name("invoice.pdf".into()))
+            .build()
+    }
+    fn sample_other() -> Self {
+        Self::builder()
+            .information(InvoiceInfoFull::sample_other())
+            .vendor(CompanyInformation::sample_client())
+            .client(CompanyInformation::sample_vendor())
+            .line_items(Items::sample_other())
+            .payment_info(PaymentInformation::sample_other())
+            .output_path(OutputPath::Name("invoice_other.pdf".into()))
             .build()
     }
 }

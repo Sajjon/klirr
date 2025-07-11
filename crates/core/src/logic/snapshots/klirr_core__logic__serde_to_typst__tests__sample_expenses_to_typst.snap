@@ -24,7 +24,7 @@ expression: typst
     emphasize_color_hex: "#8b008b",
     footer_text: "Billed with the utmost discretion—your secrets are safe, for a price.",
     invoice_date: "2025-05-31",
-    number: 1451,
+    number: 34,
     purchase_order: "PO-12345",
   ),
   line_items: (
@@ -38,26 +38,10 @@ expression: typst
         transaction_date: "2025-05-20",
         unit_price: 1602.25,
       ),
-      (
-        currency: "EUR",
-        name: "Coffee",
-        quantity: 2.0,
-        total_cost: 9.392,
-        transaction_date: "2025-05-31",
-        unit_price: 4.696,
-      ),
-      (
-        currency: "EUR",
-        name: "Sandwich",
-        quantity: 1.0,
-        total_cost: 8.218,
-        transaction_date: "2025-05-31",
-        unit_price: 8.218,
-      ),
     ),
   ),
   output_path: (
-    name: "2025-05-31_Lupin_et_Associés_expenses_invoice_1451.pdf",
+    name: "2025-05-31_Lupin_et_Associés_expenses_invoice_34.pdf",
   ),
   payment_info: (
     bank_name: "Banque de Paris",

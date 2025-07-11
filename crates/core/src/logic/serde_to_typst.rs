@@ -118,7 +118,7 @@ mod tests {
             Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
-                .month(YearAndMonth::sample())
+                .period(YearAndMonth::sample())
                 .language(Language::EN)
                 .build()
         );
@@ -130,7 +130,7 @@ mod tests {
             Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Service { days_off: None })
-                .month(YearAndMonth::sample())
+                .period(YearAndMonth::sample())
                 .language(Language::EN)
                 .build()
         );

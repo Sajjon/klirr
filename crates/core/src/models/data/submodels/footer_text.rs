@@ -21,6 +21,9 @@ impl HasSample for FooterText {
     fn sample() -> Self {
         Self::from("Billed with the utmost discretion—your secrets are safe, for a price.")
     }
+    fn sample_other() -> Self {
+        Self::from("Thank you for your business! We appreciate your trust in our services.")
+    }
 }
 
 #[cfg(test)]

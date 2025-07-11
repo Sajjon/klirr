@@ -47,6 +47,13 @@ impl HasSample for PaymentTerms {
     fn sample() -> Self {
         Self::default()
     }
+    fn sample_other() -> Self {
+        Self::Net(
+            NetDays::builder()
+                .due_in(Day::try_from(15).unwrap())
+                .build(),
+        )
+    }
 }
 
 #[derive(

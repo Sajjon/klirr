@@ -88,6 +88,24 @@ impl<T: Zeroize + HasSample> HasSample for EmailSettings<T> {
             ]))
             .build()
     }
+    fn sample_other() -> Self {
+        Self::builder()
+            .smtp_app_password(T::sample_other())
+            .salt(Salt::sample())
+            .template(Template::default())
+            .smtp_server(SmtpServer::default())
+            .sender(EmailAccount::sample_other())
+            .recipients(IndexSet::from([
+                EmailAddress::sample_bob(),
+                EmailAddress::sample_carol(),
+            ]))
+            .cc_recipients(IndexSet::from([EmailAddress::sample_dave()]))
+            .bcc_recipients(IndexSet::from([
+                EmailAddress::sample_erin(),
+                EmailAddress::sample_alice(),
+            ]))
+            .build()
+    }
 }
 
 impl EncryptedEmailSettings {

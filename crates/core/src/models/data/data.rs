@@ -3,10 +3,10 @@ use crate::prelude::*;
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, WithSetters)]
-pub struct Data {
+pub struct Data<Period: IsPeriod> {
     /// Information about this specific invoice.
     #[getset(get = "pub")]
-    information: ProtoInvoiceInfo,
+    information: ProtoInvoiceInfo<Period>,
 
     /// The company that issued the invoice, the vendor/seller/supplier/issuer.
     #[getset(get = "pub")]
@@ -28,10 +28,10 @@ pub struct Data {
 
     /// Any expenses that you might have incurred.
     #[getset(get = "pub")]
-    expensed_months: ExpensedMonths,
+    expensed_periods: ExpensedPeriods<Period>,
 }
 
-impl Data {
+impl<Period: IsPeriod> Data<Period> {
     /// Validates the invoice information and returns a `Result<Self>`.
     /// If the information is valid, it returns `Ok(self)`.
     /// If the information is invalid
@@ -42,7 +42,7 @@ impl Data {
     /// ```
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
-    /// let data = Data::sample();
+    /// let data = Data::<YearAndMonth>::sample();
     /// let result = data.validate();
     /// assert!(result.is_ok(), "Expected validation to succeed, got: {:?}", result);
     /// ```
@@ -63,15 +63,18 @@ impl Data {
     /// ```
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
-    /// let data = Data::sample();
+    /// let data = Data::<YearAndMonth>::sample();
     /// let input = ValidInput::sample();
     /// let result = data.to_partial(input);
     /// assert!(result.is_ok(), "Expected conversion to succeed, got: {:?}", result);
     /// ```
-    pub fn to_partial(self, input: ValidInput) -> Result<DataWithItemsPricedInSourceCurrency> {
+    pub fn to_partial(
+        self,
+        input: ValidInput<Period>,
+    ) -> Result<DataWithItemsPricedInSourceCurrency> {
         let items = input.items();
-        let target_month = input.month();
-        let invoice_date = target_month.to_date_end_of_month();
+        let target_period = input.period();
+        let invoice_date = target_period.to_date_end_of_period();
         let due_date = invoice_date.advance(self.payment_info().terms());
         let is_expenses = items.is_expenses();
         let number = input.invoice_number(self.information());
@@ -110,9 +113,9 @@ impl Data {
                 .information(full_info)
                 .line_items(match items {
                     InvoicedItems::Service { days_off } => {
-                        let working_days = working_days_in_month(
-                            target_month,
-                            self.information.months_off_record(),
+                        let working_days = working_days_in_period(
+                            target_period,
+                            self.information.record_of_periods_off(),
                         )?;
                         let worked_days = working_days - days_off.map(|d| *d).unwrap_or(0);
 
@@ -126,7 +129,7 @@ impl Data {
                         LineItemsPricedInSourceCurrency::Service(service)
                     }
                     InvoicedItems::Expenses => {
-                        let expenses = self.expensed_months.get(target_month)?;
+                        let expenses = self.expensed_periods.get(target_period)?;
                         LineItemsPricedInSourceCurrency::Expenses(expenses.clone())
                     }
                 })
@@ -139,7 +142,7 @@ impl Data {
     }
 }
 
-impl HasSample for Data {
+impl<Period: IsPeriod + HasSample> HasSample for Data<Period> {
     fn sample() -> Self {
         Data::builder()
             .information(ProtoInvoiceInfo::sample())
@@ -147,14 +150,17 @@ impl HasSample for Data {
             .vendor(CompanyInformation::sample_vendor())
             .payment_info(PaymentInformation::sample())
             .service_fees(ServiceFees::sample())
-            .expensed_months(ExpensedMonths::new(IndexMap::from_iter([(
-                YearAndMonth::sample(),
-                vec![
-                    Item::sample_expense_breakfast(),
-                    Item::sample_expense_coffee(),
-                    Item::sample_expense_sandwich(),
-                ],
-            )])))
+            .expensed_periods(ExpensedPeriods::sample())
+            .build()
+    }
+    fn sample_other() -> Self {
+        Data::builder()
+            .information(ProtoInvoiceInfo::sample_other())
+            .client(CompanyInformation::sample_client())
+            .vendor(CompanyInformation::sample_vendor())
+            .payment_info(PaymentInformation::sample_other())
+            .service_fees(ServiceFees::sample_other())
+            .expensed_periods(ExpensedPeriods::sample_other())
             .build()
     }
 }
@@ -168,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_serialization_sample() {
-        assert_ron_snapshot!(Data::sample())
+        assert_ron_snapshot!(Data::<YearAndMonth>::sample())
     }
 
     #[test]
@@ -180,7 +186,7 @@ mod tests {
                     .items(InvoicedItems::Service {
                         days_off: Some(Day::try_from(2).unwrap()),
                     })
-                    .month(YearAndMonth::sample())
+                    .period(YearAndMonth::sample())
                     .build(),
             )
             .unwrap();

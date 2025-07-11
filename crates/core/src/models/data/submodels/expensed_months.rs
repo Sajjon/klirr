@@ -1,40 +1,37 @@
 use crate::{define_item_struct, prelude::*};
 
 #[derive(Clone, Debug, Serialize, PartialEq, Deserialize, Getters)]
-pub struct ExpensedMonths {
+pub struct ExpensedPeriods<Period: IsPeriod> {
     explanation: String,
     #[getset(get = "pub")]
-    expenses_for_months: IndexMap<YearAndMonth, ExpensesForMonth>,
+    expenses_for_periods: IndexMap<Period, ExpensesForPeriods>,
 }
 
-impl ExpensedMonths {
-    pub fn sample() -> Self {
-        Self::new(IndexMap::from_iter([
-            (
-                YearAndMonth::january(2024),
-                vec![
-                    Item::sample_expense_coffee(),
-                    Item::sample_expense_sandwich(),
-                ],
-            ),
-            (
-                YearAndMonth::february(2024),
-                vec![Item::sample_expense_breakfast()],
-            ),
-        ]))
+impl<Period: IsPeriod + HasSample> HasSample for ExpensedPeriods<Period> {
+    fn sample() -> Self {
+        Self::new(IndexMap::from_iter([(
+            Period::sample(),
+            vec![Item::sample_expense_breakfast()],
+        )]))
+    }
+    fn sample_other() -> Self {
+        Self::new(IndexMap::from_iter([(
+            Period::sample_other(),
+            vec![Item::sample_expense_coffee()],
+        )]))
     }
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Deserialize, Default)]
 #[serde(transparent)]
-struct ExpensesForMonth(Vec<Item>);
+struct ExpensesForPeriods(Vec<Item>);
 
 #[derive(Hash, Eq, PartialEq, Display, Clone, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 struct QuantityIgnored;
 define_item_struct!(pub, Marker, QuantityIgnored);
 
-impl ExpensesForMonth {
-    /// Inserts a vector of items into the `ExpensesForMonth`, merging items that are the same
+impl ExpensesForPeriods {
+    /// Inserts a vector of items into the `ExpensesForPeriods`, merging items that are the same
     /// except for their quantity.
     fn insert(&mut self, items: Vec<Item>) {
         self.0.extend(items);
@@ -67,7 +64,7 @@ impl ExpensesForMonth {
         }
     }
 
-    /// Creates a new `ExpensesForMonth` with the given items, merging items that are the same
+    /// Creates a new `ExpensesForPeriods` with the given items, merging items that are the same
     /// except for their quantity.
     fn new(items: Vec<Item>) -> Self {
         let mut self_ = Self::default();
@@ -81,19 +78,19 @@ impl ExpensesForMonth {
     }
 }
 
-impl Default for ExpensedMonths {
+impl<Period: IsPeriod> Default for ExpensedPeriods<Period> {
     fn default() -> Self {
         Self::new(IndexMap::default())
     }
 }
 
-impl ExpensedMonths {
-    pub fn new(expenses_for_months: IndexMap<YearAndMonth, Vec<Item>>) -> Self {
+impl<Period: IsPeriod> ExpensedPeriods<Period> {
+    pub fn new(expenses_for_periods: IndexMap<Period, Vec<Item>>) -> Self {
         Self {
-            explanation: "Expenses for months".to_string(),
-            expenses_for_months: expenses_for_months
+            explanation: "Expenses for periods".to_string(),
+            expenses_for_periods: expenses_for_periods
                 .into_iter()
-                .map(|(month, items)| (month, ExpensesForMonth::new(items)))
+                .map(|(month, items)| (month, ExpensesForPeriods::new(items)))
                 .collect(),
         }
     }
@@ -105,14 +102,14 @@ impl ExpensedMonths {
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
     /// let month = YearAndMonth::january(2024);
-    /// let expenses = ExpensedMonths::new(IndexMap::from_iter([
+    /// let expenses = ExpensedPeriods::new(IndexMap::from_iter([
     ///     (month.clone(), vec![Item::sample_expense_coffee()]),
     /// ]));
     /// assert!(expenses.contains(&month));
     /// assert!(!expenses.contains(&YearAndMonth::february(2024)));
     /// ```
-    pub fn contains(&self, month: &YearAndMonth) -> bool {
-        self.expenses_for_months.contains_key(month)
+    pub fn contains(&self, period: &Period) -> bool {
+        self.expenses_for_periods.contains_key(period)
     }
 
     /// Retrieves the expenses for a specific month from a collection of expenses
@@ -126,16 +123,16 @@ impl ExpensedMonths {
     /// use klirr_core::prelude::*;
     /// let target_month = YearAndMonth::january(2024);
     /// let expenses_for_months = IndexMap::from_iter([(YearAndMonth::january(2024), vec![Item::sample_expense_breakfast()])]);
-    /// let expensed_months = ExpensedMonths::new(expenses_for_months);
+    /// let expensed_months = ExpensedPeriods::new(expenses_for_months);
     /// let expenses = expensed_months.get(&target_month);
     /// assert_eq!(expenses.unwrap().len(), 1); // January 2024 has one expense
     /// ```
-    pub fn get(&self, target_month: &YearAndMonth) -> Result<Vec<Item>> {
-        if let Some(items) = self.expenses_for_months().get(target_month) {
+    pub fn get(&self, target_period: &Period) -> Result<Vec<Item>> {
+        if let Some(items) = self.expenses_for_periods().get(target_period) {
             Ok(items.items())
         } else {
-            Err(Error::TargetMonthMustHaveExpenses {
-                target_month: *target_month,
+            Err(Error::TargetPeriodMustHaveExpenses {
+                target_period: format!("{:?}", target_period),
             })
         }
     }
@@ -148,7 +145,7 @@ impl ExpensedMonths {
     /// ```
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
-    /// let mut expensed_months = ExpensedMonths::new(IndexMap::new());
+    /// let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
     /// let month = YearAndMonth::january(2024);
     /// let items = vec![Item::sample_expense_coffee()];
     /// expensed_months.insert_expenses(&month, items.clone());
@@ -159,13 +156,13 @@ impl ExpensedMonths {
     /// assert_eq!(*expensed_months.get(&month).unwrap()[0].quantity(), Quantity::from(dec!(4.0))); // 2 + 2
     ///
     /// ```
-    pub fn insert_expenses(&mut self, month: &YearAndMonth, items: Vec<Item>) {
-        match self.expenses_for_months.entry(*month) {
+    pub fn insert_expenses(&mut self, period: &Period, items: Vec<Item>) {
+        match self.expenses_for_periods.entry(period.clone()) {
             indexmap::map::Entry::Occupied(mut entry) => {
                 entry.get_mut().insert(items);
             }
             indexmap::map::Entry::Vacant(entry) => {
-                entry.insert(ExpensesForMonth::new(items));
+                entry.insert(ExpensesForPeriods::new(items));
             }
         }
     }
@@ -178,7 +175,7 @@ mod tests {
     #[test]
     fn test_expensed_months_contains() {
         let month = YearAndMonth::january(2024);
-        let expenses = ExpensedMonths::new(IndexMap::from_iter([(
+        let expenses = ExpensedPeriods::new(IndexMap::from_iter([(
             month,
             vec![Item::sample_expense_coffee()],
         )]));
@@ -188,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_get_not_found() {
-        let expenses = ExpensedMonths::sample();
+        let expenses = ExpensedPeriods::sample();
         let target_month = YearAndMonth::january(1970);
         let result = expenses.get(&target_month);
         assert!(result.is_err());
@@ -201,14 +198,14 @@ mod tests {
             YearAndMonth::january(2024),
             vec![Item::sample_expense_breakfast()],
         )]);
-        let expensed_months = ExpensedMonths::new(expenses_for_months);
+        let expensed_months = ExpensedPeriods::new(expenses_for_months);
         let expenses = expensed_months.get(&target_month);
         assert_eq!(expenses.unwrap().len(), 1); // January 2024 has one expense
     }
 
     #[test]
     fn test_insert_expenses_different() {
-        let mut expensed_months = ExpensedMonths::new(IndexMap::new());
+        let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
         let month = YearAndMonth::january(2024);
         let items = vec![Item::sample_expense_coffee()];
         expensed_months.insert_expenses(&month, items.clone());
@@ -219,7 +216,7 @@ mod tests {
 
     #[test]
     fn test_insert_expenses_same_except_quantity() {
-        let mut expensed_months = ExpensedMonths::new(IndexMap::new());
+        let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
         let month = YearAndMonth::january(2024);
         let item1 = Item::builder()
             .name("Coffee".into())
@@ -244,7 +241,7 @@ mod tests {
 
     #[test]
     fn test_insert_expenses_same_except_quantity_added_in_two_batches() {
-        let mut expensed_months = ExpensedMonths::new(IndexMap::new());
+        let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
         let month = YearAndMonth::january(2024);
         let item1 = Item::builder()
             .name("Coffee".into())
@@ -270,7 +267,7 @@ mod tests {
 
     #[test]
     fn default_is_empty() {
-        let expensed_months = ExpensedMonths::default();
-        assert!(expensed_months.expenses_for_months.is_empty());
+        let expensed_periods = ExpensedPeriods::<YearAndMonth>::default();
+        assert!(expensed_periods.expenses_for_periods.is_empty());
     }
 }

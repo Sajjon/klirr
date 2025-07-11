@@ -34,6 +34,9 @@ impl HasSample for HexColor {
     fn sample() -> Self {
         Self::from_str("#8b008b").expect("Failed to create sample HexColor")
     }
+    fn sample_other() -> Self {
+        Self::from_str("#ff4500").expect("Failed to create sample HexColor")
+    }
 }
 
 impl FromStr for HexColor {

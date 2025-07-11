@@ -2,17 +2,17 @@ use crate::prelude::*;
 
 /// Partial information about the invoice which can be used to derive a [`InvoiceInfoFull`]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, Setters)]
-pub struct ProtoInvoiceInfo {
+pub struct ProtoInvoiceInfo<Period: IsPeriod> {
     /// An offset which is used to calculate the invoice number, e.g. `(237, 2025-05)`.
     /// This is enables us to calculate the next invoice number based on the current
     /// date and this offset.
     #[getset(get = "pub", set_with = "pub")]
-    offset: TimestampedInvoiceNumber,
+    offset: TimestampedInvoiceNumber<Period>,
 
-    /// Record of months when we were 100% off, i.e. did not invoice for, e.g. `["2025-01", "2025-02"]`.
+    /// Record of periods when we were 100% off, i.e. did not invoice for, e.g. `["2025-01", "2025-02"]`.
     #[builder(default)]
     #[getset(get = "pub", set = "pub")]
-    months_off_record: MonthsOffRecord,
+    record_of_periods_off: RecordOfPeriodsOff<Period>,
 
     /// A purchase order number associated with this invoice, e.g. `"PO-12345"`
     /// Typically agreed upon between the vendor and client before the
@@ -29,37 +29,47 @@ pub struct ProtoInvoiceInfo {
     emphasize_color_hex: Option<HexColor>,
 }
 
-impl ProtoInvoiceInfo {
+impl<Period: IsPeriod> ProtoInvoiceInfo<Period> {
     /// Inserts a new month into the months off record.
     /// This is used to keep track of months when no invoices were issued.
     /// # Examples
     /// ```
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
-    /// let mut invoice_info = ProtoInvoiceInfo::sample();
+    /// let mut invoice_info = ProtoInvoiceInfo::<YearAndMonth>::sample();
     /// let month = YearAndMonth::may(2025);
-    /// invoice_info.insert_month_off(month);
-    /// assert!(invoice_info.months_off_record().contains(&month));
+    /// invoice_info.insert_period_off(month);
+    /// assert!(invoice_info.record_of_periods_off().contains(&month));
     /// ```
-    pub fn insert_month_off(&mut self, month: YearAndMonth) {
-        let mut months_off = self.months_off_record.clone();
-        months_off.insert(month);
-        self.set_months_off_record(months_off);
+    pub fn insert_period_off(&mut self, period: Period) {
+        let mut periods_off = self.record_of_periods_off.clone();
+        periods_off.insert(period);
+        self.set_record_of_periods_off(periods_off);
     }
 }
-impl HasSample for ProtoInvoiceInfo {
+
+impl<Period: IsPeriod + HasSample> HasSample for ProtoInvoiceInfo<Period> {
     fn sample() -> Self {
         Self::builder()
             .purchase_order(PurchaseOrder::sample())
             .footer_text(FooterText::sample())
             .emphasize_color_hex(HexColor::sample())
             .offset(TimestampedInvoiceNumber::sample())
-            .months_off_record(MonthsOffRecord::sample())
+            .record_of_periods_off(RecordOfPeriodsOff::default())
+            .build()
+    }
+    fn sample_other() -> Self {
+        Self::builder()
+            .purchase_order(PurchaseOrder::sample_other())
+            .footer_text(FooterText::sample_other())
+            .emphasize_color_hex(HexColor::sample_other())
+            .offset(TimestampedInvoiceNumber::sample_other())
+            .record_of_periods_off(RecordOfPeriodsOff::default())
             .build()
     }
 }
 
-impl ProtoInvoiceInfo {
+impl<Period: IsPeriod> ProtoInvoiceInfo<Period> {
     /// Validates the invoice information, ensuring that the offset month
     /// is not in the record of months off.
     ///
@@ -67,13 +77,14 @@ impl ProtoInvoiceInfo {
     /// ```
     /// extern crate klirr_core;
     /// use klirr_core::prelude::*;
-    /// let invoice_info = ProtoInvoiceInfo::sample();
+    /// let invoice_info = ProtoInvoiceInfo::<YearAndMonth>::sample();
     /// assert!(invoice_info.validate().is_ok());
     /// ```
     pub fn validate(&self) -> Result<()> {
-        if self.months_off_record.contains(self.offset.month()) {
-            return Err(Error::OffsetMonthMustNotBeInRecordOfMonthsOff {
-                offset_month: *self.offset.month(),
+        if self.record_of_periods_off.contains(self.offset.period()) {
+            return Err(Error::OffsetPeriodMustNotBeInRecordOfPeriodsOff {
+                offset_period: format!("{:?}", self.offset.period()),
+                period_kind: type_name::<Period>(),
             });
         }
         Ok(())
@@ -95,7 +106,7 @@ mod tests {
 
     #[test]
     fn test_proto_invoice_info_validate_valid() {
-        let invoice_info = ProtoInvoiceInfo::sample();
+        let invoice_info = ProtoInvoiceInfo::<YearAndMonth>::sample();
         assert!(invoice_info.validate().is_ok());
     }
 
@@ -105,11 +116,11 @@ mod tests {
         let invoice_info = ProtoInvoiceInfo::builder()
             .offset(
                 TimestampedInvoiceNumber::builder()
-                    .month(month)
+                    .period(month)
                     .offset(237.into())
                     .build(),
             )
-            .months_off_record(MonthsOffRecord::new([month]))
+            .record_of_periods_off(RecordOfPeriodsOff::new([month]))
             .purchase_order(PurchaseOrder::sample())
             .build();
         let result = invoice_info.validate();
@@ -117,10 +128,10 @@ mod tests {
     }
 
     #[test]
-    fn test_insert_month_off() {
+    fn test_insert_period_off() {
         let mut invoice_info = ProtoInvoiceInfo::sample();
-        let month = YearAndMonth::may(2025);
-        invoice_info.insert_month_off(month);
-        assert!(invoice_info.months_off_record.contains(&month));
+        let period = YearAndMonth::may(2025);
+        invoice_info.insert_period_off(period);
+        assert!(invoice_info.record_of_periods_off().contains(&period));
     }
 }

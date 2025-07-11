@@ -2,6 +2,34 @@ use std::borrow::Borrow;
 
 use crate::prelude::*;
 
+impl Year {
+    /// Checks if this year is a leap year, if it is, `true` is returned, else
+    /// `false`
+    pub fn is_leap(&self) -> bool {
+        let year = **self;
+        (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+    }
+}
+
+impl Month {
+    pub fn last_day(&self, is_leap_year: bool) -> Day {
+        use Month::*;
+        match self {
+            January | March | May | July | August | October | December => {
+                Day::try_from(31).expect("LEQ 31 days")
+            }
+            April | June | September | November => Day::try_from(30).expect("LEQ 31 days"),
+            February => {
+                if is_leap_year {
+                    Day::try_from(29).expect("LEQ 31 days")
+                } else {
+                    Day::try_from(28).expect("LEQ 31 days")
+                }
+            }
+        }
+    }
+}
+
 impl YearAndMonth {
     /// Returns the last day of the month for this `YearAndMonth`, e.g. if the
     /// year is not a leap year, February will return 28, and for leap year
@@ -14,19 +42,7 @@ impl YearAndMonth {
     /// assert_eq!(year_and_month.last_day_of_month(), Day::try_from(31).unwrap());
     /// ```
     pub fn last_day_of_month(&self) -> Day {
-        match **self.month() {
-            1 | 3 | 5 | 7 | 8 | 10 | 12 => Day::try_from(31).expect("LEQ 31 days"),
-            4 | 6 | 9 | 11 => Day::try_from(30).expect("LEQ 31 days"),
-            2 => {
-                let year = **self.year();
-                if (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) {
-                    Day::try_from(29).expect("LEQ 31 days")
-                } else {
-                    Day::try_from(28).expect("LEQ 31 days")
-                }
-            }
-            _ => unreachable!("Invalid month value"),
-        }
+        self.month().last_day(self.year().is_leap())
     }
 
     /// Converts this `YearAndMonth` to a `Date` representing the last day of the month.
@@ -121,20 +137,38 @@ impl YearAndMonth {
     }
 }
 
-impl ValidInput {
+impl IsPeriod for YearAndMonth {
+    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16 {
+        self.elapsed_months_since(start)
+    }
+
+    fn to_date_end_of_period(&self) -> Date {
+        self.to_date_end_of_month()
+    }
+
+    fn year(&self) -> &Year {
+        self.year()
+    }
+
+    fn month(&self) -> &Month {
+        self.month()
+    }
+}
+
+impl<Period: IsPeriod> ValidInput<Period> {
     /// Calculates the invoice number for the given `ProtoInvoiceInfo` based on
     /// the target month and whether the items are expenses or services.
     ///
     /// See `calculate_invoice_number` for the logic.
-    pub fn invoice_number(&self, information: &ProtoInvoiceInfo) -> InvoiceNumber {
+    pub fn invoice_number(&self, information: &ProtoInvoiceInfo<Period>) -> InvoiceNumber {
         let items = self.items();
-        let target_month = self.month();
+        let target_period = self.period();
         let is_expenses = items.is_expenses();
         calculate_invoice_number(
             information.offset(),
-            target_month,
+            target_period,
             is_expenses,
-            information.months_off_record(),
+            information.record_of_periods_off(),
         )
     }
 }
@@ -150,10 +184,10 @@ impl ValidInput {
 /// ```
 /// extern crate klirr_core;
 /// use klirr_core::prelude::*;
-/// let offset = TimestampedInvoiceNumber::builder().offset(100.into()).month(YearAndMonth::january(2024)).build();
+/// let offset = TimestampedInvoiceNumber::<YearAndMonth>::builder().offset(100.into()).period(YearAndMonth::january(2024)).build();
 /// let target_month = YearAndMonth::august(2024);
 /// let is_expenses = true;
-/// let months_off_record = MonthsOffRecord::new([
+/// let months_off_record = RecordOfPeriodsOff::new([
 ///   YearAndMonth::march(2024),
 ///   YearAndMonth::april(2024),
 /// ]);
@@ -173,21 +207,22 @@ impl ValidInput {
 /// let expected = InvoiceNumber::from(106);
 /// assert_eq!(invoice_number, expected);
 /// ```
-pub fn calculate_invoice_number(
-    offset: &TimestampedInvoiceNumber,
-    target_month: &YearAndMonth,
+pub fn calculate_invoice_number<Period: IsPeriod>(
+    offset: &TimestampedInvoiceNumber<Period>,
+    target_period: &Period,
     is_expenses: bool,
-    months_off_record: &MonthsOffRecord,
+    record_of_periods_off: &RecordOfPeriodsOff<Period>,
 ) -> InvoiceNumber {
     assert!(
-        !months_off_record.contains(offset.month()),
-        "Should have validated ProtoInvoiceInfo before calling this function"
+        !record_of_periods_off.contains(offset.period()),
+        "Record of periods off contains offset.period(): {:?} but it should not.",
+        offset.period()
     );
-    let months_elapsed_since_offset = target_month.elapsed_months_since(offset.month());
+    let months_elapsed_since_offset = target_period.elapsed_periods_since(offset.period());
 
     let mut months_off_to_subtract = 0;
-    for year_and_month in months_off_record.iter() {
-        if year_and_month > offset.month() && year_and_month <= target_month {
+    for period_off in record_of_periods_off.iter() {
+        if period_off > offset.period() && period_off <= target_period {
             // If the month is off record, we need to adjust the invoice number
             // by subtracting the number of months off record.
             months_off_to_subtract += 1;
@@ -213,22 +248,22 @@ pub fn calculate_invoice_number(
 /// use klirr_core::prelude::*;
 ///
 /// let target_month = YearAndMonth::january(2024);
-/// let months_off_record = MonthsOffRecord::new([]);
-/// let working_days = working_days_in_month(&target_month, &months_off_record);
+/// let months_off_record = RecordOfPeriodsOff::new([]);
+/// let working_days = working_days_in_period(&target_month, &months_off_record);
 /// assert_eq!(working_days.unwrap(), 23); // January 2024 has 23
 /// ```
-pub fn working_days_in_month(
-    target_month: &YearAndMonth,
-    months_off_record: &MonthsOffRecord,
+pub fn working_days_in_period<Period: IsPeriod>(
+    target_period: &Period,
+    record_of_periods_off: &RecordOfPeriodsOff<Period>,
 ) -> Result<u8> {
-    if months_off_record.contains(target_month) {
-        return Err(Error::TargetMonthMustNotBeInRecordOfMonthsOff {
-            target_month: *target_month,
+    if record_of_periods_off.contains(target_period) {
+        return Err(Error::TargetPeriodMustNotBeInRecordOfPeriodsOff {
+            target_period: format!("{:?}", target_period),
         });
     }
 
-    let year = **target_month.year() as i32;
-    let month = **target_month.month() as u32;
+    let year = **target_period.year() as i32;
+    let month = **target_period.month() as u32;
 
     // Start from the 1st of the month
     let mut day = NaiveDate::from_ymd_opt(year, month, 1)
@@ -316,7 +351,7 @@ mod tests {
         expected: impl Into<InvoiceNumber>,
     ) {
         let input = ValidInput::builder()
-            .month(target_month)
+            .period(target_month)
             .items(if is_expenses {
                 InvoicedItems::Expenses
             } else {
@@ -325,11 +360,11 @@ mod tests {
             .build();
         let information = ProtoInvoiceInfo::builder()
             .purchase_order(PurchaseOrder::from("PO"))
-            .months_off_record(MonthsOffRecord::new(months_off))
+            .record_of_periods_off(RecordOfPeriodsOff::new(months_off))
             .offset(
                 TimestampedInvoiceNumber::builder()
                     .offset(offset_no.into())
-                    .month(offset_month)
+                    .period(offset_month)
                     .build(),
             )
             .build();
@@ -624,19 +659,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Should have validated ProtoInvoiceInfo before calling this function"
-    )]
+    #[should_panic]
     fn test_calculate_invoice_number_panics_for_invalid_input() {
         let month = YearAndMonth::may(2025);
         let invoice_info = ProtoInvoiceInfo::builder()
             .offset(
                 TimestampedInvoiceNumber::builder()
-                    .month(month)
+                    .period(month)
                     .offset(237.into())
                     .build(),
             )
-            .months_off_record(MonthsOffRecord::new([month]))
+            .record_of_periods_off(RecordOfPeriodsOff::new([month]))
             .purchase_order(PurchaseOrder::sample())
             .build();
 
@@ -644,23 +677,23 @@ mod tests {
             invoice_info.offset(),
             &YearAndMonth::december(2025),
             true,
-            invoice_info.months_off_record(),
+            invoice_info.record_of_periods_off(),
         );
     }
 
     #[test]
-    fn test_working_days_in_month_target_month_is_in_record_of_months_off() {
+    fn test_working_days_in_period_target_month_is_in_record_of_months_off() {
         let target_month = YearAndMonth::january(2024);
-        let months_off_record = MonthsOffRecord::new([target_month]);
-        let result = working_days_in_month(&target_month, &months_off_record);
+        let months_off_record = RecordOfPeriodsOff::new([target_month]);
+        let result = working_days_in_period(&target_month, &months_off_record);
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_working_days_in_month_target_month_december() {
+    fn test_working_days_in_period_target_month_december() {
         let target_month = YearAndMonth::december(2025);
-        let months_off_record = MonthsOffRecord::new([]);
-        let result = working_days_in_month(&target_month, &months_off_record);
+        let months_off_record = RecordOfPeriodsOff::new([]);
+        let result = working_days_in_period(&target_month, &months_off_record);
         assert!(result.is_ok());
     }
 }

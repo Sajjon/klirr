@@ -29,6 +29,9 @@ impl HasSample for CompanyInformation {
     fn sample() -> Self {
         Self::sample_client()
     }
+    fn sample_other() -> Self {
+        Self::sample_vendor()
+    }
 }
 
 impl CompanyInformation {

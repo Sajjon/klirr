@@ -29,6 +29,9 @@ impl HasSample for Quantity {
     fn sample() -> Self {
         Self::ONE
     }
+    fn sample_other() -> Self {
+        Self::from(dec!(3.5)) // Example of a different quantity
+    }
 }
 
 #[cfg(test)]

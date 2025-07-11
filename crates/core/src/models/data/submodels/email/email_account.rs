@@ -29,6 +29,9 @@ impl HasSample for EmailAccount {
     fn sample() -> Self {
         Self::sample_alice()
     }
+    fn sample_other() -> Self {
+        Self::sample_bob()
+    }
 }
 
 #[cfg(test)]

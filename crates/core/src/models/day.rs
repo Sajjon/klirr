@@ -8,6 +8,9 @@ impl HasSample for Day {
     fn sample() -> Self {
         Self(1)
     }
+    fn sample_other() -> Self {
+        Self(15)
+    }
 }
 
 impl std::str::FromStr for Day {

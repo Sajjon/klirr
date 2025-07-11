@@ -164,17 +164,79 @@ fn format_help_skippable(help: impl Into<Option<String>>) -> String {
     )
 }
 
+fn build_period(
+    help: impl Into<Option<String>>,
+    default: Option<PeriodAnno>,
+    cadence: Cadence,
+) -> InquireResult<Option<PeriodAnno>> {
+    let help = help.into();
+    // match cadence {
+    //     Cadence::Monthly => if let Some(default) = default {
+    //         match default {
+    //             PeriodAnno::YearAndMonth(ym) => {
+    //                 build_year_month_inner(help, Some(*ym.year()), Some(*ym.month()))
+    //             }
+    //             PeriodAnno::YearMonthAndFortnight(_) => {
+    //                 panic!("Expected YearAndMonth since Cadence is Monthly")
+    //             }
+    //         }
+    //     } else {
+    //         build_year_month_inner(help, None, None)
+    //     }
+    //     .map(|ok| ok.map(PeriodAnno::from)),
+    //     Cadence::BiWeekly => build_year_month_inner(),
+    // }
+    let Some(ym) = build_year_month_inner(
+        help.clone(),
+        default.as_ref().map(|d| d.year()),
+        default.as_ref().map(|d| d.month()),
+    )?
+    else {
+        return Ok(None);
+    };
+    match cadence {
+        Cadence::Monthly => Ok(Some(ym.into())),
+        Cadence::BiWeekly => {
+            let help_message = format_help_skippable(help);
+
+            let Some(half) = CustomType::<MonthHalf>::new("Half of month?")
+                .with_help_message(&help_message)
+                .with_optional_default(&default.and_then(|d| {
+                    d.try_unwrap_year_month_and_fortnight()
+                        .ok()
+                        .map(|yam| *yam.half())
+                }))
+                .prompt_skippable()?
+            else {
+                return Ok(None);
+            };
+
+            Ok(Some(
+                YearMonthAndFortnight::builder()
+                    .year(*ym.year())
+                    .month(*ym.month())
+                    .half(half)
+                    .build()
+                    .into(),
+            ))
+        }
+    }
+}
+
 fn build_year_month_inner(
     help: impl Into<Option<String>>,
-    default: Option<YearAndMonth>,
+    default_year: Option<&Year>,
+    default_month: Option<&Month>,
 ) -> InquireResult<Option<YearAndMonth>> {
-    let default_value = default.unwrap_or(YearAndMonth::last());
+    let default = YearAndMonth::last();
+    let default_year = default_year.unwrap_or(default.year());
+    let default_month = default_month.unwrap_or(default.month());
 
     let help_message = format_help_skippable(help);
 
     let Some(year) = CustomType::<Year>::new("Year?")
         .with_help_message(&help_message)
-        .with_default(*default_value.year())
+        .with_default(*default_year)
         .prompt_skippable()?
     else {
         return Ok(None);
@@ -182,7 +244,7 @@ fn build_year_month_inner(
 
     let Some(month) = CustomType::<Month>::new("Month?")
         .with_help_message(&help_message)
-        .with_default(*default_value.month())
+        .with_default(*default_month)
         .prompt_skippable()?
     else {
         return Ok(None);
@@ -193,18 +255,14 @@ fn build_year_month_inner(
     ))
 }
 
-#[allow(unused)]
-fn build_year_month(
-    help: impl Into<Option<String>>,
-    default: Option<YearAndMonth>,
-) -> Result<Option<YearAndMonth>> {
-    build_year_month_inner(help, default).map_err(|e| Error::InvalidYearAndMonth {
-        underlying: e.to_string(),
-    })
-}
-
-fn build_invoice_info(default: &ProtoInvoiceInfo) -> Result<ProtoInvoiceInfo> {
-    fn inner(default: &ProtoInvoiceInfo) -> InquireResult<ProtoInvoiceInfo> {
+fn build_invoice_info(
+    default: &ProtoInvoiceInfo<PeriodAnno>,
+    cadence: Cadence,
+) -> Result<ProtoInvoiceInfo<PeriodAnno>> {
+    fn inner(
+        default: &ProtoInvoiceInfo<PeriodAnno>,
+        cadence: Cadence,
+    ) -> InquireResult<ProtoInvoiceInfo<PeriodAnno>> {
         let invoice_number_offset = CustomType::<InvoiceNumber>::new(
             "What is the last invoice number you issued? We call this the 'offset'",
         )
@@ -215,16 +273,17 @@ fn build_invoice_info(default: &ProtoInvoiceInfo) -> Result<ProtoInvoiceInfo> {
         .prompt_skippable()?
         .unwrap_or_default();
 
-        let invoice_number_offset_month = build_year_month_inner(
+        let invoice_number_offset_period = build_period(
             "When was that invoice issued? (Used to calculate future invoice numbers)".to_owned(),
-            Some(*default.offset().month()),
+            Some(default.offset().period().clone()),
+            cadence,
         )?
         // if we use `0` as offset and set month to last month, then the next invoice number will be `1` for this month, which is correct.
-        .unwrap_or(YearAndMonth::last());
+        .unwrap_or(YearAndMonth::last().into());
 
-        let offset = TimestampedInvoiceNumber::builder()
+        let offset = TimestampedInvoiceNumber::<PeriodAnno>::builder()
             .offset(invoice_number_offset)
-            .month(invoice_number_offset_month)
+            .period(invoice_number_offset_period)
             .build();
 
         let purchase_order = CustomType::<PurchaseOrder>::new("Purchase order number (optional)")
@@ -254,12 +313,12 @@ fn build_invoice_info(default: &ProtoInvoiceInfo) -> Result<ProtoInvoiceInfo> {
             .maybe_purchase_order(purchase_order)
             .maybe_footer_text(footer_text)
             .maybe_emphasize_color_hex(emphasize_color_hex)
-            .months_off_record(default.months_off_record().clone())
+            .record_of_periods_off(default.record_of_periods_off().clone())
             .build();
 
         Ok(info)
     }
-    inner(default).map_err(|e| Error::InvalidInvoiceInfo {
+    inner(default, cadence).map_err(|e| Error::InvalidInvoiceInfo {
         reason: format!("{:?}", e),
     })
 }
@@ -551,10 +610,15 @@ fn config_render() {
     );
 }
 
-fn select_or_default<S, T, F>(selector: Option<S>, target: S, default: &T, builder: F) -> Result<T>
+fn select_or_default<'a, 'b: 'a, S, T, F>(
+    selector: Option<S>,
+    target: S,
+    default: &'b T,
+    builder: F,
+) -> Result<T>
 where
     S: Select,
-    F: FnOnce(&T) -> Result<T>,
+    F: FnOnce(&'a T) -> Result<T>,
     T: Clone,
 {
     if selector
@@ -680,7 +744,10 @@ pub fn ask_for_email(
     Ok(email_settings)
 }
 
-pub fn ask_for_data(default: Data, data_selector: Option<DataSelector>) -> Result<Data> {
+pub fn ask_for_data(
+    default: Data<PeriodAnno>,
+    data_selector: Option<DataSelector>,
+) -> Result<Data<PeriodAnno>> {
     config_render();
 
     let vendor = select_or_default(data_selector, DataSelector::Vendor, default.vendor(), |d| {
@@ -691,11 +758,18 @@ pub fn ask_for_data(default: Data, data_selector: Option<DataSelector>) -> Resul
         build_company("Your client", d)
     })?;
 
+    let service_fees = select_or_default(
+        data_selector,
+        DataSelector::ServiceFees,
+        default.service_fees(),
+        build_service_fees,
+    )?;
+
     let invoice_info = select_or_default(
         data_selector,
         DataSelector::Information,
         default.information(),
-        build_invoice_info,
+        curry2(build_invoice_info, *service_fees.cadence()),
     )?;
 
     let payment_info = select_or_default(
@@ -705,20 +779,13 @@ pub fn ask_for_data(default: Data, data_selector: Option<DataSelector>) -> Resul
         build_payment_info,
     )?;
 
-    let service_fees = select_or_default(
-        data_selector,
-        DataSelector::ServiceFees,
-        default.service_fees(),
-        build_service_fees,
-    )?;
-
     let data = Data::builder()
         .client(client)
         .vendor(vendor)
         .payment_info(payment_info)
         .service_fees(service_fees)
         .information(invoice_info)
-        .expensed_months(default.expensed_months().clone())
+        .expensed_periods(default.expensed_periods().clone())
         .build();
 
     Ok(data)

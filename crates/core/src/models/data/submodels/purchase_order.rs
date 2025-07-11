@@ -16,4 +16,7 @@ impl HasSample for PurchaseOrder {
     fn sample() -> Self {
         Self::from("PO-12345")
     }
+    fn sample_other() -> Self {
+        Self::from("PO-67890")
+    }
 }

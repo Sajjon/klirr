@@ -40,6 +40,9 @@ impl HasSample for Salt {
     fn sample() -> Self {
         Self([0xab; 16])
     }
+    fn sample_other() -> Self {
+        Self([0xcd; 16])
+    }
 }
 
 impl PbHkdfSha256 {

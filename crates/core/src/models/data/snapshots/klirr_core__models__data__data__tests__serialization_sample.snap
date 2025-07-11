@@ -1,17 +1,14 @@
 ---
 source: crates/core/src/models/data/data.rs
-expression: "Data::sample()"
+expression: "Data::<YearAndMonth>::sample()"
 ---
 Data(
   information: ProtoInvoiceInfo(
     offset: TimestampedInvoiceNumber(
       offset: 17,
-      month: "1905-10",
+      period: "2024-01",
     ),
-    months_off_record: MonthsOffRecord([
-      "2020-12",
-      "2021-03",
-    ]),
+    record_of_periods_off: RecordOfPeriodsOff([]),
     purchase_order: Some("PO-12345"),
     footer_text: Some("Billed with the utmost discretion—your secrets are safe, for a price."),
     emphasize_color_hex: Some("#8b008b"),
@@ -58,9 +55,9 @@ Data(
     rate: Daily(UnitPrice(777.0)),
     cadence: Monthly,
   ),
-  expensed_months: ExpensedMonths(
-    explanation: "Expenses for months",
-    expenses_for_months: {
+  expensed_periods: ExpensedPeriods(
+    explanation: "Expenses for periods",
+    expenses_for_periods: {
       "2025-05": [
         Item(
           name: "Breakfast",
@@ -68,20 +65,6 @@ Data(
           currency: "SEK",
           quantity: Quantity(1.0),
           transaction_date: "2025-05-20",
-        ),
-        Item(
-          name: "Coffee",
-          unit_price: UnitPrice(4.0),
-          currency: "GBP",
-          quantity: Quantity(2.0),
-          transaction_date: "2025-05-31",
-        ),
-        Item(
-          name: "Sandwich",
-          unit_price: UnitPrice(7.0),
-          currency: "GBP",
-          quantity: Quantity(1.0),
-          transaction_date: "2025-05-31",
         ),
       ],
     },

@@ -79,6 +79,9 @@ impl HasSample for Currency {
     fn sample() -> Self {
         Currency::EUR
     }
+    fn sample_other() -> Self {
+        Currency::USD
+    }
 }
 
 // Display implementation to return ISO code

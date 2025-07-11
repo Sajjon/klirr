@@ -25,11 +25,11 @@ log.workspace = true
 rand.workspace = true
 rpassword.workspace = true
 ron.workspace = true
+serde.workspace = true
 secrecy.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-serde.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
 test-log.workspace = true

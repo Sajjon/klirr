@@ -29,4 +29,11 @@ impl HasSample for EmailCredentials {
             .password("open sesame".into())
             .build()
     }
+    fn sample_other() -> Self {
+        Self::builder()
+            .smtp_server(SmtpServer::default())
+            .account(EmailAccount::sample_bob())
+            .password("super_secret".into())
+            .build()
+    }
 }

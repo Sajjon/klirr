@@ -56,4 +56,15 @@ impl HasSample for Email {
             )]))
             .build()
     }
+    fn sample_other() -> Self {
+        Self::builder()
+            .public_recipients(IndexSet::from_iter(vec![EmailAddress::sample_alice()]))
+            .cc_recipients(IndexSet::from_iter(vec![EmailAddress::sample_dave()]))
+            .subject("Another Sample Email Subject".to_string())
+            .body("This is another sample email body.".to_string())
+            .attachments(IndexSet::from_iter(vec![Attachment::Pdf(
+                NamedPdf::sample_other(),
+            )]))
+            .build()
+    }
 }
