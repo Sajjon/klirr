@@ -33,8 +33,8 @@ pub struct InvoiceInfoFull {
     emphasize_color_hex: HexColor,
 }
 
-impl InvoiceInfoFull {
-    pub fn sample() -> Self {
+impl HasSample for InvoiceInfoFull {
+    fn sample() -> Self {
         Self::builder()
             .number(InvoiceNumber::sample())
             .invoice_date(Date::sample())
@@ -44,6 +44,17 @@ impl InvoiceInfoFull {
             .emphasize_color_hex(HexColor::sample())
             .build()
     }
+
+    fn sample_other() -> Self {
+        Self::builder()
+            .number(InvoiceNumber::sample_other())
+            .invoice_date(Date::sample_other())
+            .due_date(Date::sample_other())
+            .purchase_order(PurchaseOrder::sample_other())
+            .footer_text(FooterText::sample_other())
+            .emphasize_color_hex(HexColor::sample_other())
+            .build()
+    }
 }
 
 #[cfg(test)]
@@ -51,9 +62,22 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = InvoiceInfoFull;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_invoice_info_full_sample() {
-        let sample = InvoiceInfoFull::sample();
+        let sample = Sut::sample();
         assert!(sample.footer_text().is_some());
     }
 }

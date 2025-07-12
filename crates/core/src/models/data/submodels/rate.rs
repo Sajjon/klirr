@@ -1,10 +1,15 @@
+use std::ops::Deref;
+
 use crate::prelude::*;
 
 /// Invoice rate, a fixed price per month, per day or per hour.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub enum Rate {
+    /// A fixed rate per month, invoiced monthly
     Monthly(UnitPrice),
+    /// A fixed rate per day, invoice monthly or bi-weekly
     Daily(UnitPrice),
+    /// A fixed rate per hour, invoice monthly or bi-weekly
     Hourly(UnitPrice),
 }
 
@@ -19,12 +24,17 @@ impl From<(UnitPrice, Granularity)> for Rate {
 }
 
 impl Rate {
+    /// A monthly fixed rate
     pub fn monthly(rate: impl Into<UnitPrice>) -> Self {
         Self::Monthly(rate.into())
     }
+
+    /// A daily fixed rate
     pub fn daily(rate: impl Into<UnitPrice>) -> Self {
         Self::Daily(rate.into())
     }
+
+    /// An hourly fixed rate
     pub fn hourly(rate: impl Into<UnitPrice>) -> Self {
         Self::Hourly(rate.into())
     }
@@ -38,11 +48,62 @@ impl Rate {
         }
     }
 
+    /// The inner unit price
     pub fn unit_price(&self) -> UnitPrice {
+        *self.deref()
+    }
+}
+
+impl std::ops::Deref for Rate {
+    type Target = UnitPrice;
+
+    fn deref(&self) -> &Self::Target {
         match self {
-            Self::Monthly(price) => *price,
-            Self::Daily(price) => *price,
-            Self::Hourly(price) => *price,
+            Self::Monthly(price) => price,
+            Self::Daily(price) => price,
+            Self::Hourly(price) => price,
         }
+    }
+}
+
+impl HasSample for Rate {
+    fn sample() -> Self {
+        Self::Monthly(UnitPrice::sample())
+    }
+
+    fn sample_other() -> Self {
+        Self::Daily(UnitPrice::sample_other())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = Rate;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn unit_price() {
+        assert_eq!(**Sut::hourly(150), dec!(150));
+        assert_eq!(**Sut::daily(1_000), dec!(1_000));
+        assert_eq!(**Sut::monthly(15_000), dec!(15_000));
+    }
+
+    #[test]
+    fn granularity() {
+        assert_eq!(Sut::hourly(150).granularity(), Granularity::Hour);
+        assert_eq!(Sut::daily(1_000).granularity(), Granularity::Day);
+        assert_eq!(Sut::monthly(15_000).granularity(), Granularity::Month);
     }
 }

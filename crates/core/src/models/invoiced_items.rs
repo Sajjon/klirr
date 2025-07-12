@@ -3,8 +3,8 @@ use crate::prelude::*;
 /// The items being invoiced this month, either services or expenses.
 #[derive(Clone, Debug, Display, Serialize, Deserialize, IsVariant, PartialEq)]
 pub enum InvoicedItems {
-    #[display("Service {{ days_off: {} }} ", days_off.map(|d| *d).unwrap_or(0))]
-    Service { days_off: Option<Day> },
+    #[display("Service {{ time_off: {} }} ", time_off.map(|d| *d).unwrap_or(Quantity::ZERO))]
+    Service { time_off: Option<TimeOff> },
     #[display("Expenses")]
     Expenses,
 }
@@ -16,15 +16,18 @@ impl MaybeIsExpenses for InvoicedItems {
 
 impl Default for InvoicedItems {
     fn default() -> Self {
-        Self::Service { days_off: None }
+        Self::Service { time_off: None }
     }
 }
 
 impl HasSample for InvoicedItems {
     fn sample() -> Self {
         Self::Service {
-            days_off: Some(Day::sample()),
+            time_off: Some(TimeOff::sample()),
         }
+    }
+    fn sample_other() -> Self {
+        Self::Expenses
     }
 }
 
@@ -33,11 +36,24 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = InvoicedItems;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn is_expenses() {
-        assert!(MaybeIsExpenses::is_expenses(&InvoicedItems::Expenses));
-        assert!(!MaybeIsExpenses::is_expenses(&InvoicedItems::Service {
-            days_off: None
+        assert!(MaybeIsExpenses::is_expenses(&Sut::Expenses));
+        assert!(!MaybeIsExpenses::is_expenses(&Sut::Service {
+            time_off: None
         }));
     }
 }

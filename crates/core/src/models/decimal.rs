@@ -26,6 +26,7 @@ use derive_more::FromStr;
     Deref,
     derive_more::Mul,
     derive_more::Add,
+    derive_more::Sub,
     derive_more::AddAssign,
 )]
 #[from(rust_decimal::Decimal, u8, i32)]
@@ -34,6 +35,7 @@ pub struct Decimal(rust_decimal::Decimal);
 impl Decimal {
     pub const ZERO: Self = Self(rust_decimal::Decimal::ZERO);
     pub const ONE: Self = Self(rust_decimal::Decimal::ONE);
+    pub const EIGHT: Self = Self(rust_decimal::Decimal::from_parts(8, 0, 0, false, 0));
 }
 
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
@@ -81,17 +83,24 @@ impl<'de> Deserialize<'de> for Decimal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use insta::assert_ron_snapshot;
+    use insta::{assert_ron_snapshot, assert_snapshot};
     use test_log::test;
+
+    type Sut = Decimal;
+
+    #[test]
+    fn test_display() {
+        assert_snapshot!(Sut::EIGHT)
+    }
 
     #[test]
     fn test_serde() {
-        assert_ron_snapshot!(Decimal::from(dec!(3.14159265)));
+        assert_ron_snapshot!(Sut::from(dec!(3.14159265)));
     }
 
     #[test]
     fn test_decimal_from_f64_nan() {
-        let result = Decimal::try_from(f64::NAN);
+        let result = Sut::try_from(f64::NAN);
         assert!(result.is_err());
     }
 }

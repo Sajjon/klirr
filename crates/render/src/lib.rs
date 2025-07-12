@@ -1,3 +1,5 @@
+#![cfg_attr(not(test), forbid(unsafe_code))]
+
 mod render;
 mod typst_context;
 

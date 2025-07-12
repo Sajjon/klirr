@@ -29,6 +29,10 @@ impl HasSample for CompanyInformation {
     fn sample() -> Self {
         Self::sample_client()
     }
+
+    fn sample_other() -> Self {
+        Self::sample_vendor()
+    }
 }
 
 impl CompanyInformation {
@@ -50,5 +54,23 @@ impl CompanyInformation {
             .postal_address(PostalAddress::sample_vendor())
             .vat_number("FR74185293012".into())
             .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = CompanyInformation;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

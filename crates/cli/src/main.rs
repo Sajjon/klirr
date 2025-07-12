@@ -1,3 +1,5 @@
+#![cfg_attr(not(test), forbid(unsafe_code))]
+
 mod dispatch_command;
 mod init_logging;
 mod input;

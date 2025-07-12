@@ -64,7 +64,7 @@ mod tests {
             Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
-                .month(YearAndMonth::sample())
+                .period(YearAndMonth::sample())
                 .language(Language::EN)
                 .build(),
             fixture("expected_expenses.png"),
@@ -80,8 +80,8 @@ mod tests {
         compare_image_against_expected(
             Data::sample(),
             ValidInput::builder()
-                .items(InvoicedItems::Service { days_off: None })
-                .month(YearAndMonth::sample())
+                .items(InvoicedItems::Service { time_off: None })
+                .period(YearAndMonth::sample())
                 .language(Language::EN)
                 .build(),
             fixture("expected_services.png"),

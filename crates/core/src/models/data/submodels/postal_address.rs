@@ -28,6 +28,10 @@ impl HasSample for PostalAddress {
     fn sample() -> Self {
         Self::sample_client()
     }
+
+    fn sample_other() -> Self {
+        Self::sample_vendor()
+    }
 }
 
 impl PostalAddress {
@@ -65,9 +69,22 @@ mod tests {
     use insta::assert_debug_snapshot;
     use test_log::test;
 
+    type Sut = PostalAddress;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_debug() {
-        assert_debug_snapshot!(PostalAddress::sample(), @r###"
+        assert_debug_snapshot!(Sut::sample(), @r###"
         PostalAddress {
             street_address: StreetAddress {
                 line_1: "221B Baker Street",

@@ -118,7 +118,7 @@ mod tests {
             Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
-                .month(YearAndMonth::sample())
+                .period(YearAndMonth::sample())
                 .language(Language::EN)
                 .build()
         );
@@ -129,8 +129,8 @@ mod tests {
         test_data_to_typst!(
             Data::sample(),
             ValidInput::builder()
-                .items(InvoicedItems::Service { days_off: None })
-                .month(YearAndMonth::sample())
+                .items(InvoicedItems::Service { time_off: None })
+                .period(YearAndMonth::sample())
                 .language(Language::EN)
                 .build()
         );

@@ -16,7 +16,9 @@ impl Cadence {
     pub fn validate(&self, granularity: impl Into<Granularity>) -> Result<()> {
         let granularity = granularity.into();
         match (self, granularity) {
-            (Self::BiWeekly, Granularity::Month) => Err(Error::InvalidUtf8), // FIXME proper error variant
+            (Self::BiWeekly, Granularity::Month) => {
+                Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly)
+            }
             (Self::BiWeekly, Granularity::Day | Granularity::Hour) => Ok(()),
             (Self::Monthly, Granularity::Day | Granularity::Hour | Granularity::Month) => Ok(()),
         }

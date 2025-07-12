@@ -8,27 +8,26 @@ impl HasSample for Pdf {
     fn sample() -> Self {
         Self(vec![0xde, 0xad, 0xbe, 0xef]) // Sample PDF data
     }
+
+    fn sample_other() -> Self {
+        Self(vec![0xca, 0xfe, 0xba, 0xbe]) // Another sample PDF data
+    }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Builder, Getters)]
-pub struct NamedPdf {
-    #[getset(get = "pub")]
-    prepared_data: PreparedData,
-    #[getset(get = "pub")]
-    pdf: Pdf,
-    #[getset(get = "pub")]
-    saved_at: PathBuf,
-    #[getset(get = "pub")]
-    name: String,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl HasSample for NamedPdf {
-    fn sample() -> Self {
-        Self::builder()
-            .prepared_data(PreparedData::sample())
-            .pdf(Pdf::sample()) // Sample PDF data
-            .saved_at(PathBuf::from("/tmp/sample_invoice.pdf"))
-            .name("sample_invoice.pdf".to_string())
-            .build()
+    type Sut = Pdf;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
     }
 }

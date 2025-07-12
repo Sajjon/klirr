@@ -1,5 +1,6 @@
 [package]
 name = "klirr-render"
+rust-version = "1.85.1"
 version = "0.1.26"
 edition = "2024"
 description = "Zero-maintenance and smart FOSS generating beautiful invoices for services and expenses."

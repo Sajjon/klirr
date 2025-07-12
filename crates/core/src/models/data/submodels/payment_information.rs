@@ -38,4 +38,32 @@ impl HasSample for PaymentInformation {
             .terms(PaymentTerms::sample())
             .build()
     }
+
+    fn sample_other() -> Self {
+        Self::builder()
+            .bank_name("Bank of London".into())
+            .iban("GB29 NWBK 6016 1331 9268 19".into())
+            .bic("NWBKGB2L".into())
+            .currency(Currency::USD)
+            .terms(PaymentTerms::sample_other())
+            .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = PaymentInformation;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
 }
