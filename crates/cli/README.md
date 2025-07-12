@@ -1,4 +1,10 @@
+[![Build Status](https://github.com/Sajjon/klirr/actions/workflows/test.yml/badge.svg)](https://github.com/Sajjon/klirr/actions)
 [![codecov](https://codecov.io/gh/Sajjon/klirr/graph/badge.svg?token=HG6N5QPYPH)](https://codecov.io/gh/Sajjon/klirr)
+[![Latest Version](https://img.shields.io/crates/v/klirr.svg)](https://crates.io/crates/klirr)
+[![Rust Documentation](https://docs.rs/klirr-render/badge.svg)](https://docs.rs/klirr-render)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Sajjon/klirr/main/LICENSE.txt)
+[![Rust 1.85.1](https://img.shields.io/badge/rustc-1.85.1-lightgray.svg)](https://blog.rust-lang.org/2025/03/18/Rust-1.85.1/)
+[![Unsafe Forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance)
 
 **Tired of manual bumping invoice number, calculating number of working days and looking up exchange rates and converting expenses into your currency?**
 
