@@ -35,7 +35,7 @@ Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomat
     -   [Edit Data](#edit-data)
         -   [Manually](#data-edit-manual)
     -   [Generate Invoice](#generate-invoice)
-        -   [Out of office for some days?](#ooo)
+        -   [Off for some days/hours?](#off)
         -   [Took vacation a whole month or parental leave?](#month-off)
     -   [Invoice for expenses](#expenses)
         -   [Add expenses](#expenses-add)
@@ -169,6 +169,11 @@ You can at any time validate the data by running:
 klirr data validate
 ```
 
+Or if you just wanna print the contents you can run:
+```bash
+klirr data dump
+```
+
 ## Generate Invoice<a href="#generate-invoice" id="generate-invoice"/>[ ^](#thetoc)
 
 ```bash
@@ -191,13 +196,27 @@ klirr invoice -- --output $HOME/my/custom/path/my_custom_name_of_file.pdf
 > If you don't specify `output` path the invoice will be saved in
 > `$HOME/invoices`.
 
-### Out of office for some days? <a href="#ooo" id="ooo"/> [ ^](#thetoc)
+### Off (free) for some days/hours? <a href="#off" id="off"/> [ ^](#thetoc)
 
-If you did not work for some days, and you need to not invoice for those days, e.g. `6` days off, use:
+If you did not work for some days/hours, and you need to not invoice for those days, e.g. `6` days off, use:
+
+#### Days off
 
 ```bash
-klirr invoice ooo 6
+klirr services-off --quantity 6 --unit days
 ```
+
+#### Hours off
+
+```bash
+klirr services-off --quantity 16 --unit hours
+```
+
+> [!IMPORTANT]
+> The unit MUST match the `rate`  specified in the service_fees.ron, e.g.
+> if you are invoicing with a **daily** rate, the value passed to `unit` must
+> be `days` and analogoulsy if you are invoicing with an **hourly** rate you
+> must pass `hours` to `unit`.
 
 ### Took vacation a whole month or parental leave? <a href="#month-off" id="month-off"/> [ ^](#thetoc)
 

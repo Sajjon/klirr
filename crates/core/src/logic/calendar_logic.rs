@@ -1,4 +1,4 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, ops::Mul};
 
 use crate::prelude::*;
 
@@ -138,6 +138,9 @@ impl YearAndMonth {
 }
 
 impl IsPeriod for YearAndMonth {
+    fn max_granularity(&self) -> Granularity {
+        Granularity::Month
+    }
     fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16 {
         self.elapsed_months_since(start)
     }
@@ -248,39 +251,74 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
 /// use klirr_core::prelude::*;
 ///
 /// let target_month = YearAndMonth::january(2024);
-/// let months_off_record = RecordOfPeriodsOff::new([]);
-/// let working_days = working_days_in_period(&target_month, &months_off_record);
-/// assert_eq!(working_days.unwrap(), 23); // January 2024 has 23
+/// let working_days = quantity_in_period(&target_month, Granularity::Day, &RecordOfPeriodsOff::default());
+/// assert_eq!(*working_days.unwrap(), dec!(23)); // January 2024 has 23
 /// ```
-pub fn working_days_in_period<Period: IsPeriod>(
+pub fn quantity_in_period<Period: IsPeriod>(
     target_period: &Period,
+    granularity: Granularity,
     record_of_periods_off: &RecordOfPeriodsOff<Period>,
-) -> Result<u8> {
+) -> Result<Quantity> {
     if record_of_periods_off.contains(target_period) {
         return Err(Error::TargetPeriodMustNotBeInRecordOfPeriodsOff {
             target_period: format!("{:?}", target_period),
         });
     }
 
+    if granularity > target_period.max_granularity() {
+        return Err(Error::GranularityTooCoarse {
+            granularity,
+            max_granularity: target_period.max_granularity(),
+            target_period: format!("{:?}", target_period),
+        });
+    }
+    if granularity.is_month() {
+        return Ok(Quantity::ONE);
+    }
+    let working_days = working_days_in_period(target_period)?;
+    match granularity {
+        Granularity::Month => unreachable!("Handled above"),
+        Granularity::Day => Ok(working_days),
+        Granularity::Hour => Ok(Quantity::EIGHT.mul(*working_days)), // TODO: Maybe this should be configurable
+    }
+}
+
+trait FromYmd: Sized {
+    fn ymd(year: impl Into<i32>, month: impl Into<u32>, day: impl Into<u32>) -> Result<Self>;
+}
+impl FromYmd for NaiveDate {
+    fn ymd(year: impl Into<i32>, month: impl Into<u32>, day: impl Into<u32>) -> Result<Self> {
+        let year = year.into();
+        let month = month.into();
+        let day = day.into();
+        Self::from_ymd_opt(year, month, day)
+            .ok_or(Error::InvalidDate {
+                underlying: "Failed to create date from year and month".to_owned(),
+            })?
+            .pred_opt()
+            .ok_or(Error::InvalidDate {
+                underlying: "Failed to create date from year and month".to_owned(),
+            })
+    }
+}
+
+/// Calculates the number of working days in a given month, excluding weekends.
+///
+/// # Errors
+/// Returns an error if the target month is in the record of months off.
+fn working_days_in_period<Period: IsPeriod>(target_period: &Period) -> Result<Quantity> {
     let year = **target_period.year() as i32;
     let month = **target_period.month() as u32;
 
     // Start from the 1st of the month
-    let mut day = NaiveDate::from_ymd_opt(year, month, 1)
-        .expect("Should always be able to create a date from year, month (and day)");
+    let mut day = NaiveDate::ymd(year, month, 1u32)?;
 
     // Get the last day of the month
     let last_day = if month == 12 {
-        NaiveDate::from_ymd_opt(year + 1, 1, 1)
-            .unwrap()
-            .pred_opt()
-            .unwrap()
+        NaiveDate::ymd(year + 1, 1u32, 1u32)
     } else {
-        NaiveDate::from_ymd_opt(year, month + 1, 1)
-            .unwrap()
-            .pred_opt()
-            .unwrap()
-    };
+        NaiveDate::ymd(year, month + 1, 1u32)
+    }?;
 
     let mut working_days = 0;
     while day <= last_day {
@@ -290,10 +328,12 @@ pub fn working_days_in_period<Period: IsPeriod>(
             }
             _ => {}
         }
-        day = day.succ_opt().unwrap();
+        day = day.succ_opt().ok_or(Error::InvalidDate {
+            underlying: "Failed to get next day".to_owned(),
+        })?
     }
 
-    Ok(working_days)
+    Ok(Quantity::from(working_days))
 }
 
 #[cfg(test)]
@@ -342,6 +382,59 @@ mod tests {
     /// 2028 is a leap year
     const MAR_2028: YearAndMonth = YearAndMonth::march(2028);
 
+    #[test]
+    fn test_quantity_in_period_various_granularity() {
+        // Test when granularity is too coarse for the target period
+        // YearAndMonth has max_granularity of Month, so Month and below should work
+        let target_period = JAN_2025;
+        let record_of_periods_off = RecordOfPeriodsOff::new([]);
+
+        // This should work - Month granularity is exactly the max for YearAndMonth
+        let result = quantity_in_period(&target_period, Granularity::Month, &record_of_periods_off);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Quantity::ONE);
+
+        // Day granularity should work - it's less coarse than Month
+        let result = quantity_in_period(&target_period, Granularity::Day, &record_of_periods_off);
+        assert!(result.is_ok());
+
+        // Hour granularity should work - it's less coarse than Month
+        let result = quantity_in_period(&target_period, Granularity::Hour, &record_of_periods_off);
+        assert!(result.is_ok());
+
+        // Now test with YearMonthAndFortnight which has max_granularity of Day
+        // Month granularity should fail because it's coarser than Day
+        let fortnight_period = YearMonthAndFortnight::builder()
+            .year(Year::from(2025))
+            .month(Month::January)
+            .half(MonthHalf::First)
+            .build();
+        let fortnight_record = RecordOfPeriodsOff::new([]);
+
+        // Month granularity should fail for fortnight period
+        let result = quantity_in_period(&fortnight_period, Granularity::Month, &fortnight_record);
+        assert!(result.is_err());
+        if let Err(Error::GranularityTooCoarse {
+            granularity,
+            max_granularity,
+            ..
+        }) = result
+        {
+            assert_eq!(granularity, Granularity::Month);
+            assert_eq!(max_granularity, Granularity::Day);
+        } else {
+            panic!("Expected GranularityTooCoarse error");
+        }
+
+        // Day granularity should work for fortnight period
+        let result = quantity_in_period(&fortnight_period, Granularity::Day, &fortnight_record);
+        assert!(result.is_ok());
+
+        // Hour granularity should work for fortnight period
+        let result = quantity_in_period(&fortnight_period, Granularity::Hour, &fortnight_record);
+        assert!(result.is_ok());
+    }
+
     fn test_invoice_number(
         offset_no: impl Into<InvoiceNumber>,
         offset_month: YearAndMonth,
@@ -355,7 +448,7 @@ mod tests {
             .items(if is_expenses {
                 InvoicedItems::Expenses
             } else {
-                InvoicedItems::Service { days_off: None }
+                InvoicedItems::Service { time_off: None }
             })
             .build();
         let information = ProtoInvoiceInfo::builder()
@@ -682,18 +775,18 @@ mod tests {
     }
 
     #[test]
-    fn test_working_days_in_period_target_month_is_in_record_of_months_off() {
+    fn quantity_in_period_target_month_is_in_record_of_months_off() {
         let target_month = YearAndMonth::january(2024);
         let months_off_record = RecordOfPeriodsOff::new([target_month]);
-        let result = working_days_in_period(&target_month, &months_off_record);
+        let result = quantity_in_period(&target_month, Granularity::Day, &months_off_record);
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_working_days_in_period_target_month_december() {
+    fn quantity_in_period_target_month_december() {
         let target_month = YearAndMonth::december(2025);
         let months_off_record = RecordOfPeriodsOff::new([]);
-        let result = working_days_in_period(&target_month, &months_off_record);
+        let result = quantity_in_period(&target_month, Granularity::Day, &months_off_record);
         assert!(result.is_ok());
     }
 }

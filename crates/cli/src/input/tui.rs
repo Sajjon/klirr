@@ -170,22 +170,7 @@ fn build_period(
     cadence: Cadence,
 ) -> InquireResult<Option<PeriodAnno>> {
     let help = help.into();
-    // match cadence {
-    //     Cadence::Monthly => if let Some(default) = default {
-    //         match default {
-    //             PeriodAnno::YearAndMonth(ym) => {
-    //                 build_year_month_inner(help, Some(*ym.year()), Some(*ym.month()))
-    //             }
-    //             PeriodAnno::YearMonthAndFortnight(_) => {
-    //                 panic!("Expected YearAndMonth since Cadence is Monthly")
-    //             }
-    //         }
-    //     } else {
-    //         build_year_month_inner(help, None, None)
-    //     }
-    //     .map(|ok| ok.map(PeriodAnno::from)),
-    //     Cadence::BiWeekly => build_year_month_inner(),
-    // }
+
     let Some(ym) = build_year_month_inner(
         help.clone(),
         default.as_ref().map(|d| d.year()),

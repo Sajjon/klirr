@@ -23,6 +23,13 @@ impl HasSample for PeriodAnno {
 }
 
 impl IsPeriod for PeriodAnno {
+    fn max_granularity(&self) -> Granularity {
+        match self {
+            Self::YearAndMonth(period) => period.max_granularity(),
+            Self::YearMonthAndFortnight(period) => period.max_granularity(),
+        }
+    }
+
     fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16 {
         match (self, start.borrow()) {
             (Self::YearAndMonth(lhs), Self::YearAndMonth(rhs)) => lhs.elapsed_periods_since(rhs),

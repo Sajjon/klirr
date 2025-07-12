@@ -20,6 +20,7 @@ mod rate;
 mod record_of_periods_off;
 mod service_fees;
 mod street_address;
+mod time_off;
 mod timestamped_invoice_number;
 mod year_month_and_fortnight;
 
@@ -44,5 +45,6 @@ pub use rate::*;
 pub use record_of_periods_off::*;
 pub use service_fees::*;
 pub use street_address::*;
+pub use time_off::*;
 pub use timestamped_invoice_number::*;
 pub use year_month_and_fortnight::*;

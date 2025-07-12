@@ -80,7 +80,7 @@ mod tests {
         compare_image_against_expected(
             Data::sample(),
             ValidInput::builder()
-                .items(InvoicedItems::Service { days_off: None })
+                .items(InvoicedItems::Service { time_off: None })
                 .period(YearAndMonth::sample())
                 .language(Language::EN)
                 .build(),

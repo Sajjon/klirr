@@ -16,6 +16,8 @@ use crate::prelude::*;
     PartialOrd,
     derive_more::Add,
     derive_more::AddAssign,
+    derive_more::Sub,
+    derive_more::Mul,
 )]
 #[from(forward)]
 #[deref(forward)]
@@ -23,6 +25,7 @@ pub struct Quantity(Decimal);
 impl Quantity {
     pub const ZERO: Self = Self(Decimal::ZERO);
     pub const ONE: Self = Self(Decimal::ONE);
+    pub const EIGHT: Self = Self(Decimal::EIGHT);
 }
 
 impl HasSample for Quantity {

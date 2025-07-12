@@ -3,8 +3,8 @@ use crate::prelude::*;
 /// The items being invoiced this month, either services or expenses.
 #[derive(Clone, Debug, Display, Serialize, Deserialize, IsVariant, PartialEq)]
 pub enum InvoicedItems {
-    #[display("Service {{ days_off: {} }} ", days_off.map(|d| *d).unwrap_or(0))]
-    Service { days_off: Option<Day> },
+    #[display("Service {{ time_off: {} }} ", time_off.map(|d| *d).unwrap_or(Quantity::ZERO))]
+    Service { time_off: Option<TimeOff> },
     #[display("Expenses")]
     Expenses,
 }
@@ -16,14 +16,14 @@ impl MaybeIsExpenses for InvoicedItems {
 
 impl Default for InvoicedItems {
     fn default() -> Self {
-        Self::Service { days_off: None }
+        Self::Service { time_off: None }
     }
 }
 
 impl HasSample for InvoicedItems {
     fn sample() -> Self {
         Self::Service {
-            days_off: Some(Day::sample()),
+            time_off: Some(TimeOff::sample()),
         }
     }
     fn sample_other() -> Self {
@@ -53,7 +53,7 @@ mod tests {
     fn is_expenses() {
         assert!(MaybeIsExpenses::is_expenses(&Sut::Expenses));
         assert!(!MaybeIsExpenses::is_expenses(&Sut::Service {
-            days_off: None
+            time_off: None
         }));
     }
 }

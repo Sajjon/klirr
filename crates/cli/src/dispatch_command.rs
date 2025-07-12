@@ -27,12 +27,41 @@ fn edit_email_data(
     edit_email_data_at(data_dir(), provide_data)
 }
 
+fn dump_data() -> Result<()> {
+    let base_path = data_dir();
+    info!("Dumping data directory at: {}", base_path.display());
+
+    read_data_from_disk_with_base_path::<YearAndMonth>(base_path)
+        .inspect(|model| {
+            let ron_str = ron::ser::to_string_pretty(model, ron::ser::PrettyConfig::default())
+                .expect("Failed to serialize data to RON");
+            info!("✅ Data: {ron_str}");
+        })
+        .inspect_err(|e| {
+            fn load_contents<F>(get_path: F) -> String where F: FnOnce(&Path) -> PathBuf {
+                let path = get_path(&data_dir());
+                std::fs::read_to_string(&path).unwrap_or_else(|_| {
+                    panic!("Failed to read file at: {}", path.display())
+                })
+            }
+            let information = load_contents(|path| proto_invoice_info_path(path));
+            let vendor = load_contents(|path| vendor_path(path));
+            let client = load_contents(|path| client_path(path));
+            let payment_info = load_contents(|path| payment_info_path(path));
+            let service_fees = load_contents(|path| service_fees_path(path));
+            let expensed_periods = load_contents(|path| expensed_periods_path(path));
+            let str = format!("information: {information}\nvendor: {vendor}\nclient: {client}\npayment_info: {payment_info}\nservice_fees: {service_fees}\nexpensed_periods: {expensed_periods}\n");
+            error!("❌ Data directory is invalid: {}, is:\n\n{}", e, str);
+        })
+        .map_to_void()
+}
+
 fn validate_data() -> Result<()> {
     let base_path = data_dir();
     info!("Validating data directory at: {}", base_path.display());
 
     read_data_from_disk_with_base_path::<YearAndMonth>(base_path)
-        .map(|_| ())
+        .map_to_void()
         .inspect(|_| {
             info!("✅ Data directory is valid");
         })
@@ -52,6 +81,7 @@ fn record_month_off(month: &YearAndMonth) -> Result<()> {
 pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
     match command {
         DataAdminInputCommand::Init => init_data::<PeriodAnno>(curry2(ask_for_data, None)),
+        DataAdminInputCommand::Dump => dump_data(),
         DataAdminInputCommand::Validate => validate_data(),
         DataAdminInputCommand::Edit(input) => edit_data(curry2(
             ask_for_data,

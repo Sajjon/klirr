@@ -6,6 +6,28 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError, PartialEq)]
 pub enum Error {
+    #[error(
+        "Invalid granularity for time off: '{free_granularity}', expected: '{service_fees_granularity}', use the same time unit for time off as you specified in service fees. View it with `klirr data dump` command."
+    )]
+    InvalidGranularityForTimeOff {
+        free_granularity: Granularity,
+        service_fees_granularity: Granularity,
+    },
+
+    /// Granularity too coarse,
+    #[error(
+        "Granularity too coarse '{granularity}', max is: '{max_granularity}', for period: '{target_period}'"
+    )]
+    GranularityTooCoarse {
+        granularity: Granularity,
+        max_granularity: Granularity,
+        target_period: String,
+    },
+
+    /// Cannot invoice for month when cadence is bi-weekly.
+    #[error("Cannot invoice for month when cadence is bi-weekly")]
+    CannotInvoiceForMonthWhenCadenceIsBiWeekly,
+
     /// Password does not match, e.g. when the user tries to set a password
     /// and the confirmation password does not match.
     #[error("Passwords do not match")]

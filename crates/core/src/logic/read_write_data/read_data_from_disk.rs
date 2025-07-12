@@ -116,32 +116,56 @@ pub const DATA_FILE_NAME_PROTO_INVOICE_INFO: &str = "invoice_info";
 pub const DATA_FILE_NAME_EXPENSES: &str = "expenses";
 pub const DATA_FILE_NAME_CACHED_RATES: &str = "cached_rates";
 
+pub fn client_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_CLIENT)
+}
+
+pub fn vendor_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_VENDOR)
+}
+
+pub fn payment_info_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_PAYMENT)
+}
+
+pub fn service_fees_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_SERVICE_FEES)
+}
+
+pub fn proto_invoice_info_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_PROTO_INVOICE_INFO)
+}
+
+pub fn expensed_periods_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EXPENSES)
+}
+
 fn client(base_path: impl AsRef<Path>) -> Result<CompanyInformation> {
-    load_data(base_path, DATA_FILE_NAME_CLIENT)
+    deserialize_contents_of_ron(client_path(base_path))
 }
 
 fn vendor(base_path: impl AsRef<Path>) -> Result<CompanyInformation> {
-    load_data(base_path, DATA_FILE_NAME_VENDOR)
+    deserialize_contents_of_ron(vendor_path(base_path))
 }
 
 fn payment_info(base_path: impl AsRef<Path>) -> Result<PaymentInformation> {
-    load_data(base_path, DATA_FILE_NAME_PAYMENT)
+    deserialize_contents_of_ron(payment_info_path(base_path))
 }
 
 fn service_fees(base_path: impl AsRef<Path>) -> Result<ServiceFees> {
-    load_data(base_path, DATA_FILE_NAME_SERVICE_FEES)
+    deserialize_contents_of_ron(service_fees_path(base_path))
 }
 
 pub fn proto_invoice_info<Period: IsPeriod + DeserializeOwned>(
     base_path: impl AsRef<Path>,
 ) -> Result<ProtoInvoiceInfo<Period>> {
-    load_data(base_path, DATA_FILE_NAME_PROTO_INVOICE_INFO)
+    deserialize_contents_of_ron(proto_invoice_info_path(base_path))
 }
 
 pub fn expensed_periods<Period: IsPeriod + DeserializeOwned>(
     base_path: impl AsRef<Path>,
 ) -> Result<ExpensedPeriods<Period>> {
-    load_data(base_path, DATA_FILE_NAME_EXPENSES)
+    deserialize_contents_of_ron(expensed_periods_path(base_path))
 }
 
 pub fn read_email_data_from_disk_with_base_path(

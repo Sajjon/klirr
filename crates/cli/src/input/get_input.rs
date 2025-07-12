@@ -63,6 +63,8 @@ pub struct DataAdminInput {
 /// validating the data, or recording expenses or month off.
 #[derive(Debug, Subcommand, Unwrap, PartialEq)]
 pub enum DataAdminInputCommand {
+    /// Prints the data in the data directory as a RON object.
+    Dump,
     /// Initializes the data in the data directory, creating it if it does not exist.
     /// Such as information about you as a vendor and your client, payment information
     /// pricing etc
@@ -230,17 +232,16 @@ pub struct InvoiceInput {
 }
 
 impl InvoiceInput {
-    /// Maps `Option<TargetItems>` to `InvoicedItems`, e.g. for `TargetItems::Ooo { days }`
-    /// we map from `Option<u8>` to `Option<Day>`.
+    /// Maps `Option<TargetItems>` to `InvoicedItems`.
     fn _invoiced_items(&self) -> Result<InvoicedItems> {
         match self.items.clone().unwrap_or_default() {
-            TargetItems::Ooo { days } => Ok(InvoicedItems::Service {
-                days_off: if days == 0 {
-                    None
-                } else {
-                    Some(Day::try_from(days)?)
-                },
-            }),
+            TargetItems::ServicesOff(time_off) => {
+                let time_off = TimeOff::try_from(time_off)?;
+                Ok(InvoicedItems::Service {
+                    time_off: Some(time_off),
+                })
+            }
+            TargetItems::Services => Ok(InvoicedItems::Service { time_off: None }),
             TargetItems::Expenses => Ok(InvoicedItems::Expenses),
         }
     }
@@ -269,6 +270,7 @@ impl InvoiceInput {
             Ok(None)
         }?;
         let items = self._invoiced_items()?;
+
         let valid = ValidInput::builder()
             .period(PeriodAnno::from(self.month.year_and_month()))
             .layout(*self.layout())
@@ -363,11 +365,33 @@ mod tests {
             }
 
             #[test]
-            fn test_input_parsing_items_specified_ooo() {
-                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "ooo", "3"]);
+            fn test_input_parsing_items_specified_services_free() {
+                let input = CliArgs::parse_from([
+                    BINARY_NAME,
+                    "invoice",
+                    "services-off",
+                    "--quantity",
+                    "3",
+                    "--unit",
+                    "days",
+                ]);
                 assert_eq!(
                     input.command.unwrap_invoice().items,
-                    Some(TargetItems::Ooo { days: 3 })
+                    Some(TargetItems::ServicesOff(
+                        TimeOffInput::builder()
+                            .quantity(3.0)
+                            .unit(TimeUnitInput::Days)
+                            .build()
+                    ))
+                );
+            }
+
+            #[test]
+            fn test_input_parsing_items_specified_services_not_off() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "services"]);
+                assert_eq!(
+                    input.command.unwrap_invoice().items,
+                    Some(TargetItems::Services)
                 );
             }
 
@@ -410,13 +434,20 @@ mod tests {
             #[test]
             fn test_input_parsing_items_services() {
                 let input = InvoiceInput::builder()
-                    .items(TargetItems::Ooo { days: 25 })
+                    .items(TargetItems::ServicesOff(
+                        TimeOffInput::builder()
+                            .quantity(25.0)
+                            .unit(TimeUnitInput::Days)
+                            .build(),
+                    ))
                     .build();
                 let input = input.parsed().unwrap();
+                let expected_decimal = Decimal::try_from(25.0).unwrap();
+                let expected_quantity = Quantity::from(expected_decimal);
                 assert_eq!(
                     *input.items(),
                     InvoicedItems::Service {
-                        days_off: Some(Day::try_from(25).unwrap())
+                        time_off: Some(TimeOff::Days(expected_quantity))
                     }
                 );
             }

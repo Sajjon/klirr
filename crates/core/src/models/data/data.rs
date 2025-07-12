@@ -51,6 +51,20 @@ impl<Period: IsPeriod> Data<Period> {
         Ok(self)
     }
 
+    fn billable_quantity(
+        &self,
+        target_period: &Period,
+        time_off: &Option<TimeOff>,
+    ) -> Result<Quantity> {
+        let quantity_in_period = quantity_in_period(
+            target_period,
+            self.service_fees().rate().granularity(),
+            self.information().record_of_periods_off(),
+        )?;
+        let billable_quantity = quantity_in_period - time_off.map(|d| *d).unwrap_or(Quantity::ZERO);
+        Ok(billable_quantity)
+    }
+
     /// Converts the `Data` into a `DataWithItemsPricedInSourceCurrency`
     /// using the provided `ValidInput`.
     /// This method prepares the invoice data for rendering by creating an
@@ -109,20 +123,27 @@ impl<Period: IsPeriod> Data<Period> {
 
         let input_unpriced =
             DataFromDiskWithItemsOfKind::<LineItemsPricedInSourceCurrency>::builder()
-                .client(self.client)
+                .client(self.client.clone())
                 .information(full_info)
                 .line_items(match items {
-                    InvoicedItems::Service { days_off } => {
-                        let working_days = working_days_in_period(
-                            target_period,
-                            self.information.record_of_periods_off(),
-                        )?;
-                        let worked_days = working_days - days_off.map(|d| *d).unwrap_or(0);
+                    InvoicedItems::Service { time_off } => {
+                        if let Some(time_off) = time_off {
+                            if time_off.granularity() != self.service_fees().rate().granularity() {
+                                return Err(Error::InvalidGranularityForTimeOff {
+                                    free_granularity: time_off.granularity(),
+                                    service_fees_granularity: self
+                                        .service_fees()
+                                        .rate()
+                                        .granularity(),
+                                });
+                            }
+                        }
 
+                        let quantity = self.billable_quantity(target_period, time_off)?;
                         let service = Item::builder()
                             .name(self.service_fees.name().clone())
                             .transaction_date(invoice_date)
-                            .quantity(Quantity::from(Decimal::from(worked_days)))
+                            .quantity(quantity)
                             .unit_price(self.service_fees.unit_price())
                             .currency(*self.payment_info.currency())
                             .build();
@@ -209,7 +230,7 @@ mod tests {
             .to_partial(
                 ValidInput::builder()
                     .items(InvoicedItems::Service {
-                        days_off: Some(Day::try_from(2).unwrap()),
+                        time_off: Some(TimeOff::Days(Quantity::from(dec!(2.0)))),
                     })
                     .period(YearAndMonth::sample())
                     .build(),
@@ -222,7 +243,110 @@ mod tests {
                 .try_unwrap_service()
                 .unwrap()
                 .quantity(),
-            &Quantity::from(dec!(20.0))
+            &Quantity::from(dec!(21.0))
         );
+    }
+    #[test]
+    fn to_partial_with_free_time_with_invalid_granularity_hour_instead_of_expected_day() {
+        // Create service fees with Hour granularity (more granular than Day)
+        let service_fees_hour = ServiceFees::builder()
+            .name("Hourly Consulting Services".to_string())
+            .rate(Rate::hourly(dec!(150.0)))
+            .cadence(Cadence::Monthly)
+            .build()
+            .expect("Should build service fees");
+
+        // Create data with Hour granularity service fees
+        let sut = Data::builder()
+            .information(ProtoInvoiceInfo::sample())
+            .vendor(CompanyInformation::sample_vendor())
+            .client(CompanyInformation::sample_client())
+            .payment_info(PaymentInformation::sample())
+            .service_fees(service_fees_hour)
+            .expensed_periods(ExpensedPeriods::sample())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service {
+                // Free time is Day granularity, but service is Hour granularity
+                // Day > Hour in the granularity ordering, so this should fail
+                time_off: Some(TimeOff::Days(Quantity::from(dec!(2.0)))),
+            })
+            .period(YearAndMonth::sample())
+            .build();
+
+        let result = sut.to_partial(input);
+
+        assert!(
+            result.is_err(),
+            "Expected InvalidGranularityForTimeOff error"
+        );
+
+        if let Err(Error::InvalidGranularityForTimeOff {
+            free_granularity,
+            service_fees_granularity,
+        }) = result
+        {
+            assert_eq!(free_granularity, Granularity::Day);
+            assert_eq!(service_fees_granularity, Granularity::Hour);
+        } else {
+            panic!(
+                "Expected InvalidGranularityForTimeOff error, got: {:?}",
+                result
+            );
+        }
+    }
+
+    #[test]
+    fn to_partial_with_free_time_with_invalid_granularity_hour_for_day_service() {
+        // Create service fees with Day granularity (less granular than Hour)
+        let service_fees_day = ServiceFees::builder()
+            .name("Daily Consulting Services".to_string())
+            .rate(Rate::daily(dec!(1000.0)))
+            .cadence(Cadence::Monthly)
+            .build()
+            .expect("Should build service fees");
+
+        // Create data with Day granularity service fees
+        let sut = Data::builder()
+            .information(ProtoInvoiceInfo::sample())
+            .vendor(CompanyInformation::sample_vendor())
+            .client(CompanyInformation::sample_client())
+            .payment_info(PaymentInformation::sample())
+            .service_fees(service_fees_day)
+            .expensed_periods(ExpensedPeriods::sample())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service {
+                // Free time is Hour granularity, service is Day granularity
+                // Hour < Day in the granularity ordering, so this should succeed
+                // because free time can be more granular than service granularity
+                time_off: Some(TimeOff::Hours(Quantity::from(dec!(8.0)))),
+            })
+            .period(YearAndMonth::sample())
+            .build();
+
+        let result = sut.to_partial(input);
+
+        // Should fail with InvalidGranularityForTimeOff error
+        assert!(
+            result.is_err(),
+            "Expected InvalidGranularityForTimeOff error"
+        );
+
+        if let Err(Error::InvalidGranularityForTimeOff {
+            free_granularity,
+            service_fees_granularity,
+        }) = result
+        {
+            assert_eq!(free_granularity, Granularity::Hour);
+            assert_eq!(service_fees_granularity, Granularity::Day);
+        } else {
+            panic!(
+                "Expected InvalidGranularityForTimeOff error, got: {:?}",
+                result
+            );
+        }
     }
 }
