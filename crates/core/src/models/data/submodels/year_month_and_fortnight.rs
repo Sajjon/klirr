@@ -93,7 +93,7 @@ impl FromStr for YearMonthAndFortnight {
     /// Parses `"YYYY-MM-1` into YearMonthAndFortnight with FortnightOfMonth being FirstTwoWeeks,
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('-').collect();
-        if parts.len() != 2 {
+        if parts.len() != 3 {
             return Err(Error::FailedToParseDate {
                 underlying: "Invalid Format YearAndMonth".to_owned(),
             });
@@ -107,11 +107,40 @@ impl FromStr for YearMonthAndFortnight {
     }
 }
 
+impl HasSample for YearMonthAndFortnight {
+    fn sample() -> Self {
+        Self::builder()
+            .year(2025.into())
+            .month(Month::July)
+            .half(MonthHalf::First)
+            .build()
+    }
+
+    fn sample_other() -> Self {
+        Self::builder()
+            .year(2025.into())
+            .month(Month::July)
+            .half(MonthHalf::Second)
+            .build()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     type Sut = YearMonthAndFortnight;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
 
     #[test]
     fn elapsed_periods_since_same_is_zero() {
@@ -659,5 +688,61 @@ mod tests {
             sut.to_date_end_of_period(),
             Date::from_str("2025-12-31").unwrap()
         );
+    }
+
+    #[test]
+    fn year() {
+        assert_eq!(
+            **Sut::builder()
+                .year(2025.into())
+                .month(Month::July)
+                .half(MonthHalf::First)
+                .build()
+                .year(),
+            2025
+        );
+    }
+
+    #[test]
+    fn month() {
+        assert_eq!(
+            *Sut::builder()
+                .year(2025.into())
+                .month(Month::July)
+                .half(MonthHalf::First)
+                .build()
+                .month(),
+            Month::July
+        );
+    }
+
+    #[test]
+    fn from_str_valid() {
+        let sut = Sut::from_str("2025-07-1").unwrap();
+        assert_eq!(*sut.year, 2025);
+        assert_eq!(sut.month, Month::July);
+        assert_eq!(sut.half, MonthHalf::First);
+
+        let sut = Sut::from_str("2025-07-2").unwrap();
+        assert_eq!(*sut.year, 2025);
+        assert_eq!(sut.month, Month::July);
+        assert_eq!(sut.half, MonthHalf::Second);
+    }
+
+    #[test]
+    fn from_str_invalid() {
+        assert!(Sut::from_str("2025-07-1a").is_err());
+        assert!(Sut::from_str("2025-07-3").is_err());
+        assert!(Sut::from_str("2025-13-1").is_err());
+    }
+
+    #[test]
+    fn serde_sample() {
+        insta::assert_ron_snapshot!(&Sut::sample())
+    }
+
+    #[test]
+    fn serde_sample_other() {
+        insta::assert_ron_snapshot!(&Sut::sample_other())
     }
 }

@@ -192,6 +192,17 @@ mod tests {
     }
 
     #[test]
+    fn test_expenses() {
+        let sut = Sut::sample();
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Expenses)
+            .period(YearAndMonth::sample())
+            .build();
+        let partial = sut.to_partial(input).unwrap();
+        assert!(partial.line_items().is_expenses());
+    }
+
+    #[test]
     fn test_worked_days_when_ooo_is_greater_than_0() {
         let sut = Sut::sample();
         let partial = sut

@@ -1,0 +1,5 @@
+---
+source: crates/core/src/models/data/submodels/year_month_and_fortnight.rs
+expression: "&Sut::sample_other()"
+---
+"2025-07"
