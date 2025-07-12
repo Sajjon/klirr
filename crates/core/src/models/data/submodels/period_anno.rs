@@ -57,6 +57,7 @@ impl IsPeriod for PeriodAnno {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     type Sut = PeriodAnno;
@@ -70,5 +71,31 @@ mod tests {
     #[test]
     fn inequality() {
         assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn test_elapsed_periods_since_year_and_month() {
+        let early = Sut::YearAndMonth(YearAndMonth::december(2024));
+        let late = Sut::YearAndMonth(YearAndMonth::february(2025));
+        assert_eq!(late.elapsed_periods_since(&early), 2);
+    }
+
+    #[test]
+    fn test_elapsed_periods_since_year_and_fortnight() {
+        let early = Sut::YearMonthAndFortnight(
+            YearMonthAndFortnight::builder()
+                .year(2024.into())
+                .month(Month::December)
+                .half(MonthHalf::Second)
+                .build(),
+        );
+        let late = Sut::YearMonthAndFortnight(
+            YearMonthAndFortnight::builder()
+                .year(2025.into())
+                .month(Month::February)
+                .half(MonthHalf::First)
+                .build(),
+        );
+        assert_eq!(late.elapsed_periods_since(&early), 3); // whole of january (2) + half of december (1)
     }
 }

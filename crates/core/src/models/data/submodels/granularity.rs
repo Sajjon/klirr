@@ -22,3 +22,36 @@ impl Granularity {
         .to_owned()
     }
 }
+
+impl HasSample for Granularity {
+    fn sample() -> Self {
+        Self::Month
+    }
+    fn sample_other() -> Self {
+        Self::Day
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    type Sut = Granularity;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn example_rates() {
+        assert!(!Sut::Day.example_rate().is_empty());
+        assert!(!Sut::Month.example_rate().is_empty());
+        assert!(!Sut::Hour.example_rate().is_empty());
+    }
+}

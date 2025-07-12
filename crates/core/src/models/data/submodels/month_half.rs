@@ -24,12 +24,12 @@ pub enum MonthHalf {
     Second,
 }
 
-impl From<MonthHalf> for u16 {
-    /// Converts `MonthHalf::First` into `0` and `MonthHalf::Second` into `1`.
+impl From<MonthHalf> for i16 {
+    /// Converts `MonthHalf::First` into `1` and `MonthHalf::Second` into `2`.
     fn from(half: MonthHalf) -> Self {
         match half {
-            MonthHalf::First => 0,
-            MonthHalf::Second => 1,
+            MonthHalf::First => 1,
+            MonthHalf::Second => 2,
         }
     }
 }
@@ -46,5 +46,46 @@ impl FromStr for MonthHalf {
                 underlying: "Invalid Format MonthHalf".to_owned(),
             }),
         }
+    }
+}
+
+impl HasSample for MonthHalf {
+    fn sample() -> Self {
+        Self::First
+    }
+
+    fn sample_other() -> Self {
+        Self::Second
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Sut = MonthHalf;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn test_from_str() {
+        assert_eq!(Sut::from_str("1").unwrap(), Sut::First);
+        assert_eq!(Sut::from_str("2").unwrap(), Sut::Second);
+        assert!(Sut::from_str("3").is_err());
+    }
+
+    #[test]
+    fn test_into_i16() {
+        assert_eq!(i16::from(Sut::First), 1);
+        assert_eq!(i16::from(Sut::Second), 2);
     }
 }
