@@ -322,4 +322,342 @@ mod tests {
             .build();
         assert_eq!(late.elapsed_periods_since(early), 25);
     }
+
+    #[test]
+    fn to_date_end_of_period_january_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::January)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-01-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_january_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::January)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-01-31").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_non_leap_year_february_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::February)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-02-14").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_non_leap_year_february_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::February)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-02-28").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_leap_year_february_first_half() {
+        let sut = Sut::builder()
+            .year(2028.into())
+            .month(Month::February)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2028-02-14").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_leap_year_february_second_half() {
+        let sut = Sut::builder()
+            .year(2028.into())
+            .month(Month::February)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2028-02-29").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_march_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::March)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-03-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_march_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::March)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-03-31").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_april_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::April)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-04-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_april_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::April)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-04-30").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_may_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::May)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-05-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_may_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::May)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-05-31").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_june_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::June)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-06-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_june_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::June)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-06-30").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_july_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::July)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-07-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_july_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::July)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-07-31").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_august_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::August)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-08-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_august_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::August)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-08-31").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_september_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::September)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-09-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_september_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::September)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-09-30").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_october_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::October)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-10-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_october_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::October)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-10-31").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_november_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::November)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-11-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_november_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::November)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-11-30").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_december_first_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::December)
+            .half(MonthHalf::First)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-12-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn to_date_end_of_period_december_second_half() {
+        let sut = Sut::builder()
+            .year(2025.into())
+            .month(Month::December)
+            .half(MonthHalf::Second)
+            .build();
+        assert_eq!(
+            sut.to_date_end_of_period(),
+            Date::from_str("2025-12-31").unwrap()
+        );
+    }
 }

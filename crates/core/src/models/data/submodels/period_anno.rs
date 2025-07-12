@@ -98,4 +98,28 @@ mod tests {
         );
         assert_eq!(late.elapsed_periods_since(&early), 3); // whole of january (2) + half of december (1)
     }
+
+    #[test]
+    fn test_to_date_end_of_period_year_and_month() {
+        let period = Sut::YearAndMonth(YearAndMonth::december(2024));
+        assert_eq!(
+            period.to_date_end_of_period(),
+            Date::from_str("2024-12-31").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_to_date_end_of_period_year_and_fortnight() {
+        let period = Sut::YearMonthAndFortnight(
+            YearMonthAndFortnight::builder()
+                .year(2024.into())
+                .month(Month::December)
+                .half(MonthHalf::First)
+                .build(),
+        );
+        assert_eq!(
+            period.to_date_end_of_period(),
+            Date::from_str("2024-12-15").unwrap()
+        );
+    }
 }
