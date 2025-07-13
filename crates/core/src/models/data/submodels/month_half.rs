@@ -14,13 +14,16 @@ use crate::prelude::*;
     Hash,
     SerializeDisplay,
     DeserializeFromStr,
+    EnumIter,
 )]
 pub enum MonthHalf {
     /// The non-greedy first half of a month, i.e. 14 days for februari (including leap year),
     /// and 15 days for the other months.
+    #[display("first-half")]
     First,
     /// The remainder of days of the month after the first half have been subtracted,
     /// 15-16 days for all months except February which is 14-15 days.
+    #[display("second-half")]
     Second,
 }
 
@@ -34,14 +37,35 @@ impl From<MonthHalf> for i16 {
     }
 }
 
+impl From<NaiveDate> for MonthHalf {
+    fn from(value: NaiveDate) -> Self {
+        let date = Date::from(value);
+        Self::from(date)
+    }
+}
+
+impl From<Date> for MonthHalf {
+    fn from(value: Date) -> Self {
+        let day = **value.day();
+        if value.month().is_february() {
+            return if day <= 14 { Self::First } else { Self::Second };
+        }
+        if day <= 15 { Self::First } else { Self::Second }
+    }
+}
+
 impl FromStr for MonthHalf {
     type Err = crate::Error;
 
     /// Parses `1` into `MonthHalf::First`, and `2` into `MonthHalf::Second`.
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        match s {
+        match s.to_lowercase().as_str() {
             "1" => Ok(Self::First),
+            "first-half" => Ok(Self::First),
+            "first" => Ok(Self::First),
             "2" => Ok(Self::Second),
+            "second-half" => Ok(Self::Second),
+            "second" => Ok(Self::Second),
             _ => Err(Error::FailedToParseDate {
                 underlying: "Invalid Format MonthHalf".to_owned(),
             }),
@@ -49,6 +73,13 @@ impl FromStr for MonthHalf {
     }
 }
 
+impl MonthHalf {
+    pub fn now() -> Self {
+        let today = chrono::Local::now().date_naive();
+        let date = Date::from(today);
+        MonthHalf::from(date)
+    }
+}
 impl HasSample for MonthHalf {
     fn sample() -> Self {
         Self::First
@@ -61,6 +92,8 @@ impl HasSample for MonthHalf {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_snapshot;
+
     use super::*;
 
     type Sut = MonthHalf;
@@ -77,10 +110,23 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str() {
+    fn display_sample() {
+        assert_snapshot!(Sut::sample());
+    }
+
+    #[test]
+    fn display_sample_other() {
+        assert_snapshot!(Sut::sample_other());
+    }
+
+    #[test]
+    fn test_from_str_all_valid() {
         assert_eq!(Sut::from_str("1").unwrap(), Sut::First);
+        assert_eq!(Sut::from_str("first-half").unwrap(), Sut::First);
+        assert_eq!(Sut::from_str("first").unwrap(), Sut::First);
         assert_eq!(Sut::from_str("2").unwrap(), Sut::Second);
-        assert!(Sut::from_str("3").is_err());
+        assert_eq!(Sut::from_str("second-half").unwrap(), Sut::Second);
+        assert_eq!(Sut::from_str("second").unwrap(), Sut::Second);
     }
 
     #[test]

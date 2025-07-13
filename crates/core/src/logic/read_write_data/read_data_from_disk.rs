@@ -174,9 +174,7 @@ pub fn read_email_data_from_disk_with_base_path(
     load_data(base_path, DATA_FILE_NAME_EMAIL_SETTINGS)
 }
 
-pub fn read_data_from_disk_with_base_path<Period: IsPeriod + DeserializeOwned>(
-    base_path: impl AsRef<Path>,
-) -> Result<Data<Period>> {
+pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result<Data<PeriodAnno>> {
     let base_path = base_path.as_ref();
     // Read the input data from a file or other source.
     // This is a placeholder function, you can add your own logic here.
@@ -208,7 +206,7 @@ mod tests {
     #[test]
     fn write_read_validate_data() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let data = Data::<YearAndMonth>::sample();
+        let data = Data::<PeriodAnno>::sample();
         save_data_with_base_path(data.clone(), tempdir.path()).unwrap();
         let loaded_data = read_data_from_disk_with_base_path(tempdir.path()).unwrap();
         assert_eq!(loaded_data, data, "Loaded data should match saved data");

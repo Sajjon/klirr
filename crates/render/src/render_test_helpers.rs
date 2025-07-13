@@ -49,7 +49,7 @@ pub fn running_in_ci() -> bool {
 /// If the expected image does not exist, it will save the new image as the expected one.
 pub fn compare_image_against_expected<Period: IsPeriod>(
     sample: Data<Period>,
-    input: ValidInput<Period>,
+    input: ValidInput,
     path_to_expected_image: impl AsRef<Path>,
 ) {
     assert!(
@@ -134,7 +134,7 @@ impl TestExchangeRatesFetcher for ExchangeRatesFetcher<tempfile::TempDir> {
 fn generate_pdf_into_png_image<Period: IsPeriod>(
     l18n: L18n,
     sample: Data<Period>,
-    input: ValidInput<Period>,
+    input: ValidInput,
 ) -> Vec<u8> {
     let layout = *input.layout();
     let data = prepare_invoice_input_data(sample, input, ExchangeRatesFetcher::tmp()).unwrap();

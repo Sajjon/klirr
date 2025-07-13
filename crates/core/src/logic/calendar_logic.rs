@@ -30,6 +30,36 @@ impl Month {
     }
 }
 
+impl YearMonthAndFortnight {
+    pub fn current() -> Self {
+        let today = chrono::Local::now().date_naive();
+        Self::builder()
+            .year(Year::from(today.year()))
+            .month(Month::try_from(today.month() as i32).expect("Chrono should return valid month"))
+            .half(MonthHalf::from(today))
+            .build()
+    }
+
+    pub fn last() -> Self {
+        Self::current().one_half_earlier()
+    }
+
+    pub fn one_half_earlier(&self) -> Self {
+        match self.half() {
+            MonthHalf::First => {
+                let ym = YearAndMonth::from(*self);
+                let ym = ym.one_month_earlier();
+                Self::year_and_month_with_half(ym, MonthHalf::Second)
+            }
+            MonthHalf::Second => Self::builder()
+                .year(*self.year())
+                .month(*self.month())
+                .half(MonthHalf::First)
+                .build(),
+        }
+    }
+}
+
 impl YearAndMonth {
     /// Returns the last day of the month for this `YearAndMonth`, e.g. if the
     /// year is not a leap year, February will return 28, and for leap year
@@ -65,11 +95,7 @@ impl YearAndMonth {
     }
 
     pub fn current() -> Self {
-        let today = chrono::Local::now().date_naive();
-        Self::builder()
-            .year(Year::from(today.year()))
-            .month(Month::try_from(today.month() as i32).expect("Chrono should return valid month"))
-            .build()
+        Self::from(YearMonthAndFortnight::current())
     }
 
     /// Returns a new `YearAndMonth` that is one month earlier than this one.
@@ -136,7 +162,27 @@ impl YearAndMonth {
         end_months - start_months
     }
 }
+impl TryInto<YearAndMonth> for PeriodAnno {
+    type Error = crate::Error;
 
+    fn try_into(self) -> std::result::Result<YearAndMonth, Self::Error> {
+        todo!()
+    }
+}
+impl TryFromPeriodAnno for YearMonthAndFortnight {
+    fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
+        period
+            .try_unwrap_year_month_and_fortnight()
+            .map_err(|_| Error::PeriodIsNotYearMonthAndFortnight)
+    }
+}
+impl TryFromPeriodAnno for YearAndMonth {
+    fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
+        period
+            .try_unwrap_year_and_month()
+            .map_err(|_| Error::PeriodIsNotYearAndMonth)
+    }
+}
 impl IsPeriod for YearAndMonth {
     fn max_granularity(&self) -> Granularity {
         Granularity::Month
@@ -155,24 +201,6 @@ impl IsPeriod for YearAndMonth {
 
     fn month(&self) -> &Month {
         self.month()
-    }
-}
-
-impl<Period: IsPeriod> ValidInput<Period> {
-    /// Calculates the invoice number for the given `ProtoInvoiceInfo` based on
-    /// the target month and whether the items are expenses or services.
-    ///
-    /// See `calculate_invoice_number` for the logic.
-    pub fn invoice_number(&self, information: &ProtoInvoiceInfo<Period>) -> InvoiceNumber {
-        let items = self.items();
-        let target_period = self.period();
-        let is_expenses = items.is_expenses();
-        calculate_invoice_number(
-            information.offset(),
-            target_period,
-            is_expenses,
-            information.record_of_periods_off(),
-        )
     }
 }
 
@@ -221,18 +249,18 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
         "Record of periods off contains offset.period(): {:?} but it should not.",
         offset.period()
     );
-    let months_elapsed_since_offset = target_period.elapsed_periods_since(offset.period());
+    let periods_elapsed_since_offset = target_period.elapsed_periods_since(offset.period());
 
-    let mut months_off_to_subtract = 0;
+    let mut periods_off_to_subtract = 0;
     for period_off in record_of_periods_off.iter() {
         if period_off > offset.period() && period_off <= target_period {
-            // If the month is off record, we need to adjust the invoice number
-            // by subtracting the number of months off record.
-            months_off_to_subtract += 1;
+            // If the period is recorded as off, we need to adjust the invoice number
+            // by subtracting the number of periods off
+            periods_off_to_subtract += 1;
         }
     }
     let mut invoice_number =
-        **offset.offset() + months_elapsed_since_offset - months_off_to_subtract;
+        **offset.offset() + periods_elapsed_since_offset - periods_off_to_subtract;
     if is_expenses {
         // For expenses we add 1, ensuring that if we invoice for services and
         // expenses the same month, the expense invoice number is always higher.
@@ -353,18 +381,28 @@ mod tests {
     const MAY_2025: YearAndMonth = YearAndMonth::may(2025);
     /// 2025 is not a leap year
     const JUNE_2025: YearAndMonth = YearAndMonth::june(2025);
+    const JUNE_2025_FIRST: YearMonthAndFortnight =
+        YearMonthAndFortnight::year_and_month_with_half(JUNE_2025, MonthHalf::First);
     /// 2025 is not a leap year
     const JULY_2025: YearAndMonth = YearAndMonth::july(2025);
+    const JULY_2025_FIRST: YearMonthAndFortnight =
+        YearMonthAndFortnight::year_and_month_with_half(JULY_2025, MonthHalf::First);
     /// 2025 is not a leap year
     const AUG_2025: YearAndMonth = YearAndMonth::august(2025);
+    const AUG_2025_FIRST: YearMonthAndFortnight =
+        YearMonthAndFortnight::year_and_month_with_half(AUG_2025, MonthHalf::First);
     /// 2025 is not a leap year
     const SEPT_2025: YearAndMonth = YearAndMonth::september(2025);
+    const SEPT_2025_FIRST: YearMonthAndFortnight =
+        YearMonthAndFortnight::year_and_month_with_half(SEPT_2025, MonthHalf::First);
     /// 2025 is not a leap year
     const OCT_2025: YearAndMonth = YearAndMonth::october(2025);
     /// 2025 is not a leap year
     const NOV_2025: YearAndMonth = YearAndMonth::november(2025);
     /// 2025 is not a leap year
     const DEC_2025: YearAndMonth = YearAndMonth::december(2025);
+    const DEC_2025_FIRST: YearMonthAndFortnight =
+        YearMonthAndFortnight::year_and_month_with_half(DEC_2025, MonthHalf::First);
 
     /// 2026 is not a leap year
     const JAN_2026: YearAndMonth = YearAndMonth::january(2026);
@@ -438,13 +476,13 @@ mod tests {
     fn test_invoice_number(
         offset_no: impl Into<InvoiceNumber>,
         offset_month: YearAndMonth,
-        target_month: YearAndMonth,
+        target_period: YearMonthAndFortnight,
         months_off: impl IntoIterator<Item = YearAndMonth>,
         is_expenses: bool,
         expected: impl Into<InvoiceNumber>,
     ) {
         let input = ValidInput::builder()
-            .period(target_month)
+            .period(target_period)
             .items(if is_expenses {
                 InvoicedItems::Expenses
             } else {
@@ -462,7 +500,12 @@ mod tests {
             )
             .build();
 
-        let invoice_number = input.invoice_number(&information);
+        let invoice_number = calculate_invoice_number(
+            information.offset(),
+            &YearAndMonth::from(target_period),
+            is_expenses,
+            information.record_of_periods_off(),
+        );
         assert_eq!(invoice_number, expected.into());
     }
 
@@ -481,7 +524,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        JUNE_2025,
+                        JUNE_2025_FIRST,
                         [],
                         false,
                         invoice_no_offset,
@@ -496,7 +539,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        SEPT_2025,
+                        SEPT_2025_FIRST,
                         [],
                         false,
                         invoice_no_offset + 3,
@@ -517,7 +560,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        JUNE_2025,
+                        JUNE_2025_FIRST,
                         [APR_2025, MAY_2025],
                         false,
                         invoice_no_offset,
@@ -532,7 +575,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        JUNE_2025,
+                        JUNE_2025_FIRST,
                         [JULY_2026, AUG_2026],
                         false,
                         invoice_no_offset,
@@ -547,7 +590,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         APR_2025,
-                        JULY_2025,
+                        JULY_2025_FIRST,
                         [MAY_2025, JUNE_2025, JULY_2025],
                         false,
                         invoice_no_offset,
@@ -562,7 +605,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         APR_2025,
-                        AUG_2025,
+                        AUG_2025_FIRST,
                         [MAY_2025, JUNE_2025, JULY_2025],
                         false,
                         invoice_no_offset + 1,
@@ -577,7 +620,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         APR_2025,
-                        DEC_2025,
+                        DEC_2025_FIRST,
                         // Add some months off before offset_month and after target_month
                         [JAN_2025, MAY_2025, JULY_2025, SEPT_2025, JAN_2028],
                         false,
@@ -603,7 +646,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        JUNE_2025,
+                        JUNE_2025_FIRST,
                         [],
                         true,
                         invoice_no_offset + 1,
@@ -618,7 +661,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        SEPT_2025,
+                        SEPT_2025_FIRST,
                         [],
                         true,
                         invoice_no_offset + 4,
@@ -639,7 +682,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        JUNE_2025,
+                        JUNE_2025_FIRST,
                         [APR_2025, MAY_2025],
                         true,
                         invoice_no_offset + 1,
@@ -654,7 +697,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         JUNE_2025,
-                        JUNE_2025,
+                        JUNE_2025_FIRST,
                         [JULY_2026, AUG_2026],
                         true,
                         invoice_no_offset + 1,
@@ -669,7 +712,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         APR_2025,
-                        JULY_2025,
+                        JULY_2025_FIRST,
                         [MAY_2025, JUNE_2025, JULY_2025],
                         true,
                         invoice_no_offset + 1,
@@ -684,7 +727,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         APR_2025,
-                        AUG_2025,
+                        AUG_2025_FIRST,
                         [MAY_2025, JUNE_2025, JULY_2025],
                         true,
                         invoice_no_offset + 2,
@@ -699,7 +742,7 @@ mod tests {
                     test_invoice_number(
                         invoice_no_offset,
                         APR_2025,
-                        DEC_2025,
+                        DEC_2025_FIRST,
                         // Add some months off before offset_month and after target_month
                         [JAN_2025, MAY_2025, JULY_2025, SEPT_2025, JAN_2028],
                         true,

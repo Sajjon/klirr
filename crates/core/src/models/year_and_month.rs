@@ -30,6 +30,20 @@ pub struct YearAndMonth {
     month: Month,
 }
 
+impl YearAndMonth {
+    pub const fn deconstruct(self) -> (Year, Month) {
+        (self.year, self.month)
+    }
+}
+impl From<YearMonthAndFortnight> for YearAndMonth {
+    fn from(value: YearMonthAndFortnight) -> Self {
+        Self::builder()
+            .year(*value.year())
+            .month(*value.month())
+            .build()
+    }
+}
+
 impl From<Date> for YearAndMonth {
     /// Converts a `Date` to a `YearAndMonth`.
     /// # Examples
@@ -394,5 +408,13 @@ mod tests {
         let year_and_month: Sut = date.into();
         assert_eq!(year_and_month.year(), &Year::new(2025));
         assert_eq!(year_and_month.month(), &Month::May);
+    }
+
+    #[test]
+    fn deconstruct() {
+        let year_and_month = Sut::new(Year::new(2025), Month::May);
+        let (year, month) = year_and_month.deconstruct();
+        assert_eq!(year, Year::new(2025));
+        assert_eq!(month, Month::May);
     }
 }

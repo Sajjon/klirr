@@ -6,7 +6,7 @@ use crate::prelude::*;
 /// for the generated PDF file.
 #[derive(Debug, Clone, Display, Builder, Getters)]
 #[display("Layout: {}, Month: {}, out: {:?}, items: {}, language: {}", layout, period, maybe_output_path.as_ref().map(|d|d.display()), items, language)]
-pub struct ValidInput<Period: IsPeriod> {
+pub struct ValidInput {
     /// The language to use for the invoice, used on labels, headers etc.
     /// Defaults to English (`Language::EN`).
     #[builder(default)]
@@ -15,8 +15,14 @@ pub struct ValidInput<Period: IsPeriod> {
 
     /// The period for which to generate the invoice, this affects the invoice
     /// number as well as the invoice date and due date.
+    ///
+    /// Note: We use the period type with the highest granularity, so that we
+    /// always can convert it to a kind of period of more coarse granularity.
+    /// For example, if the period is `YearMonthAndFortnight`, we can always
+    /// convert it to `YearAndMonth` later in the flow if that matches the invoice
+    /// cadence.
     #[getset(get = "pub")]
-    period: Period,
+    period: YearMonthAndFortnight,
 
     /// The items to be invoiced, either services or expenses.
     #[builder(default)]
@@ -39,10 +45,10 @@ pub struct ValidInput<Period: IsPeriod> {
     email: Option<DecryptedEmailSettings>,
 }
 
-impl<Period: IsPeriod + HasSample> HasSample for ValidInput<Period> {
+impl HasSample for ValidInput {
     fn sample() -> Self {
         Self::builder()
-            .period(Period::sample())
+            .period(YearMonthAndFortnight::sample())
             .items(InvoicedItems::sample())
             .maybe_output_path(PathBuf::from("invoice.pdf"))
             .build()
@@ -50,7 +56,7 @@ impl<Period: IsPeriod + HasSample> HasSample for ValidInput<Period> {
 
     fn sample_other() -> Self {
         Self::builder()
-            .period(Period::sample_other())
+            .period(YearMonthAndFortnight::sample_other())
             .items(InvoicedItems::sample_other())
             .build()
     }
@@ -61,7 +67,7 @@ mod tests {
     use super::*;
     use test_log::test;
 
-    type Sut = ValidInput<YearAndMonth>;
+    type Sut = ValidInput;
 
     #[test]
     fn valid_input_sample() {

@@ -3,7 +3,9 @@ use derive_more::FromStr;
 use crate::prelude::*;
 
 /// How often you invoice, e.g. once or twice per month
-#[derive(Clone, Copy, Debug, Display, FromStr, Default, Serialize, Deserialize, PartialEq)]
+#[derive(
+    Clone, Copy, Debug, Display, FromStr, Default, Serialize, Deserialize, PartialEq, EnumIter,
+)]
 pub enum Cadence {
     /// Invoicing **once** per month.
     #[default]

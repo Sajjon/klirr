@@ -2,4 +2,4 @@
 source: crates/core/src/models/data/submodels/year_month_and_fortnight.rs
 expression: "&Sut::sample()"
 ---
-"2025-07"
+"2025-07-first-half"

@@ -23,7 +23,7 @@ pub trait FetchExchangeRates {
 
 pub fn prepare_invoice_input_data<Period: IsPeriod>(
     data: Data<Period>,
-    input: ValidInput<Period>,
+    input: ValidInput,
     exchange_rates_fetcher: impl FetchExchangeRates,
 ) -> Result<PreparedData> {
     info!("Preparing invoice input data for PDF generation...");

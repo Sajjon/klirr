@@ -196,11 +196,11 @@ pub struct ExpensesInput {
 #[command(name = "invoice")]
 #[command(about = "Generate an invoice PDF", long_about = None)]
 pub struct InvoiceInput {
-    /// The month for which the invoice is generated.
-    #[arg(long, short = 'm', default_value_t)]
+    /// The period for which the invoice is generated.
+    #[arg(long, short = 'p', default_value_t)]
     #[builder(default)]
     #[getset(get = "pub")]
-    month: TargetMonth,
+    period: TargetPeriod,
 
     /// The language for which the invoice is generated.
     #[arg(long, short = 'l', default_value_t)]
@@ -253,7 +253,7 @@ impl InvoiceInput {
     /// # Errors
     /// Returns an error if the input is invalid, e.g. if the output path does not
     /// exist or if the items are not specified correctly.
-    pub fn parsed(self) -> Result<ValidInput<PeriodAnno>> {
+    pub fn parsed(self) -> Result<ValidInput> {
         if let Some(path) = &self.out {
             let parent = path
                 .parent()
@@ -270,9 +270,9 @@ impl InvoiceInput {
             Ok(None)
         }?;
         let items = self._invoiced_items()?;
-
+        let period = self.period.period();
         let valid = ValidInput::builder()
-            .period(PeriodAnno::from(self.month.year_and_month()))
+            .period(period)
             .layout(*self.layout())
             .items(items)
             .language(*self.language())
@@ -347,9 +347,9 @@ mod tests {
             use test_log::test;
 
             #[test]
-            fn test_input_parsing_month() {
-                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "--month", "last"]);
-                assert_eq!(input.command.unwrap_invoice().month, TargetMonth::Last);
+            fn test_input_parsing_period() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "--period", "last"]);
+                assert_eq!(input.command.unwrap_invoice().period, TargetPeriod::Last);
             }
 
             #[test]

@@ -18,6 +18,7 @@ use crate::prelude::*;
     Serialize,
     Deserialize,
     IsVariant,
+    EnumIter,
 )]
 pub enum Granularity {
     Hour,

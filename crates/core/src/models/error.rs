@@ -6,6 +6,14 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError, PartialEq)]
 pub enum Error {
+    /// Period is not YearAndMonth
+    #[error("Period is not YearAndMonth")]
+    PeriodIsNotYearAndMonth,
+
+    /// Period is not YearMonthAndFortnight
+    #[error("Period is not YearMonthAndFortnight")]
+    PeriodIsNotYearMonthAndFortnight,
+
     #[error(
         "Invalid granularity for time off: '{free_granularity}', expected: '{service_fees_granularity}', use the same time unit for time off as you specified in service fees. View it with `klirr data dump` command."
     )]

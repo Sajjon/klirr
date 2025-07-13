@@ -115,10 +115,16 @@ mod tests {
     #[test]
     fn sample_expenses_to_typst() {
         test_data_to_typst!(
-            Data::sample(),
+            Data::<YearAndMonth>::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
-                .period(YearAndMonth::sample())
+                .period(
+                    YearMonthAndFortnight::builder()
+                        .year(2025.into())
+                        .month(Month::May)
+                        .half(MonthHalf::First)
+                        .build(),
+                )
                 .language(Language::EN)
                 .build()
         );
@@ -127,10 +133,16 @@ mod tests {
     #[test]
     fn sample_services_to_typst() {
         test_data_to_typst!(
-            Data::sample(),
+            Data::<YearAndMonth>::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Service { time_off: None })
-                .period(YearAndMonth::sample())
+                .period(
+                    YearMonthAndFortnight::builder()
+                        .year(2025.into())
+                        .month(Month::May)
+                        .half(MonthHalf::First)
+                        .build(),
+                )
                 .language(Language::EN)
                 .build()
         );

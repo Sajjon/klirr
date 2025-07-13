@@ -17,8 +17,8 @@ use crate::prelude::*;
     Getters,
     Constructor,
 )]
-#[display("{year:04}-{month:02}")]
-#[debug("{year:04}-{month:02}")]
+#[display("{year:04}-{month:02}-{half}")]
+#[debug("{year:04}-{month:02}-{half}")]
 pub struct YearMonthAndFortnight {
     /// e.g. 2025
     #[getset(get = "pub")]
@@ -34,6 +34,11 @@ pub struct YearMonthAndFortnight {
 }
 
 impl YearMonthAndFortnight {
+    pub const fn year_and_month_with_half(year_and_month: YearAndMonth, half: MonthHalf) -> Self {
+        let (year, month) = year_and_month.deconstruct();
+        Self { year, month, half }
+    }
+
     fn as_year_and_month(&self) -> YearAndMonth {
         YearAndMonth::builder()
             .year(self.year)
@@ -97,7 +102,7 @@ impl FromStr for YearMonthAndFortnight {
     /// Parses `"YYYY-MM-1` into YearMonthAndFortnight with FortnightOfMonth being FirstTwoWeeks,
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('-').collect();
-        if parts.len() != 3 {
+        if parts.len() < 3 {
             return Err(Error::FailedToParseDate {
                 underlying: "Invalid Format YearAndMonth".to_owned(),
             });
@@ -131,6 +136,8 @@ impl HasSample for YearMonthAndFortnight {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_ron_snapshot;
+
     use super::*;
 
     type Sut = YearMonthAndFortnight;
@@ -722,12 +729,12 @@ mod tests {
 
     #[test]
     fn from_str_valid() {
-        let sut = Sut::from_str("2025-07-1").unwrap();
+        let sut = Sut::from_str("2025-07-first-half").unwrap();
         assert_eq!(*sut.year, 2025);
         assert_eq!(sut.month, Month::July);
         assert_eq!(sut.half, MonthHalf::First);
 
-        let sut = Sut::from_str("2025-07-2").unwrap();
+        let sut = Sut::from_str("2025-07-second-half").unwrap();
         assert_eq!(*sut.year, 2025);
         assert_eq!(sut.month, Month::July);
         assert_eq!(sut.half, MonthHalf::Second);
@@ -742,11 +749,20 @@ mod tests {
 
     #[test]
     fn serde_sample() {
-        insta::assert_ron_snapshot!(&Sut::sample())
+        assert_ron_snapshot!(&Sut::sample())
     }
 
     #[test]
     fn serde_sample_other() {
-        insta::assert_ron_snapshot!(&Sut::sample_other())
+        assert_ron_snapshot!(&Sut::sample_other())
+    }
+
+    #[test]
+    fn deserialize_ron() {
+        let s = r#""2025-05-second-half""#;
+        let sut: Sut = ron::de::from_str(s).expect("Failed to deserialize RON");
+        assert_eq!(*sut.year, 2025);
+        assert_eq!(sut.month, Month::May);
+        assert_eq!(sut.half, MonthHalf::Second);
     }
 }

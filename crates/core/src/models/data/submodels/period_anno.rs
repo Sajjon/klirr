@@ -21,7 +21,11 @@ impl HasSample for PeriodAnno {
         YearAndMonth::sample_other().into()
     }
 }
-
+impl TryFromPeriodAnno for PeriodAnno {
+    fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
+        Ok(period)
+    }
+}
 impl IsPeriod for PeriodAnno {
     fn max_granularity(&self) -> Granularity {
         match self {
@@ -64,6 +68,8 @@ impl IsPeriod for PeriodAnno {
 
 #[cfg(test)]
 mod tests {
+
+    use insta::assert_ron_snapshot;
 
     use super::*;
 
@@ -127,6 +133,33 @@ mod tests {
         assert_eq!(
             period.to_date_end_of_period(),
             Date::from_str("2024-12-15").unwrap()
+        );
+    }
+
+    #[test]
+    fn serde_fortnight() {
+        assert_ron_snapshot!(Sut::YearMonthAndFortnight(
+            YearMonthAndFortnight::builder()
+                .year(2025.into())
+                .month(Month::May)
+                .half(MonthHalf::Second)
+                .build()
+        ));
+    }
+
+    #[test]
+    fn test_deserialize_ron_year_month_and_fortnight() {
+        let ron_str = r#""2025-05-second-half""#;
+        let period: Sut = ron::de::from_str(ron_str).expect("Failed to deserialize RON");
+        assert_eq!(
+            period,
+            Sut::YearMonthAndFortnight(
+                YearMonthAndFortnight::builder()
+                    .year(2025.into())
+                    .month(Month::May)
+                    .half(MonthHalf::Second)
+                    .build()
+            )
         );
     }
 }

@@ -82,16 +82,27 @@ impl<Period: IsPeriod> Data<Period> {
     /// let result = data.to_partial(input);
     /// assert!(result.is_ok(), "Expected conversion to succeed, got: {:?}", result);
     /// ```
-    pub fn to_partial(
-        self,
-        input: ValidInput<Period>,
-    ) -> Result<DataWithItemsPricedInSourceCurrency> {
+    pub fn to_partial(self, input: ValidInput) -> Result<DataWithItemsPricedInSourceCurrency> {
+        let target_period =
+            match Into::<PeriodAnno>::into(self.information().offset().period().clone()) {
+                PeriodAnno::YearMonthAndFortnight(_) => {
+                    Period::try_from_period_anno(PeriodAnno::from(*input.period()))?
+                }
+                PeriodAnno::YearAndMonth(_) => Period::try_from_period_anno(PeriodAnno::from(
+                    YearAndMonth::from(*input.period()),
+                ))?,
+            };
         let items = input.items();
-        let target_period = input.period();
         let invoice_date = target_period.to_date_end_of_period();
         let due_date = invoice_date.advance(self.payment_info().terms());
         let is_expenses = items.is_expenses();
-        let number = input.invoice_number(self.information());
+
+        let number = calculate_invoice_number(
+            self.information().offset(),
+            &target_period,
+            is_expenses,
+            self.information().record_of_periods_off(),
+        );
         let is_expenses_str_or_empty = if is_expenses { "_expenses" } else { "" };
         let vendor_name = self.vendor.company_name().replace(' ', "_");
 
@@ -139,7 +150,7 @@ impl<Period: IsPeriod> Data<Period> {
                             }
                         }
 
-                        let quantity = self.billable_quantity(target_period, time_off)?;
+                        let quantity = self.billable_quantity(&target_period, time_off)?;
                         let service = Item::builder()
                             .name(self.service_fees.name().clone())
                             .transaction_date(invoice_date)
@@ -150,7 +161,7 @@ impl<Period: IsPeriod> Data<Period> {
                         LineItemsPricedInSourceCurrency::Service(service)
                     }
                     InvoicedItems::Expenses => {
-                        let expenses = self.expensed_periods.get(target_period)?;
+                        let expenses = self.expensed_periods.get(&target_period)?;
                         LineItemsPricedInSourceCurrency::Expenses(expenses.clone())
                     }
                 })
@@ -213,11 +224,17 @@ mod tests {
     }
 
     #[test]
-    fn test_expenses() {
+    fn expenses() {
         let sut = Sut::sample();
         let input = ValidInput::builder()
             .items(InvoicedItems::Expenses)
-            .period(YearAndMonth::sample())
+            .period(
+                YearMonthAndFortnight::builder()
+                    .year(2025.into())
+                    .month(Month::May)
+                    .half(MonthHalf::First)
+                    .build(),
+            )
             .build();
         let partial = sut.to_partial(input).unwrap();
         assert!(partial.line_items().is_expenses());
@@ -232,7 +249,7 @@ mod tests {
                     .items(InvoicedItems::Service {
                         time_off: Some(TimeOff::Days(Quantity::from(dec!(2.0)))),
                     })
-                    .period(YearAndMonth::sample())
+                    .period(YearMonthAndFortnight::sample())
                     .build(),
             )
             .unwrap();
@@ -243,7 +260,7 @@ mod tests {
                 .try_unwrap_service()
                 .unwrap()
                 .quantity(),
-            &Quantity::from(dec!(21.0))
+            &Quantity::from(dec!(22.0))
         );
     }
     #[test]
@@ -257,7 +274,7 @@ mod tests {
             .expect("Should build service fees");
 
         // Create data with Hour granularity service fees
-        let sut = Data::builder()
+        let sut = Data::<YearAndMonth>::builder()
             .information(ProtoInvoiceInfo::sample())
             .vendor(CompanyInformation::sample_vendor())
             .client(CompanyInformation::sample_client())
@@ -272,7 +289,7 @@ mod tests {
                 // Day > Hour in the granularity ordering, so this should fail
                 time_off: Some(TimeOff::Days(Quantity::from(dec!(2.0)))),
             })
-            .period(YearAndMonth::sample())
+            .period(YearMonthAndFortnight::sample())
             .build();
 
         let result = sut.to_partial(input);
@@ -308,7 +325,7 @@ mod tests {
             .expect("Should build service fees");
 
         // Create data with Day granularity service fees
-        let sut = Data::builder()
+        let sut = Data::<YearAndMonth>::builder()
             .information(ProtoInvoiceInfo::sample())
             .vendor(CompanyInformation::sample_vendor())
             .client(CompanyInformation::sample_client())
@@ -324,7 +341,7 @@ mod tests {
                 // because free time can be more granular than service granularity
                 time_off: Some(TimeOff::Hours(Quantity::from(dec!(8.0)))),
             })
-            .period(YearAndMonth::sample())
+            .period(YearMonthAndFortnight::sample())
             .build();
 
         let result = sut.to_partial(input);

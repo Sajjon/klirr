@@ -117,9 +117,9 @@ pub fn edit_email_data_at(
     Ok(())
 }
 
-pub fn edit_data_at<Period: IsPeriod + DeserializeOwned + Serialize>(
+pub fn edit_data_at(
     path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
+    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>>,
 ) -> Result<()> {
     let path = path.as_ref();
     info!("Editing data at: {}", path.display());
@@ -340,7 +340,7 @@ mod tests {
     fn test_read_data_from_disk() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         save_data_with_base_path(Data::<YearAndMonth>::sample(), tempdir.path()).unwrap();
-        let result = read_data_from_disk_with_base_path::<YearAndMonth>(tempdir.path());
+        let result = read_data_from_disk_with_base_path(tempdir.path());
         assert!(
             result.is_ok(),
             "Expected validation to succeed, got: {:?}",
@@ -439,16 +439,13 @@ mod tests {
             "Sample vendor and client should not be the same"
         );
         save_data_with_base_path(data.with_client(first.clone()), tempdir.path()).unwrap();
-        let result = edit_data_at::<YearAndMonth>(tempdir.path(), |data| {
-            Ok(data.with_client(second.clone()))
-        });
+        let result = edit_data_at(tempdir.path(), |data| Ok(data.with_client(second.clone())));
         assert!(
             result.is_ok(),
             "Expected data edit to succeed, got: {:?}",
             result
         );
-        let edited_data =
-            read_data_from_disk_with_base_path::<YearAndMonth>(tempdir.path()).unwrap();
+        let edited_data = read_data_from_disk_with_base_path(tempdir.path()).unwrap();
         assert_eq!(*edited_data.client(), second);
     }
 

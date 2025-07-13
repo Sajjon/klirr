@@ -2405,6 +2405,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde_json",
+ "strum 0.27.1",
  "tempfile",
  "test-log",
  "thiserror 2.0.12",

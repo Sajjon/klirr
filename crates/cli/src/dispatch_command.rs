@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use klirr_render::prelude::render;
 use secrecy::SecretString;
-use serde::de::DeserializeOwned;
 
 fn init_email_data(
     provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
@@ -9,14 +8,14 @@ fn init_email_data(
     init_email_data_at(data_dir(), provide_data)
 }
 
-fn init_data<Period: IsPeriod + Serialize + DeserializeOwned + HasSample>(
-    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
+fn init_data(
+    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>>,
 ) -> Result<()> {
     init_data_at(data_dir_create_if(true), provide_data)
 }
 
-fn edit_data<Period: IsPeriod + Serialize + DeserializeOwned>(
-    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
+fn edit_data(
+    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>>,
 ) -> Result<()> {
     edit_data_at(data_dir(), provide_data)
 }
@@ -31,7 +30,7 @@ fn dump_data() -> Result<()> {
     let base_path = data_dir();
     info!("Dumping data directory at: {}", base_path.display());
 
-    read_data_from_disk_with_base_path::<YearAndMonth>(base_path)
+    read_data_from_disk_with_base_path(base_path)
         .inspect(|model| {
             let ron_str = ron::ser::to_string_pretty(model, ron::ser::PrettyConfig::default())
                 .expect("Failed to serialize data to RON");
@@ -60,7 +59,7 @@ fn validate_data() -> Result<()> {
     let base_path = data_dir();
     info!("Validating data directory at: {}", base_path.display());
 
-    read_data_from_disk_with_base_path::<YearAndMonth>(base_path)
+    read_data_from_disk_with_base_path(base_path)
         .map_to_void()
         .inspect(|_| {
             info!("✅ Data directory is valid");
@@ -80,7 +79,7 @@ fn record_month_off(month: &YearAndMonth) -> Result<()> {
 
 pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
     match command {
-        DataAdminInputCommand::Init => init_data::<PeriodAnno>(curry2(ask_for_data, None)),
+        DataAdminInputCommand::Init => init_data(curry2(ask_for_data, None)),
         DataAdminInputCommand::Dump => dump_data(),
         DataAdminInputCommand::Validate => validate_data(),
         DataAdminInputCommand::Edit(input) => edit_data(curry2(
@@ -108,7 +107,7 @@ pub fn render_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
     let path = dirs_next::home_dir()
         .expect("Expected to be able to find HOME dir")
         .join("klirr_sample.pdf");
-    let mut data = Data::sample();
+    let mut data = Data::<YearAndMonth>::sample();
     if use_nonce {
         let vat = format!("VAT{} {}", rand::random::<u64>(), rand::random::<u64>());
         data = data
@@ -119,7 +118,7 @@ pub fn render_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
         data,
         ValidInput::builder()
             .maybe_output_path(path)
-            .period(YearAndMonth::last())
+            .period(YearMonthAndFortnight::last())
             .build(),
         render,
     )

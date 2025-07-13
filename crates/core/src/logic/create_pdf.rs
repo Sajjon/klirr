@@ -1,12 +1,10 @@
-use serde::de::DeserializeOwned;
-
 use crate::prelude::*;
 
 /// Compile the Typst source into a PDF and save it at the specified path, by
 /// reading data from disk at the provided path and using the provided `ValidInput`.
-pub fn create_pdf_with_data_base_path<Period: IsPeriod + DeserializeOwned>(
+pub fn create_pdf_with_data_base_path(
     data_base_path: impl AsRef<Path>,
-    input: ValidInput<Period>,
+    input: ValidInput,
     render: impl Fn(L18n, PreparedData, Layout) -> Result<Pdf>,
 ) -> Result<NamedPdf> {
     let data = read_data_from_disk_with_base_path(data_base_path)?;
@@ -17,7 +15,7 @@ pub fn create_pdf_with_data_base_path<Period: IsPeriod + DeserializeOwned>(
 /// the provided `Data` and `ValidInput`.
 pub fn create_pdf_with_data<Period: IsPeriod>(
     data: Data<Period>,
-    input: ValidInput<Period>,
+    input: ValidInput,
     render: impl Fn(L18n, PreparedData, Layout) -> Result<Pdf>,
 ) -> Result<NamedPdf> {
     let l18n: L18n = get_localization(input.language())?;
@@ -61,10 +59,10 @@ mod tests {
         let out = NamedTempFile::new().unwrap().path().to_path_buf();
         let input = ValidInput::builder()
             .maybe_output_path(out.clone())
-            .period(YearAndMonth::sample())
+            .period(YearMonthAndFortnight::sample())
             .build();
         let dummy_pdf_data = Vec::from(b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n");
-        let named_pdf = create_pdf_with_data(Data::sample(), input, |_, _, _| {
+        let named_pdf = create_pdf_with_data::<YearAndMonth>(Data::sample(), input, |_, _, _| {
             // Simulate PDF rendering
             Ok(Pdf::from(dummy_pdf_data.clone()))
         })
