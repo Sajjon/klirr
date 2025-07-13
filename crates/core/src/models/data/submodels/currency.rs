@@ -79,6 +79,9 @@ impl HasSample for Currency {
     fn sample() -> Self {
         Currency::EUR
     }
+    fn sample_other() -> Self {
+        Currency::USD
+    }
 }
 
 // Display implementation to return ISO code
@@ -172,120 +175,133 @@ mod tests {
     use insta::assert_debug_snapshot;
     use test_log::test;
 
+    type Sut = Currency;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_display() {
-        assert_eq!(Currency::USD.to_string(), "USD");
-        assert_eq!(Currency::EUR.to_string(), "EUR");
-        assert_eq!(Currency::GBP.to_string(), "GBP");
-        assert_eq!(Currency::JPY.to_string(), "JPY");
-        assert_eq!(Currency::CAD.to_string(), "CAD");
-        assert_eq!(Currency::AUD.to_string(), "AUD");
-        assert_eq!(Currency::CHF.to_string(), "CHF");
-        assert_eq!(Currency::SEK.to_string(), "SEK");
-        assert_eq!(Currency::NOK.to_string(), "NOK");
-        assert_eq!(Currency::DKK.to_string(), "DKK");
-        assert_eq!(Currency::CNY.to_string(), "CNY");
-        assert_eq!(Currency::INR.to_string(), "INR");
-        assert_eq!(Currency::BRL.to_string(), "BRL");
-        assert_eq!(Currency::RUB.to_string(), "RUB");
-        assert_eq!(Currency::ZAR.to_string(), "ZAR");
-        assert_eq!(Currency::MXN.to_string(), "MXN");
-        assert_eq!(Currency::NZD.to_string(), "NZD");
-        assert_eq!(Currency::SGD.to_string(), "SGD");
-        assert_eq!(Currency::HKD.to_string(), "HKD");
-        assert_eq!(Currency::KRW.to_string(), "KRW");
-        assert_eq!(Currency::SAR.to_string(), "SAR");
-        assert_eq!(Currency::AED.to_string(), "AED");
-        assert_eq!(Currency::TRY.to_string(), "TRY");
-        assert_eq!(Currency::PLN.to_string(), "PLN");
-        assert_eq!(Currency::THB.to_string(), "THB");
-        assert_eq!(Currency::TWD.to_string(), "TWD");
-        assert_eq!(Currency::XAF.to_string(), "XAF");
-        assert_eq!(Currency::XOF.to_string(), "XOF");
-        assert_eq!(Currency::XCD.to_string(), "XCD");
-        assert_eq!(Currency::XBT.to_string(), "XBT");
-        assert_eq!(Currency::ETH.to_string(), "ETH");
-        assert_eq!(Currency::XRD.to_string(), "XRD");
-        assert_eq!(Currency::DOT.to_string(), "DOT");
+        assert_eq!(Sut::USD.to_string(), "USD");
+        assert_eq!(Sut::EUR.to_string(), "EUR");
+        assert_eq!(Sut::GBP.to_string(), "GBP");
+        assert_eq!(Sut::JPY.to_string(), "JPY");
+        assert_eq!(Sut::CAD.to_string(), "CAD");
+        assert_eq!(Sut::AUD.to_string(), "AUD");
+        assert_eq!(Sut::CHF.to_string(), "CHF");
+        assert_eq!(Sut::SEK.to_string(), "SEK");
+        assert_eq!(Sut::NOK.to_string(), "NOK");
+        assert_eq!(Sut::DKK.to_string(), "DKK");
+        assert_eq!(Sut::CNY.to_string(), "CNY");
+        assert_eq!(Sut::INR.to_string(), "INR");
+        assert_eq!(Sut::BRL.to_string(), "BRL");
+        assert_eq!(Sut::RUB.to_string(), "RUB");
+        assert_eq!(Sut::ZAR.to_string(), "ZAR");
+        assert_eq!(Sut::MXN.to_string(), "MXN");
+        assert_eq!(Sut::NZD.to_string(), "NZD");
+        assert_eq!(Sut::SGD.to_string(), "SGD");
+        assert_eq!(Sut::HKD.to_string(), "HKD");
+        assert_eq!(Sut::KRW.to_string(), "KRW");
+        assert_eq!(Sut::SAR.to_string(), "SAR");
+        assert_eq!(Sut::AED.to_string(), "AED");
+        assert_eq!(Sut::TRY.to_string(), "TRY");
+        assert_eq!(Sut::PLN.to_string(), "PLN");
+        assert_eq!(Sut::THB.to_string(), "THB");
+        assert_eq!(Sut::TWD.to_string(), "TWD");
+        assert_eq!(Sut::XAF.to_string(), "XAF");
+        assert_eq!(Sut::XOF.to_string(), "XOF");
+        assert_eq!(Sut::XCD.to_string(), "XCD");
+        assert_eq!(Sut::XBT.to_string(), "XBT");
+        assert_eq!(Sut::ETH.to_string(), "ETH");
+        assert_eq!(Sut::XRD.to_string(), "XRD");
+        assert_eq!(Sut::DOT.to_string(), "DOT");
     }
 
     #[test]
     fn test_debug() {
-        assert_debug_snapshot!(Currency::USD, @"USD");
-        assert_debug_snapshot!(Currency::EUR, @"EUR");
-        assert_debug_snapshot!(Currency::GBP, @"GBP");
-        assert_debug_snapshot!(Currency::JPY, @"JPY");
-        assert_debug_snapshot!(Currency::CAD, @"CAD");
-        assert_debug_snapshot!(Currency::AUD, @"AUD");
-        assert_debug_snapshot!(Currency::CHF, @"CHF");
-        assert_debug_snapshot!(Currency::SEK, @"SEK");
-        assert_debug_snapshot!(Currency::NOK, @"NOK");
-        assert_debug_snapshot!(Currency::DKK, @"DKK");
-        assert_debug_snapshot!(Currency::CNY, @"CNY");
-        assert_debug_snapshot!(Currency::INR, @"INR");
-        assert_debug_snapshot!(Currency::BRL, @"BRL");
-        assert_debug_snapshot!(Currency::RUB, @"RUB");
-        assert_debug_snapshot!(Currency::ZAR, @"ZAR");
-        assert_debug_snapshot!(Currency::MXN, @"MXN");
-        assert_debug_snapshot!(Currency::NZD, @"NZD");
-        assert_debug_snapshot!(Currency::SGD, @"SGD");
-        assert_debug_snapshot!(Currency::HKD, @"HKD");
-        assert_debug_snapshot!(Currency::KRW, @"KRW");
-        assert_debug_snapshot!(Currency::SAR, @"SAR");
-        assert_debug_snapshot!(Currency::AED, @"AED");
-        assert_debug_snapshot!(Currency::TRY, @"TRY");
-        assert_debug_snapshot!(Currency::PLN, @"PLN");
-        assert_debug_snapshot!(Currency::THB, @"THB");
-        assert_debug_snapshot!(Currency::TWD, @"TWD");
-        assert_debug_snapshot!(Currency::XAF, @"XAF");
-        assert_debug_snapshot!(Currency::XOF, @"XOF");
-        assert_debug_snapshot!(Currency::XCD, @"XCD");
-        assert_debug_snapshot!(Currency::XBT, @"XBT");
-        assert_debug_snapshot!(Currency::ETH, @"ETH");
-        assert_debug_snapshot!(Currency::XRD, @"XRD");
-        assert_debug_snapshot!(Currency::DOT, @"DOT");
+        assert_debug_snapshot!(Sut::USD, @"USD");
+        assert_debug_snapshot!(Sut::EUR, @"EUR");
+        assert_debug_snapshot!(Sut::GBP, @"GBP");
+        assert_debug_snapshot!(Sut::JPY, @"JPY");
+        assert_debug_snapshot!(Sut::CAD, @"CAD");
+        assert_debug_snapshot!(Sut::AUD, @"AUD");
+        assert_debug_snapshot!(Sut::CHF, @"CHF");
+        assert_debug_snapshot!(Sut::SEK, @"SEK");
+        assert_debug_snapshot!(Sut::NOK, @"NOK");
+        assert_debug_snapshot!(Sut::DKK, @"DKK");
+        assert_debug_snapshot!(Sut::CNY, @"CNY");
+        assert_debug_snapshot!(Sut::INR, @"INR");
+        assert_debug_snapshot!(Sut::BRL, @"BRL");
+        assert_debug_snapshot!(Sut::RUB, @"RUB");
+        assert_debug_snapshot!(Sut::ZAR, @"ZAR");
+        assert_debug_snapshot!(Sut::MXN, @"MXN");
+        assert_debug_snapshot!(Sut::NZD, @"NZD");
+        assert_debug_snapshot!(Sut::SGD, @"SGD");
+        assert_debug_snapshot!(Sut::HKD, @"HKD");
+        assert_debug_snapshot!(Sut::KRW, @"KRW");
+        assert_debug_snapshot!(Sut::SAR, @"SAR");
+        assert_debug_snapshot!(Sut::AED, @"AED");
+        assert_debug_snapshot!(Sut::TRY, @"TRY");
+        assert_debug_snapshot!(Sut::PLN, @"PLN");
+        assert_debug_snapshot!(Sut::THB, @"THB");
+        assert_debug_snapshot!(Sut::TWD, @"TWD");
+        assert_debug_snapshot!(Sut::XAF, @"XAF");
+        assert_debug_snapshot!(Sut::XOF, @"XOF");
+        assert_debug_snapshot!(Sut::XCD, @"XCD");
+        assert_debug_snapshot!(Sut::XBT, @"XBT");
+        assert_debug_snapshot!(Sut::ETH, @"ETH");
+        assert_debug_snapshot!(Sut::XRD, @"XRD");
+        assert_debug_snapshot!(Sut::DOT, @"DOT");
     }
 
     #[test]
     fn test_from_str() {
-        assert_eq!(Currency::from_str("USD").unwrap(), Currency::USD);
-        assert_eq!(Currency::from_str("EUR").unwrap(), Currency::EUR);
-        assert_eq!(Currency::from_str("GBP").unwrap(), Currency::GBP);
-        assert_eq!(Currency::from_str("JPY").unwrap(), Currency::JPY);
-        assert_eq!(Currency::from_str("CAD").unwrap(), Currency::CAD);
-        assert_eq!(Currency::from_str("AUD").unwrap(), Currency::AUD);
-        assert_eq!(Currency::from_str("CHF").unwrap(), Currency::CHF);
-        assert_eq!(Currency::from_str("SEK").unwrap(), Currency::SEK);
-        assert_eq!(Currency::from_str("NOK").unwrap(), Currency::NOK);
-        assert_eq!(Currency::from_str("DKK").unwrap(), Currency::DKK);
-        assert_eq!(Currency::from_str("CNY").unwrap(), Currency::CNY);
-        assert_eq!(Currency::from_str("INR").unwrap(), Currency::INR);
-        assert_eq!(Currency::from_str("BRL").unwrap(), Currency::BRL);
-        assert_eq!(Currency::from_str("RUB").unwrap(), Currency::RUB);
-        assert_eq!(Currency::from_str("ZAR").unwrap(), Currency::ZAR);
-        assert_eq!(Currency::from_str("MXN").unwrap(), Currency::MXN);
-        assert_eq!(Currency::from_str("NZD").unwrap(), Currency::NZD);
-        assert_eq!(Currency::from_str("SGD").unwrap(), Currency::SGD);
-        assert_eq!(Currency::from_str("HKD").unwrap(), Currency::HKD);
-        assert_eq!(Currency::from_str("KRW").unwrap(), Currency::KRW);
-        assert_eq!(Currency::from_str("SAR").unwrap(), Currency::SAR);
-        assert_eq!(Currency::from_str("AED").unwrap(), Currency::AED);
-        assert_eq!(Currency::from_str("TRY").unwrap(), Currency::TRY);
-        assert_eq!(Currency::from_str("PLN").unwrap(), Currency::PLN);
-        assert_eq!(Currency::from_str("THB").unwrap(), Currency::THB);
-        assert_eq!(Currency::from_str("TWD").unwrap(), Currency::TWD);
-        assert_eq!(Currency::from_str("XAF").unwrap(), Currency::XAF);
-        assert_eq!(Currency::from_str("XOF").unwrap(), Currency::XOF);
-        assert_eq!(Currency::from_str("XCD").unwrap(), Currency::XCD);
-        assert_eq!(Currency::from_str("XBT").unwrap(), Currency::XBT);
-        assert_eq!(Currency::from_str("ETH").unwrap(), Currency::ETH);
-        assert_eq!(Currency::from_str("XRD").unwrap(), Currency::XRD);
-        assert_eq!(Currency::from_str("DOT").unwrap(), Currency::DOT);
+        assert_eq!(Sut::from_str("USD").unwrap(), Sut::USD);
+        assert_eq!(Sut::from_str("EUR").unwrap(), Sut::EUR);
+        assert_eq!(Sut::from_str("GBP").unwrap(), Sut::GBP);
+        assert_eq!(Sut::from_str("JPY").unwrap(), Sut::JPY);
+        assert_eq!(Sut::from_str("CAD").unwrap(), Sut::CAD);
+        assert_eq!(Sut::from_str("AUD").unwrap(), Sut::AUD);
+        assert_eq!(Sut::from_str("CHF").unwrap(), Sut::CHF);
+        assert_eq!(Sut::from_str("SEK").unwrap(), Sut::SEK);
+        assert_eq!(Sut::from_str("NOK").unwrap(), Sut::NOK);
+        assert_eq!(Sut::from_str("DKK").unwrap(), Sut::DKK);
+        assert_eq!(Sut::from_str("CNY").unwrap(), Sut::CNY);
+        assert_eq!(Sut::from_str("INR").unwrap(), Sut::INR);
+        assert_eq!(Sut::from_str("BRL").unwrap(), Sut::BRL);
+        assert_eq!(Sut::from_str("RUB").unwrap(), Sut::RUB);
+        assert_eq!(Sut::from_str("ZAR").unwrap(), Sut::ZAR);
+        assert_eq!(Sut::from_str("MXN").unwrap(), Sut::MXN);
+        assert_eq!(Sut::from_str("NZD").unwrap(), Sut::NZD);
+        assert_eq!(Sut::from_str("SGD").unwrap(), Sut::SGD);
+        assert_eq!(Sut::from_str("HKD").unwrap(), Sut::HKD);
+        assert_eq!(Sut::from_str("KRW").unwrap(), Sut::KRW);
+        assert_eq!(Sut::from_str("SAR").unwrap(), Sut::SAR);
+        assert_eq!(Sut::from_str("AED").unwrap(), Sut::AED);
+        assert_eq!(Sut::from_str("TRY").unwrap(), Sut::TRY);
+        assert_eq!(Sut::from_str("PLN").unwrap(), Sut::PLN);
+        assert_eq!(Sut::from_str("THB").unwrap(), Sut::THB);
+        assert_eq!(Sut::from_str("TWD").unwrap(), Sut::TWD);
+        assert_eq!(Sut::from_str("XAF").unwrap(), Sut::XAF);
+        assert_eq!(Sut::from_str("XOF").unwrap(), Sut::XOF);
+        assert_eq!(Sut::from_str("XCD").unwrap(), Sut::XCD);
+        assert_eq!(Sut::from_str("XBT").unwrap(), Sut::XBT);
+        assert_eq!(Sut::from_str("ETH").unwrap(), Sut::ETH);
+        assert_eq!(Sut::from_str("XRD").unwrap(), Sut::XRD);
+        assert_eq!(Sut::from_str("DOT").unwrap(), Sut::DOT);
     }
 
     #[test]
     fn sample() {
-        let sample_currency = Currency::sample();
-        assert_eq!(sample_currency, Currency::EUR);
+        let sample_currency = Sut::sample();
+        assert_eq!(sample_currency, Sut::EUR);
     }
 }

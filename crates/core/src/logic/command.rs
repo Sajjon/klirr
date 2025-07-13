@@ -12,10 +12,10 @@ fn input_email_data_at(
     Ok(())
 }
 
-fn input_data_at(
-    default_data: Data,
+fn input_data_at<Period: IsPeriod + Serialize>(
+    default_data: Data<Period>,
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data) -> Result<Data>,
+    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
 ) -> Result<()> {
     let data = provide_data(default_data)?;
     save_data_with_base_path(data, write_path)?;
@@ -119,7 +119,7 @@ pub fn edit_email_data_at(
 
 pub fn edit_data_at(
     path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data) -> Result<Data>,
+    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>>,
 ) -> Result<()> {
     let path = path.as_ref();
     info!("Editing data at: {}", path.display());
@@ -129,13 +129,13 @@ pub fn edit_data_at(
     Ok(())
 }
 
-pub fn init_data_at(
+pub fn init_data_at<Period: IsPeriod + Serialize + DeserializeOwned + HasSample>(
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data) -> Result<Data>,
+    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
 ) -> Result<()> {
     let write_path = write_path.as_ref();
     info!("Initializing data directory at: {}", write_path.display());
-    input_data_at(Data::sample(), write_path, provide_data)?;
+    input_data_at(Data::<Period>::sample(), write_path, provide_data)?;
     info!("✅ Data init done, you're ready: `{} invoice`", BINARY_NAME);
     Ok(())
 }
@@ -266,17 +266,17 @@ fn mutate<D: Serialize + DeserializeOwned + Clone>(
     Ok(())
 }
 
-pub fn record_expenses_with_base_path(
-    month: &YearAndMonth,
+pub fn record_expenses_with_base_path<Period: IsPeriod + Serialize + DeserializeOwned>(
+    period: &Period,
     expenses: &[Item],
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
-    info!("Recording #{} expenses for: {}", expenses.len(), month);
+    info!("Recording #{} expenses for: {:?}", expenses.len(), period);
     mutate(
         data_path,
         DATA_FILE_NAME_EXPENSES,
-        |data: &mut ExpensedMonths| {
-            data.insert_expenses(month, expenses.to_vec());
+        |data: &mut ExpensedPeriods<Period>| {
+            data.insert_expenses(period, expenses.to_vec());
         },
     )
     .inspect(|_| {
@@ -284,16 +284,16 @@ pub fn record_expenses_with_base_path(
     })
 }
 
-pub fn record_month_off_with_base_path(
-    month: &YearAndMonth,
+pub fn record_period_off_with_base_path<Period: IsPeriod + Serialize + DeserializeOwned>(
+    period: &Period,
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
-    info!("Recording month off for: {}", month);
+    info!("Recording month off for: {:?}", period);
     mutate(
         data_path,
         DATA_FILE_NAME_PROTO_INVOICE_INFO,
-        |data: &mut ProtoInvoiceInfo| {
-            data.insert_month_off(*month);
+        |data: &mut ProtoInvoiceInfo<Period>| {
+            data.insert_period_off(period.clone());
         },
     )
     .inspect(|_| {
@@ -339,7 +339,7 @@ mod tests {
     #[test]
     fn test_read_data_from_disk() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
+        save_data_with_base_path(Data::<YearAndMonth>::sample(), tempdir.path()).unwrap();
         let result = read_data_from_disk_with_base_path(tempdir.path());
         assert!(
             result.is_ok(),
@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn test_init_data_directory_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let result = init_data_at(tempdir.path(), Ok);
+        let result = init_data_at::<YearAndMonth>(tempdir.path(), Ok);
         assert!(
             result.is_ok(),
             "Expected data directory initialization to succeed, got: {:?}",
@@ -364,22 +364,22 @@ mod tests {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         let month = YearAndMonth::may(2025);
         save_to_disk(
-            &ProtoInvoiceInfo::sample(),
+            &ProtoInvoiceInfo::<YearAndMonth>::sample(),
             path_to_ron_file_with_base(tempdir.path(), DATA_FILE_NAME_PROTO_INVOICE_INFO),
         )
         .unwrap();
-        record_month_off_with_base_path(&month, tempdir.path()).unwrap();
+        record_period_off_with_base_path(&month, tempdir.path()).unwrap();
 
         // Verify that the month was recorded correctly
         let data = proto_invoice_info(tempdir.path()).unwrap();
-        assert!(data.months_off_record().contains(&month));
+        assert!(data.record_of_periods_off().contains(&month));
     }
 
     #[test]
     fn test_record_expenses_with_base_path() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         save_to_disk(
-            &ExpensedMonths::sample(),
+            &ExpensedPeriods::<YearAndMonth>::sample(),
             path_to_ron_file_with_base(tempdir.path(), DATA_FILE_NAME_EXPENSES),
         )
         .unwrap();
@@ -389,7 +389,7 @@ mod tests {
         record_expenses_with_base_path(&month, &expenses, tempdir.path()).unwrap();
 
         // Verify that the month was recorded correctly
-        let data = expensed_months(tempdir.path()).unwrap();
+        let data = expensed_periods::<YearAndMonth>(tempdir.path()).unwrap();
         assert!(data.contains(&month));
     }
 
@@ -431,7 +431,7 @@ mod tests {
     #[test]
     fn test_edit_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let data = Data::sample();
+        let data = Data::<YearAndMonth>::sample();
         let first = CompanyInformation::sample_vendor();
         let second = CompanyInformation::sample_client();
         assert_ne!(

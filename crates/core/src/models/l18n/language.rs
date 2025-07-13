@@ -13,7 +13,11 @@ pub enum Language {
     SV,
 }
 
-impl Language {
+pub trait VariantIterable {
+    fn all() -> impl Iterator<Item = Self>;
+}
+
+impl VariantIterable for Language {
     /// Returns all available languages as an iterator.
     /// This can be used to iterate over all supported languages.
     /// # Examples
@@ -23,7 +27,7 @@ impl Language {
     ///     println!("Supported language: {}", lang);
     /// }
     /// ```
-    pub fn all() -> impl Iterator<Item = Self> {
+    fn all() -> impl Iterator<Item = Self> {
         Self::iter()
     }
 }

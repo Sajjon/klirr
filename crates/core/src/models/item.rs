@@ -54,6 +54,9 @@ impl HasSample for Item {
     fn sample() -> Self {
         Self::sample_expense_coffee()
     }
+    fn sample_other() -> Self {
+        Self::sample_consulting_service()
+    }
 }
 
 impl Item {
@@ -229,10 +232,23 @@ mod tests {
     use super::*;
     use test_log::test;
 
+    type Sut = Item;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_from_str() {
         // N.B. sometimes space after comma, sometimes not.
-        let sut = Item::from_str("Coffee,2.5, EUR,3.0, 2025-05-31").expect("Failed to parse Item");
+        let sut = Sut::from_str("Coffee,2.5, EUR,3.0, 2025-05-31").expect("Failed to parse Item");
         assert_eq!(sut.name(), "Coffee");
         assert_eq!(**sut.unit_price(), dec!(2.5));
         assert_eq!(sut.currency(), &Currency::EUR);
@@ -241,14 +257,6 @@ mod tests {
             sut.transaction_date(),
             &Date::from_str("2025-05-31").unwrap()
         );
-    }
-
-    #[test]
-    fn inequal() {
-        let item1 = Item::sample_expense_coffee();
-        let item2 = Item::sample_consulting_service();
-        assert_ne!(item1, item2);
-        assert_ne!(item1, Item::sample_expense_sandwich());
     }
 
     #[test]
@@ -264,7 +272,7 @@ mod tests {
         ];
 
         for &s in &invalid_strings {
-            assert!(Item::from_str(s).is_err(), "Expected error for: {}", s);
+            assert!(Sut::from_str(s).is_err(), "Expected error for: {}", s);
         }
     }
 }

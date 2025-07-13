@@ -29,6 +29,10 @@ impl HasSample for EmailAccount {
     fn sample() -> Self {
         Self::sample_alice()
     }
+
+    fn sample_other() -> Self {
+        Self::sample_bob()
+    }
 }
 
 #[cfg(test)]
@@ -37,10 +41,23 @@ mod tests {
 
     use super::*;
 
+    type Sut = EmailAccount;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_sample_values_hash() {
         assert_eq!(
-            HashSet::from([EmailAccount::sample_alice(), EmailAccount::sample_bob()]).len(),
+            HashSet::from([Sut::sample_alice(), Sut::sample_bob()]).len(),
             2
         );
     }

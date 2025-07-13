@@ -21,7 +21,12 @@ impl HasSample for EmailAddress {
     fn sample() -> Self {
         Self::sample_alice()
     }
+
+    fn sample_other() -> Self {
+        Self::sample_bob()
+    }
 }
+
 impl EmailAddress {
     pub fn sample_alice() -> Self {
         Self::from_str("alice@example.com").unwrap()
@@ -50,26 +55,39 @@ mod tests {
 
     use super::*;
 
+    type Sut = EmailAddress;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
     #[test]
     fn test_sample_is_alice() {
-        assert_eq!(EmailAddress::sample(), EmailAddress::sample_alice());
+        assert_eq!(Sut::sample(), Sut::sample_alice());
     }
 
     #[test]
     fn test_sample_values() {
         assert_eq!(
             HashSet::from([
-                EmailAddress::sample_alice(),
-                EmailAddress::sample_bob(),
-                EmailAddress::sample_carol(),
-                EmailAddress::sample_dave(),
-                EmailAddress::sample_erin(),
+                Sut::sample_alice(),
+                Sut::sample_bob(),
+                Sut::sample_carol(),
+                Sut::sample_dave(),
+                Sut::sample_erin(),
                 // duplicate should be removed
-                EmailAddress::sample_alice(),
-                EmailAddress::sample_bob(),
-                EmailAddress::sample_carol(),
-                EmailAddress::sample_dave(),
-                EmailAddress::sample_erin(),
+                Sut::sample_alice(),
+                Sut::sample_bob(),
+                Sut::sample_carol(),
+                Sut::sample_dave(),
+                Sut::sample_erin(),
             ])
             .len(),
             5

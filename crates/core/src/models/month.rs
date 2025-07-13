@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 /// A month of the year, e.g. 1 for January, 2 for February, etc.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Display, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Display, Serialize, Deserialize, IsVariant,
+)]
 #[display("{}", self.month())]
 pub enum Month {
     January = 1,

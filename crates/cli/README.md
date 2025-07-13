@@ -1,4 +1,10 @@
+[![Build Status](https://github.com/Sajjon/klirr/actions/workflows/test.yml/badge.svg)](https://github.com/Sajjon/klirr/actions)
 [![codecov](https://codecov.io/gh/Sajjon/klirr/graph/badge.svg?token=HG6N5QPYPH)](https://codecov.io/gh/Sajjon/klirr)
+[![Latest Version](https://img.shields.io/crates/v/klirr.svg)](https://crates.io/crates/klirr)
+[![Rust Documentation](https://docs.rs/klirr-render/badge.svg)](https://docs.rs/klirr-render)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Sajjon/klirr/main/LICENSE.txt)
+[![Rust 1.85.1](https://img.shields.io/badge/rustc-1.85.1-lightgray.svg)](https://blog.rust-lang.org/2025/03/18/Rust-1.85.1/)
+[![Unsafe Forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance)
 
 **Tired of manual bumping invoice number, calculating number of working days and looking up exchange rates and converting expenses into your currency?**
 
@@ -29,7 +35,7 @@ Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomat
     -   [Edit Data](#edit-data)
         -   [Manually](#data-edit-manual)
     -   [Generate Invoice](#generate-invoice)
-        -   [Out of office for some days?](#ooo)
+        -   [Off for some days/hours?](#off)
         -   [Took vacation a whole month or parental leave?](#month-off)
     -   [Invoice for expenses](#expenses)
         -   [Add expenses](#expenses-add)
@@ -163,6 +169,11 @@ You can at any time validate the data by running:
 klirr data validate
 ```
 
+Or if you just wanna print the contents you can run:
+```bash
+klirr data dump
+```
+
 ## Generate Invoice<a href="#generate-invoice" id="generate-invoice"/>[ ^](#thetoc)
 
 ```bash
@@ -185,13 +196,27 @@ klirr invoice -- --output $HOME/my/custom/path/my_custom_name_of_file.pdf
 > If you don't specify `output` path the invoice will be saved in
 > `$HOME/invoices`.
 
-### Out of office for some days? <a href="#ooo" id="ooo"/> [ ^](#thetoc)
+### Off (free) for some days/hours? <a href="#off" id="off"/> [ ^](#thetoc)
 
-If you did not work for some days, and you need to not invoice for those days, e.g. `6` days off, use:
+If you did not work for some days/hours, and you need to not invoice for those days, e.g. `6` days off, use:
+
+#### Days off
 
 ```bash
-klirr invoice ooo 6
+klirr services-off --quantity 6 --unit days
 ```
+
+#### Hours off
+
+```bash
+klirr services-off --quantity 16 --unit hours
+```
+
+> [!IMPORTANT]
+> The unit MUST match the `rate`  specified in the service_fees.ron, e.g.
+> if you are invoicing with a **daily** rate, the value passed to `unit` must
+> be `days` and analogoulsy if you are invoicing with an **hourly** rate you
+> must pass `hours` to `unit`.
 
 ### Took vacation a whole month or parental leave? <a href="#month-off" id="month-off"/> [ ^](#thetoc)
 
