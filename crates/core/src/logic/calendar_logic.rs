@@ -162,6 +162,7 @@ impl YearAndMonth {
         end_months - start_months
     }
 }
+
 impl TryInto<YearAndMonth> for PeriodAnno {
     type Error = crate::Error;
 
@@ -169,6 +170,7 @@ impl TryInto<YearAndMonth> for PeriodAnno {
         todo!()
     }
 }
+
 impl TryFromPeriodAnno for YearMonthAndFortnight {
     fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
         period
@@ -176,6 +178,7 @@ impl TryFromPeriodAnno for YearMonthAndFortnight {
             .map_err(|_| Error::PeriodIsNotYearMonthAndFortnight)
     }
 }
+
 impl TryFromPeriodAnno for YearAndMonth {
     fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
         period
@@ -183,10 +186,12 @@ impl TryFromPeriodAnno for YearAndMonth {
             .map_err(|_| Error::PeriodIsNotYearAndMonth)
     }
 }
+
 impl IsPeriod for YearAndMonth {
     fn max_granularity(&self) -> Granularity {
         Granularity::Month
     }
+
     fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16 {
         self.elapsed_months_since(start)
     }
@@ -208,7 +213,7 @@ impl IsPeriod for YearAndMonth {
 /// the items are expenses, and the months off record.
 /// This function assumes that the `ProtoInvoiceInfo` has already been validated
 /// to ensure that the target month is not in the record of months off.
-/// /// It computes the invoice number by considering the elapsed months since
+/// It computes the invoice number by considering the elapsed months since
 /// the offset month, adjusting for any months that are off record, and
 /// adding an additional increment if the items are expenses.
 ///
@@ -229,12 +234,12 @@ impl IsPeriod for YearAndMonth {
 ///     &months_off_record,
 /// );
 ///
-/// /// The expected invoice number is calculated as follows:
-/// /// - Offset is 100
-/// /// - Target month is August 2024, which is 7 months after January
-/// /// - Months off record are March and April, which are 2 months off
-/// /// - Since this is for expenses, we add 1 to the final invoice number.
-/// /// - Therefore, the invoice number should be 100 + 7 - 2 + 1 = 106
+/// // The expected invoice number is calculated as follows:
+/// // - Offset is 100
+/// // - Target month is August 2024, which is 7 months after January
+/// // - Months off record are March and April, which are 2 months off
+/// // - Since this is for expenses, we add 1 to the final invoice number.
+/// // - Therefore, the invoice number should be 100 + 7 - 2 + 1 = 106
 /// let expected = InvoiceNumber::from(106);
 /// assert_eq!(invoice_number, expected);
 /// ```

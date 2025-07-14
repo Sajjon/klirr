@@ -21,6 +21,21 @@ pub struct EmailCredentials {
     password: SecretString,
 }
 
+impl From<DecryptedEmailSettings> for EmailCredentials {
+    fn from(settings: DecryptedEmailSettings) -> Self {
+        EmailCredentials::builder()
+            .account(
+                EmailAccount::builder()
+                    .name(settings.sender().name().clone())
+                    .email(settings.sender().email().clone())
+                    .build(),
+            )
+            .password(settings.smtp_app_password().clone())
+            .smtp_server(settings.smtp_server().clone())
+            .build()
+    }
+}
+
 impl PartialEq for EmailCredentials {
     fn eq(&self, other: &Self) -> bool {
         self.smtp_server == other.smtp_server

@@ -51,12 +51,14 @@ pub fn compare_image_against_expected<Period: IsPeriod>(
     sample: Data<Period>,
     input: ValidInput,
     path_to_expected_image: impl AsRef<Path>,
+    fetcher: impl FetchExchangeRates,
 ) {
     assert!(
         is_imagemagick_installed(),
         "Imagemagick not installed, but required to run. `brew install imagemagick`"
     );
-    let new_image = generate_pdf_into_png_image(L18n::new(Language::EN).unwrap(), sample, input);
+    let new_image =
+        generate_pdf_into_png_image(L18n::new(Language::EN).unwrap(), sample, input, fetcher);
 
     let save_new_image_as_expected = |new_image: Vec<u8>| {
         if !running_in_ci() {
@@ -114,19 +116,19 @@ pub fn compare_image_against_expected<Period: IsPeriod>(
 }
 
 #[cfg(test)]
-trait TestExchangeRatesFetcher {
-    fn tmp() -> ExchangeRatesFetcher<tempfile::TempDir>;
-}
+#[derive(derive_more::From, Default)]
+pub struct MockedExchangeRatesFetcher(ExchangeRatesMap);
 #[cfg(test)]
-impl TestExchangeRatesFetcher for ExchangeRatesFetcher<tempfile::TempDir> {
-    fn tmp() -> ExchangeRatesFetcher<tempfile::TempDir> {
-        use tempfile::tempdir;
-
-        let tempdir = tempdir().expect("Failed to create temporary directory");
-        ExchangeRatesFetcher::builder()
-            .path_to_cache(tempdir.path().to_path_buf())
-            .extra(tempdir)
-            .build()
+impl FetchExchangeRates for MockedExchangeRatesFetcher {
+    fn fetch_for_items(
+        &self,
+        target_currency: Currency,
+        _items: Vec<Item>,
+    ) -> Result<ExchangeRates> {
+        Ok(ExchangeRates::builder()
+            .rates(self.0.clone())
+            .target_currency(target_currency)
+            .build())
     }
 }
 
@@ -135,9 +137,10 @@ fn generate_pdf_into_png_image<Period: IsPeriod>(
     l18n: L18n,
     sample: Data<Period>,
     input: ValidInput,
+    fetcher: impl FetchExchangeRates,
 ) -> Vec<u8> {
     let layout = *input.layout();
-    let data = prepare_invoice_input_data(sample, input, ExchangeRatesFetcher::tmp()).unwrap();
+    let data = prepare_invoice_input_data(sample, input, fetcher).unwrap();
     let pdf = render(l18n, data, layout).unwrap();
     convert_pdf_to_pngs(pdf.as_ref(), 85.0).expect("Should be able to convert")
 }

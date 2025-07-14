@@ -2,6 +2,10 @@ use derive_more::Constructor;
 
 use crate::prelude::*;
 
+/// A year-month-fortnight representation, used to model a two weeks period
+/// within a certain month.
+///
+/// This period is useful for representing bi-weekly pay periods or similar use cases.
 #[derive(
     Clone,
     Copy,
@@ -46,6 +50,8 @@ impl YearMonthAndFortnight {
             .build()
     }
 
+    /// Returns the last day of the fortnight, which is either the 14th or
+    /// 15th for the first half or the last day of the month for the second half.
     fn last_day_of_half(&self) -> Day {
         match self.half {
             MonthHalf::First => Day::try_from(if self.month == Month::February {
@@ -63,6 +69,7 @@ impl IsPeriod for YearMonthAndFortnight {
     fn max_granularity(&self) -> Granularity {
         Granularity::Fortnight
     }
+
     fn elapsed_periods_since(&self, start: impl std::borrow::Borrow<Self>) -> u16 {
         let start = start.borrow();
         let start_ym = start.as_year_and_month();
@@ -97,8 +104,8 @@ impl IsPeriod for YearMonthAndFortnight {
 impl FromStr for YearMonthAndFortnight {
     type Err = crate::Error;
 
-    /// Parses `"YYYY-MM-2` into YearMonthAndFortnight with FortnightOfMonth being LastTwoWeeks,
-    /// Parses `"YYYY-MM-1` into YearMonthAndFortnight with FortnightOfMonth being FirstTwoWeeks,
+    /// Parses `"YYYY-MM-first-half` into YearMonthAndFortnight with MonthHalf::First,
+    /// Parses `"YYYY-MM-second-half` into YearMonthAndFortnight with MonthHalf::Second,
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('-').collect();
         if parts.len() < 3 {
@@ -135,9 +142,9 @@ impl HasSample for YearMonthAndFortnight {
 
 #[cfg(test)]
 mod tests {
-    use insta::assert_ron_snapshot;
-
     use super::*;
+    use insta::assert_ron_snapshot;
+    use test_log::test;
 
     type Sut = YearMonthAndFortnight;
 

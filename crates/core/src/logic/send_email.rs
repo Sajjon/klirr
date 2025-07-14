@@ -39,5 +39,6 @@ fn send_email_with_credentials(email: Email, credentials: EmailCredentials) -> R
     if !response.is_positive() {
         warn!("Email sent, but response was negative: {:?}", response);
     }
+
     Ok(())
 }

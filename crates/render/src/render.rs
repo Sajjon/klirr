@@ -74,6 +74,10 @@ mod tests {
                 .language(Language::EN)
                 .build(),
             fixture("expected_expenses.png"),
+            MockedExchangeRatesFetcher::from(ExchangeRatesMap::from_iter([
+                (Currency::EUR, UnitPrice::from(10)),
+                (Currency::SEK, UnitPrice::from(10)),
+            ])),
         );
     }
 
@@ -91,6 +95,7 @@ mod tests {
                 .language(Language::EN)
                 .build(),
             fixture("expected_services.png"),
+            MockedExchangeRatesFetcher::default(),
         );
     }
 }

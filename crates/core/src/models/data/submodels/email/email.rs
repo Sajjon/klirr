@@ -43,6 +43,20 @@ impl Email {
     }
 }
 
+impl From<(DecryptedEmailSettings, NamedPdf)> for Email {
+    fn from((settings, pdf): (DecryptedEmailSettings, NamedPdf)) -> Self {
+        let (subject, body) = settings.template().materialize(pdf.prepared_data());
+        Email::builder()
+            .subject(subject)
+            .body(body)
+            .public_recipients(settings.recipients().clone())
+            .cc_recipients(settings.cc_recipients().clone())
+            .bcc_recipients(settings.bcc_recipients().clone())
+            .attachments(IndexSet::from([Attachment::Pdf(pdf)]))
+            .build()
+    }
+}
+
 impl HasSample for Email {
     fn sample() -> Self {
         Self::builder()

@@ -16,6 +16,7 @@ fn get_tmp_file_for_path_to_pdf() -> Option<PathBuf> {
 pub fn save_pdf_location_to_tmp_file(pdf_location: PathBuf) -> Result<()> {
     save_pdf_location_to_tmp_file_target(pdf_location, get_tmp_file_for_path_to_pdf())
 }
+
 fn save_pdf_location_to_tmp_file_target(
     pdf_location: PathBuf,
     target: Option<PathBuf>,

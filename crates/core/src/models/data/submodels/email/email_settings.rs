@@ -69,6 +69,14 @@ pub struct EmailSettings<AppPassword: Zeroize> {
     bcc_recipients: IndexSet<EmailAddress>,
 }
 
+impl DecryptedEmailSettings {
+    pub fn compose(&self, pdf: &NamedPdf) -> (Email, EmailCredentials) {
+        let email = Email::from((self.clone(), pdf.clone()));
+        let credentials = EmailCredentials::from(self.clone());
+        (email, credentials)
+    }
+}
+
 impl<T: Zeroize + HasSample> HasSample for EmailSettings<T> {
     fn sample() -> Self {
         Self::builder()

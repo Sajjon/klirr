@@ -15,6 +15,7 @@ klirr-core.workspace = true
 # External dependencies
 bon.workspace = true
 chrono.workspace = true
+derive_more.workspace = true
 typst = "0.13.1"
 typst-kit = "0.13.1"
 typst-pdf = "0.13.1"

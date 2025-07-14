@@ -22,89 +22,6 @@ fn input_data_at<Period: IsPeriod + Serialize>(
     Ok(())
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DataSelector {
-    /// All but expensed months
-    All,
-    Vendor,
-    Client,
-    Information,
-    PaymentInfo,
-    ServiceFees,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EmailSettingsSelector {
-    All,
-    AppPassword,
-    EncryptionPassword,
-    Template,
-    SmtpServer,
-    ReplyTo,
-    Sender,
-    Recipients,
-    CcRecipients,
-    BccRecipients,
-}
-
-pub trait Select {
-    fn includes(&self, target: Self) -> bool;
-}
-
-impl Select for DataSelector {
-    fn includes(&self, target: Self) -> bool {
-        match self {
-            DataSelector::All => true,
-            DataSelector::Vendor => matches!(target, DataSelector::Vendor),
-            DataSelector::Client => matches!(target, DataSelector::Client),
-            DataSelector::Information => matches!(target, DataSelector::Information),
-            DataSelector::PaymentInfo => matches!(target, DataSelector::PaymentInfo),
-            DataSelector::ServiceFees => matches!(target, DataSelector::ServiceFees),
-        }
-    }
-}
-
-impl EmailSettingsSelector {
-    pub fn requires_encryption_password(&self) -> bool {
-        use EmailSettingsSelector::*;
-        match self {
-            All | AppPassword | EncryptionPassword => true,
-            Template | SmtpServer | ReplyTo | Sender | Recipients | CcRecipients
-            | BccRecipients => false,
-        }
-    }
-}
-impl Select for EmailSettingsSelector {
-    fn includes(&self, target: Self) -> bool {
-        match self {
-            EmailSettingsSelector::All => true,
-            EmailSettingsSelector::AppPassword => {
-                matches!(target, EmailSettingsSelector::AppPassword)
-            }
-            EmailSettingsSelector::EncryptionPassword => {
-                matches!(target, EmailSettingsSelector::EncryptionPassword)
-            }
-            EmailSettingsSelector::Template => {
-                matches!(target, EmailSettingsSelector::Template)
-            }
-            EmailSettingsSelector::SmtpServer => {
-                matches!(target, EmailSettingsSelector::SmtpServer)
-            }
-            EmailSettingsSelector::ReplyTo => matches!(target, EmailSettingsSelector::ReplyTo),
-            EmailSettingsSelector::Sender => matches!(target, EmailSettingsSelector::Sender),
-            EmailSettingsSelector::Recipients => {
-                matches!(target, EmailSettingsSelector::Recipients)
-            }
-            EmailSettingsSelector::CcRecipients => {
-                matches!(target, EmailSettingsSelector::CcRecipients)
-            }
-            EmailSettingsSelector::BccRecipients => {
-                matches!(target, EmailSettingsSelector::BccRecipients)
-            }
-        }
-    }
-}
-
 pub fn edit_email_data_at(
     path: impl AsRef<Path>,
     provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
@@ -164,43 +81,6 @@ fn decrypt_email_settings_and<T>(
     let encryption_password = get_email_password()?;
     let email_settings = email_settings.decrypt_smtp_app_password(encryption_password)?;
     on_decrypt(email_settings)
-}
-
-impl From<(DecryptedEmailSettings, NamedPdf)> for Email {
-    fn from((settings, pdf): (DecryptedEmailSettings, NamedPdf)) -> Self {
-        let (subject, body) = settings.template().materialize(pdf.prepared_data());
-        Email::builder()
-            .subject(subject)
-            .body(body)
-            .public_recipients(settings.recipients().clone())
-            .cc_recipients(settings.cc_recipients().clone())
-            .bcc_recipients(settings.bcc_recipients().clone())
-            .attachments(IndexSet::from([Attachment::Pdf(pdf)]))
-            .build()
-    }
-}
-
-impl From<DecryptedEmailSettings> for EmailCredentials {
-    fn from(settings: DecryptedEmailSettings) -> Self {
-        EmailCredentials::builder()
-            .account(
-                EmailAccount::builder()
-                    .name(settings.sender().name().clone())
-                    .email(settings.sender().email().clone())
-                    .build(),
-            )
-            .password(settings.smtp_app_password().clone())
-            .smtp_server(settings.smtp_server().clone())
-            .build()
-    }
-}
-
-impl DecryptedEmailSettings {
-    pub fn compose(&self, pdf: &NamedPdf) -> (Email, EmailCredentials) {
-        let email = Email::from((self.clone(), pdf.clone()));
-        let credentials = EmailCredentials::from(self.clone());
-        (email, credentials)
-    }
 }
 
 fn load_email_data_and_send_test_email_at_with_send(
