@@ -24,6 +24,7 @@ pub enum Granularity {
     Hour,
     #[default]
     Day,
+    Fortnight,
     Month,
 }
 
@@ -32,6 +33,7 @@ impl Granularity {
         match self {
             Self::Hour => "$150",
             Self::Day => "$1,000",
+            Self::Fortnight => "$9,000",
             Self::Month => "$15,000",
         }
         .to_owned()
@@ -68,15 +70,18 @@ mod tests {
     fn example_rates() {
         assert!(!Sut::Day.example_rate().is_empty());
         assert!(!Sut::Month.example_rate().is_empty());
+        assert!(!Sut::Fortnight.example_rate().is_empty());
         assert!(!Sut::Hour.example_rate().is_empty());
     }
 
     #[test]
     fn ord() {
         assert!(Sut::Month > Sut::Day);
+        assert!(Sut::Month > Sut::Fortnight);
         assert!(Sut::Month > Sut::Hour);
         assert!(Sut::Day < Sut::Month);
 
+        assert!(Sut::Fortnight > Sut::Day);
         assert!(Sut::Day > Sut::Hour);
         assert!(Sut::Hour < Sut::Day);
         assert!(Sut::Hour < Sut::Month);

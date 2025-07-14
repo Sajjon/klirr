@@ -279,12 +279,13 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
 /// use klirr_core::prelude::*;
 ///
 /// let target_month = YearAndMonth::january(2024);
-/// let working_days = quantity_in_period(&target_month, Granularity::Day, &RecordOfPeriodsOff::default());
+/// let working_days = quantity_in_period(&target_month, Granularity::Day, Cadence::Monthly, &RecordOfPeriodsOff::default());
 /// assert_eq!(*working_days.unwrap(), dec!(23)); // January 2024 has 23
 /// ```
 pub fn quantity_in_period<Period: IsPeriod>(
     target_period: &Period,
     granularity: Granularity,
+    cadence: Cadence,
     record_of_periods_off: &RecordOfPeriodsOff<Period>,
 ) -> Result<Quantity> {
     if record_of_periods_off.contains(target_period) {
@@ -300,14 +301,24 @@ pub fn quantity_in_period<Period: IsPeriod>(
             target_period: format!("{:?}", target_period),
         });
     }
-    if granularity.is_month() {
-        return Ok(Quantity::ONE);
-    }
-    let working_days = working_days_in_period(target_period)?;
+
+    let daily = || working_days_in_period(target_period);
+    let hourly = || {
+        // TODO maybe 8h per day should be configurable
+        Result::Ok(Quantity::EIGHT.mul(*working_days_in_period(target_period)?))
+    };
+
     match granularity {
-        Granularity::Month => unreachable!("Handled above"),
-        Granularity::Day => Ok(working_days),
-        Granularity::Hour => Ok(Quantity::EIGHT.mul(*working_days)), // TODO: Maybe this should be configurable
+        Granularity::Month => match cadence {
+            Cadence::Monthly => Ok(Quantity::ONE),
+            Cadence::BiWeekly => Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly),
+        },
+        Granularity::Fortnight => match cadence {
+            Cadence::Monthly => Ok(Quantity::TWO), // Two fortnights in a month
+            Cadence::BiWeekly => Ok(Quantity::ONE),
+        },
+        Granularity::Day => daily(),
+        Granularity::Hour => hourly(),
     }
 }
 
@@ -421,27 +432,58 @@ mod tests {
     const MAR_2028: YearAndMonth = YearAndMonth::march(2028);
 
     #[test]
-    fn test_quantity_in_period_various_granularity() {
-        // Test when granularity is too coarse for the target period
-        // YearAndMonth has max_granularity of Month, so Month and below should work
+    fn test_quantity_in_period_year_and_month_with_month_granularity() {
+        // YearAndMonth has max_granularity of Month, so Month granularity should work
         let target_period = JAN_2025;
         let record_of_periods_off = RecordOfPeriodsOff::new([]);
 
-        // This should work - Month granularity is exactly the max for YearAndMonth
-        let result = quantity_in_period(&target_period, Granularity::Month, &record_of_periods_off);
+        let result = quantity_in_period(
+            &target_period,
+            Granularity::Month,
+            Cadence::Monthly,
+            &record_of_periods_off,
+        );
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), Quantity::ONE);
+    }
 
-        // Day granularity should work - it's less coarse than Month
-        let result = quantity_in_period(&target_period, Granularity::Day, &record_of_periods_off);
+    #[test]
+    fn test_quantity_in_period_year_and_month_with_day_granularity() {
+        // Day granularity should work with YearAndMonth (less coarse than Month)
+        let target_period = JAN_2025;
+        let record_of_periods_off = RecordOfPeriodsOff::new([]);
+
+        let result = quantity_in_period(
+            &target_period,
+            Granularity::Day,
+            Cadence::Monthly,
+            &record_of_periods_off,
+        );
+
         assert!(result.is_ok());
+    }
 
-        // Hour granularity should work - it's less coarse than Month
-        let result = quantity_in_period(&target_period, Granularity::Hour, &record_of_periods_off);
+    #[test]
+    fn test_quantity_in_period_year_and_month_with_hour_granularity() {
+        // Hour granularity should work with YearAndMonth (less coarse than Month)
+        let target_period = JAN_2025;
+        let record_of_periods_off = RecordOfPeriodsOff::new([]);
+
+        let result = quantity_in_period(
+            &target_period,
+            Granularity::Hour,
+            Cadence::Monthly,
+            &record_of_periods_off,
+        );
+
         assert!(result.is_ok());
+    }
 
-        // Now test with YearMonthAndFortnight which has max_granularity of Day
-        // Month granularity should fail because it's coarser than Day
+    #[test]
+    fn test_quantity_in_period_fortnight_with_month_granularity_should_fail() {
+        // YearMonthAndFortnight has max_granularity of Fortnight
+        // Month granularity should fail because it's coarser than Fortnight
         let fortnight_period = YearMonthAndFortnight::builder()
             .year(Year::from(2025))
             .month(Month::January)
@@ -449,8 +491,13 @@ mod tests {
             .build();
         let fortnight_record = RecordOfPeriodsOff::new([]);
 
-        // Month granularity should fail for fortnight period
-        let result = quantity_in_period(&fortnight_period, Granularity::Month, &fortnight_record);
+        let result = quantity_in_period(
+            &fortnight_period,
+            Granularity::Month,
+            Cadence::Monthly,
+            &fortnight_record,
+        );
+
         assert!(result.is_err());
         if let Err(Error::GranularityTooCoarse {
             granularity,
@@ -459,17 +506,49 @@ mod tests {
         }) = result
         {
             assert_eq!(granularity, Granularity::Month);
-            assert_eq!(max_granularity, Granularity::Day);
+            assert_eq!(max_granularity, Granularity::Fortnight);
         } else {
             panic!("Expected GranularityTooCoarse error");
         }
+    }
 
-        // Day granularity should work for fortnight period
-        let result = quantity_in_period(&fortnight_period, Granularity::Day, &fortnight_record);
+    #[test]
+    fn test_quantity_in_period_fortnight_with_fortnight_granularity() {
+        // Fortnight granularity should work for fortnight period (exactly the max granularity)
+        let fortnight_period = YearMonthAndFortnight::builder()
+            .year(Year::from(2025))
+            .month(Month::January)
+            .half(MonthHalf::First)
+            .build();
+        let fortnight_record = RecordOfPeriodsOff::new([]);
+
+        let result = quantity_in_period(
+            &fortnight_period,
+            Granularity::Fortnight,
+            Cadence::Monthly,
+            &fortnight_record,
+        );
+
         assert!(result.is_ok());
+    }
 
-        // Hour granularity should work for fortnight period
-        let result = quantity_in_period(&fortnight_period, Granularity::Hour, &fortnight_record);
+    #[test]
+    fn test_quantity_in_period_fortnight_with_hour_granularity() {
+        // Hour granularity should work for fortnight period (less coarse than Day)
+        let fortnight_period = YearMonthAndFortnight::builder()
+            .year(Year::from(2025))
+            .month(Month::January)
+            .half(MonthHalf::First)
+            .build();
+        let fortnight_record = RecordOfPeriodsOff::new([]);
+
+        let result = quantity_in_period(
+            &fortnight_period,
+            Granularity::Hour,
+            Cadence::Monthly,
+            &fortnight_record,
+        );
+
         assert!(result.is_ok());
     }
 
@@ -821,7 +900,12 @@ mod tests {
     fn quantity_in_period_target_month_is_in_record_of_months_off() {
         let target_month = YearAndMonth::january(2024);
         let months_off_record = RecordOfPeriodsOff::new([target_month]);
-        let result = quantity_in_period(&target_month, Granularity::Day, &months_off_record);
+        let result = quantity_in_period(
+            &target_month,
+            Granularity::Day,
+            Cadence::Monthly,
+            &months_off_record,
+        );
         assert!(result.is_err());
     }
 
@@ -829,7 +913,12 @@ mod tests {
     fn quantity_in_period_target_month_december() {
         let target_month = YearAndMonth::december(2025);
         let months_off_record = RecordOfPeriodsOff::new([]);
-        let result = quantity_in_period(&target_month, Granularity::Day, &months_off_record);
+        let result = quantity_in_period(
+            &target_month,
+            Granularity::Day,
+            Cadence::Monthly,
+            &months_off_record,
+        );
         assert!(result.is_ok());
     }
 }

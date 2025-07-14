@@ -35,6 +35,7 @@ pub struct Decimal(rust_decimal::Decimal);
 impl Decimal {
     pub const ZERO: Self = Self(rust_decimal::Decimal::ZERO);
     pub const ONE: Self = Self(rust_decimal::Decimal::ONE);
+    pub const TWO: Self = Self(rust_decimal::Decimal::TWO);
     pub const EIGHT: Self = Self(rust_decimal::Decimal::from_parts(8, 0, 0, false, 0));
 }
 

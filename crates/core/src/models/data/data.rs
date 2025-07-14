@@ -54,11 +54,13 @@ impl<Period: IsPeriod> Data<Period> {
     fn billable_quantity(
         &self,
         target_period: &Period,
+        cadence: Cadence,
         time_off: &Option<TimeOff>,
     ) -> Result<Quantity> {
         let quantity_in_period = quantity_in_period(
             target_period,
             self.service_fees().rate().granularity(),
+            cadence,
             self.information().record_of_periods_off(),
         )?;
         let billable_quantity = quantity_in_period - time_off.map(|d| *d).unwrap_or(Quantity::ZERO);
@@ -150,7 +152,11 @@ impl<Period: IsPeriod> Data<Period> {
                             }
                         }
 
-                        let quantity = self.billable_quantity(&target_period, time_off)?;
+                        let quantity = self.billable_quantity(
+                            &target_period,
+                            *self.service_fees().cadence(),
+                            time_off,
+                        )?;
                         let service = Item::builder()
                             .name(self.service_fees.name().clone())
                             .transaction_date(invoice_date)

@@ -61,8 +61,7 @@ impl YearMonthAndFortnight {
 
 impl IsPeriod for YearMonthAndFortnight {
     fn max_granularity(&self) -> Granularity {
-        // We cannot invoice for a month if the period is a fortnight,
-        Granularity::Day
+        Granularity::Fortnight
     }
     fn elapsed_periods_since(&self, start: impl std::borrow::Borrow<Self>) -> u16 {
         let start = start.borrow();

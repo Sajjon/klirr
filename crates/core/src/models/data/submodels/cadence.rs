@@ -21,8 +21,13 @@ impl Cadence {
             (Self::BiWeekly, Granularity::Month) => {
                 Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly)
             }
-            (Self::BiWeekly, Granularity::Day | Granularity::Hour) => Ok(()),
-            (Self::Monthly, Granularity::Day | Granularity::Hour | Granularity::Month) => Ok(()),
+            (Self::BiWeekly, Granularity::Fortnight | Granularity::Day | Granularity::Hour) => {
+                Ok(())
+            }
+            (
+                Self::Monthly,
+                Granularity::Fortnight | Granularity::Day | Granularity::Hour | Granularity::Month,
+            ) => Ok(()),
         }
     }
 }

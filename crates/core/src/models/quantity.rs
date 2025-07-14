@@ -25,6 +25,7 @@ pub struct Quantity(Decimal);
 impl Quantity {
     pub const ZERO: Self = Self(Decimal::ZERO);
     pub const ONE: Self = Self(Decimal::ONE);
+    pub const TWO: Self = Self(Decimal::TWO);
     pub const EIGHT: Self = Self(Decimal::EIGHT);
 }
 
