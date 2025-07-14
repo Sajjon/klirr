@@ -134,4 +134,22 @@ mod tests {
         assert_eq!(i16::from(Sut::First), 1);
         assert_eq!(i16::from(Sut::Second), 2);
     }
+
+    #[test]
+    fn now() {
+        let now = Sut::now();
+        assert!(now == Sut::First || now == Sut::Second);
+    }
+
+    #[test]
+    fn from_date() {
+        let date = Date::from_str("2025-02-14").unwrap();
+        assert_eq!(Sut::from(date), Sut::First);
+        let date = Date::from_str("2025-02-15").unwrap();
+        assert_eq!(Sut::from(date), Sut::Second);
+        let date = Date::from_str("2025-03-15").unwrap();
+        assert_eq!(Sut::from(date), Sut::First);
+        let date = Date::from_str("2025-03-16").unwrap();
+        assert_eq!(Sut::from(date), Sut::Second);
+    }
 }

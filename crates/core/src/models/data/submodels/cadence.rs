@@ -31,3 +31,45 @@ impl Cadence {
         }
     }
 }
+
+impl HasSample for Cadence {
+    fn sample() -> Self {
+        Self::Monthly
+    }
+
+    fn sample_other() -> Self {
+        Self::BiWeekly
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_log::test;
+
+    type Sut = Cadence;
+
+    #[test]
+    fn equality() {
+        assert_eq!(Sut::sample(), Sut::sample());
+        assert_eq!(Sut::sample_other(), Sut::sample_other());
+    }
+
+    #[test]
+    fn inequality() {
+        assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn validate() {
+        assert!(Sut::sample().validate(Granularity::Month).is_ok());
+        assert!(Sut::sample().validate(Granularity::Fortnight).is_ok());
+        assert!(Sut::sample().validate(Granularity::Day).is_ok());
+        assert!(Sut::sample().validate(Granularity::Hour).is_ok());
+
+        assert!(Sut::sample_other().validate(Granularity::Month).is_err());
+        assert!(Sut::sample_other().validate(Granularity::Fortnight).is_ok());
+        assert!(Sut::sample_other().validate(Granularity::Day).is_ok());
+        assert!(Sut::sample_other().validate(Granularity::Hour).is_ok());
+    }
+}

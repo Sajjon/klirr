@@ -741,6 +741,8 @@ mod tests {
 
     #[test]
     fn from_str_invalid() {
+        assert!(Sut::from_str("foobar").is_err());
+        assert!(Sut::from_str("foo-bar").is_err());
         assert!(Sut::from_str("2025-07-1a").is_err());
         assert!(Sut::from_str("2025-07-3").is_err());
         assert!(Sut::from_str("2025-13-1").is_err());

@@ -86,16 +86,6 @@ impl Item {
             .build()
     }
 
-    pub fn sample_expense_sandwich() -> Self {
-        Self::builder()
-            .name("Sandwich".into())
-            .transaction_date(Date::sample())
-            .quantity(dec!(1.0).into())
-            .unit_price(dec!(7.0).into())
-            .currency(Currency::GBP)
-            .build()
-    }
-
     pub fn sample_consulting_service() -> Self {
         Self::builder()
             .name("Agreed Consulting Fees".into())

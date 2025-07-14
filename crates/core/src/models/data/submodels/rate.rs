@@ -118,4 +118,24 @@ mod tests {
         assert_eq!(Sut::fortnight(9_000).granularity(), Granularity::Fortnight);
         assert_eq!(Sut::monthly(15_000).granularity(), Granularity::Month);
     }
+
+    #[test]
+    fn from_tuple() {
+        assert_eq!(
+            Sut::from((UnitPrice::sample(), Granularity::Month)),
+            Sut::monthly(UnitPrice::sample())
+        );
+        assert_eq!(
+            Sut::from((UnitPrice::sample(), Granularity::Day)),
+            Sut::daily(UnitPrice::sample())
+        );
+        assert_eq!(
+            Sut::from((UnitPrice::sample(), Granularity::Hour)),
+            Sut::hourly(UnitPrice::sample())
+        );
+        assert_eq!(
+            Sut::from((UnitPrice::sample(), Granularity::Fortnight)),
+            Sut::fortnight(UnitPrice::sample())
+        );
+    }
 }

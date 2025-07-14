@@ -8,7 +8,9 @@ use crate::prelude::*;
 )]
 #[serde(untagged)]
 pub enum PeriodAnno {
+    /// A year and month, e.g. `2024-12`.
     YearAndMonth(YearAndMonth),
+    /// A year, month and fortnight, e.g. `2024-12-second-half`.
     YearMonthAndFortnight(YearMonthAndFortnight),
 }
 
@@ -21,12 +23,16 @@ impl HasSample for PeriodAnno {
         YearAndMonth::sample_other().into()
     }
 }
+
 impl TryFromPeriodAnno for PeriodAnno {
     fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
         Ok(period)
     }
 }
+
 impl IsPeriod for PeriodAnno {
+    /// The max granularity of the period, which is the most granular period
+    /// that can be represented.
     fn max_granularity(&self) -> Granularity {
         match self {
             Self::YearAndMonth(period) => period.max_granularity(),
@@ -34,6 +40,7 @@ impl IsPeriod for PeriodAnno {
         }
     }
 
+    /// Number of periods that have elapsed since the given start period.
     fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16 {
         match (self, start.borrow()) {
             (Self::YearAndMonth(lhs), Self::YearAndMonth(rhs)) => lhs.elapsed_periods_since(rhs),
@@ -44,6 +51,9 @@ impl IsPeriod for PeriodAnno {
         }
     }
 
+    /// Converts the period into a date that represents the end of the period.
+    /// For `YearAndMonth`, this is the last day of the month, and for
+    /// `YearMonthAndFortnight`, this is the last day of the fortnight.
     fn to_date_end_of_period(&self) -> Date {
         match self {
             Self::YearAndMonth(period) => period.to_date_end_of_period(),
@@ -51,6 +61,7 @@ impl IsPeriod for PeriodAnno {
         }
     }
 
+    /// Returns the year of the period.
     fn year(&self) -> &Year {
         match self {
             Self::YearAndMonth(period) => period.year(),
@@ -58,6 +69,7 @@ impl IsPeriod for PeriodAnno {
         }
     }
 
+    /// Returns the month of the period.
     fn month(&self) -> &Month {
         match self {
             Self::YearAndMonth(period) => period.month(),
@@ -161,5 +173,49 @@ mod tests {
                     .build()
             )
         );
+    }
+
+    #[test]
+    fn year_month_and_fortnight_max_granularity() {
+        let sut = Sut::YearMonthAndFortnight(YearMonthAndFortnight::sample());
+        assert_eq!(sut.max_granularity(), Granularity::Fortnight);
+    }
+
+    #[test]
+    #[should_panic(expected = "Cannot mix period kinds")]
+    fn test_mix_ym_ymf() {
+        let _ = Sut::YearAndMonth(YearAndMonth::sample())
+            .elapsed_periods_since(Sut::YearMonthAndFortnight(YearMonthAndFortnight::sample()));
+    }
+
+    #[test]
+    #[should_panic(expected = "Cannot mix period kinds")]
+    fn test_mix_ymf_ym() {
+        let _ = Sut::YearMonthAndFortnight(YearMonthAndFortnight::sample())
+            .elapsed_periods_since(Sut::YearAndMonth(YearAndMonth::sample()));
+    }
+
+    #[test]
+    fn year_month_and_fortnight_get_year() {
+        let sut = Sut::YearMonthAndFortnight(
+            YearMonthAndFortnight::builder()
+                .year(2025.into())
+                .month(Month::May)
+                .half(MonthHalf::Second)
+                .build(),
+        );
+        assert_eq!(*sut.year(), Year::from(2025));
+    }
+
+    #[test]
+    fn year_month_and_fortnight_get_month() {
+        let sut = Sut::YearMonthAndFortnight(
+            YearMonthAndFortnight::builder()
+                .year(2025.into())
+                .month(Month::May)
+                .half(MonthHalf::Second)
+                .build(),
+        );
+        assert_eq!(*sut.month(), Month::May);
     }
 }

@@ -102,6 +102,14 @@ mod tests {
     type Sut = EncryptedAppPassword;
 
     #[test]
+    fn equality_secret_str() {
+        assert_ne!(
+            SecretString::sample().expose_secret(),
+            SecretString::sample_other().expose_secret()
+        );
+    }
+
+    #[test]
     fn equality() {
         assert_eq!(Sut::sample(), Sut::sample());
         assert_eq!(Sut::sample_other(), Sut::sample_other());
