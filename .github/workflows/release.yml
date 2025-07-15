@@ -6,7 +6,7 @@ on:
       - main
 env:
   CARGO_TERM_COLOR: always
-  RUST_TOOLCHAIN: 1.85.0
+  RUST_TOOLCHAIN: 1.85.1
 jobs:
   spelling:
     name: Spell Check with Typos
