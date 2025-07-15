@@ -88,79 +88,14 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Commit and push version bump
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --staged --quiet; then
             echo "No changes to commit - version might already be bumped"
           else
-            echo "Creating verified commit via GitHub API..."
-            
-            # Get current commit SHA
-            CURRENT_SHA=$(git rev-parse HEAD)
-            echo "Current SHA: $CURRENT_SHA"
-            
-            # Create a tree with the staged changes
-            TREE_SHA=$(git write-tree)
-            echo "Tree SHA: $TREE_SHA"
-            
-            # Create commit via GitHub API (this will be automatically signed/verified)
-            COMMIT_RESPONSE=$(curl -s -X POST \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json" \
-              -H "Content-Type: application/json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/${{ github.repository }}/git/commits" \
-              -d "{
-                \"message\": \"chore: release v${{ steps.extract_version.outputs.version }}\",
-                \"tree\": \"$TREE_SHA\",
-                \"parents\": [\"$CURRENT_SHA\"],
-                \"author\": {
-                  \"name\": \"github-actions[bot]\",
-                  \"email\": \"github-actions[bot]@users.noreply.github.com\",
-                  \"date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
-                },
-                \"committer\": {
-                  \"name\": \"github-actions[bot]\",
-                  \"email\": \"github-actions[bot]@users.noreply.github.com\",
-                  \"date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
-                }
-              }")
-            
-            echo "Commit API response: $COMMIT_RESPONSE"
-            
-            # Extract new commit SHA
-            NEW_SHA=$(echo "$COMMIT_RESPONSE" | jq -r '.sha')
-            
-            if [ "$NEW_SHA" = "null" ] || [ -z "$NEW_SHA" ]; then
-              echo "Failed to create commit via API"
-              echo "Response: $COMMIT_RESPONSE"
-              # Check if response contains an error message
-              ERROR_MSG=$(echo "$COMMIT_RESPONSE" | jq -r '.message // .error // "Unknown error"')
-              echo "Error message: $ERROR_MSG"
-              exit 1
-            fi
-            
-            echo "New commit SHA: $NEW_SHA"
-            
-            # Update main branch to point to new commit
-            UPDATE_RESPONSE=$(curl -s -f -X PATCH \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json" \
-              -H "Content-Type: application/json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/main" \
-              -d "{\"sha\": \"$NEW_SHA\"}")
-            
-            echo "Branch update response: $UPDATE_RESPONSE"
-            
-            # Verify the update was successful
-            UPDATED_SHA=$(echo "$UPDATE_RESPONSE" | jq -r '.object.sha')
-            if [ "$UPDATED_SHA" = "$NEW_SHA" ]; then
-              echo "✅ Successfully created verified commit and updated main branch"
-            else
-              echo "❌ Failed to update main branch"
-              echo "Response: $UPDATE_RESPONSE"
-              exit 1
-            fi
+            git commit -m "chore: release v${{ steps.extract_version.outputs.version }}"
+            git push origin main
           fi
       - name: Publish to crates.io
         env:

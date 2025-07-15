@@ -4,8 +4,8 @@ members = ["crates/cli", "crates/render", "crates/core"]
 
 [workspace.dependencies]
 # Internal dependencies
-klirr-core = { path = "crates/core", version = "0.1.26" }
-klirr-render = { path = "crates/render", version = "0.1.26" }
+klirr-core = { path = "crates/core", version = "0.2.0" }
+klirr-render = { path = "crates/render", version = "0.2.0" }
 
 # External dependencies
 aes-gcm = { version = "=0.10.3", default-features = false, features = [
