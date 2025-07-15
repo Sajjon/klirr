@@ -4,7 +4,17 @@ use crate::prelude::*;
 
 /// A tagged union of period kinds.
 #[derive(
-    Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Hash, From, TryUnwrap,
+    Clone,
+    derive_more::Display,
+    Debug,
+    Serialize,
+    Deserialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Hash,
+    From,
+    TryUnwrap,
 )]
 #[serde(untagged)]
 pub enum PeriodAnno {
@@ -14,13 +24,29 @@ pub enum PeriodAnno {
     YearMonthAndFortnight(YearMonthAndFortnight),
 }
 
+impl std::str::FromStr for PeriodAnno {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(period) = YearAndMonth::from_str(s) {
+            Ok(Self::YearAndMonth(period))
+        } else if let Ok(period) = YearMonthAndFortnight::from_str(s) {
+            Ok(Self::YearMonthAndFortnight(period))
+        } else {
+            Err(Error::InvalidPeriod {
+                bad_value: s.to_owned(),
+            })
+        }
+    }
+}
+
 impl HasSample for PeriodAnno {
     fn sample() -> Self {
         YearAndMonth::sample().into()
     }
 
     fn sample_other() -> Self {
-        YearAndMonth::sample_other().into()
+        YearMonthAndFortnight::sample_other().into()
     }
 }
 
@@ -81,7 +107,7 @@ impl IsPeriod for PeriodAnno {
 #[cfg(test)]
 mod tests {
 
-    use insta::assert_ron_snapshot;
+    use insta::{assert_ron_snapshot, assert_snapshot};
 
     use super::*;
 
@@ -217,5 +243,55 @@ mod tests {
                 .build(),
         );
         assert_eq!(*sut.month(), Month::May);
+    }
+
+    #[test]
+    fn from_str_valid() {
+        let valid_formats = vec![
+            "2024-12",
+            "2024-01",
+            "2024-12-first-half",
+            "2024-12-first",
+            "2024-12-1",
+            "2024-12-second-half",
+            "2024-12-second",
+            "2024-12-2",
+        ];
+        for format in valid_formats {
+            let period: Sut = format.parse().expect("Failed to parse valid format");
+            assert!(matches!(
+                period,
+                Sut::YearAndMonth(_) | Sut::YearMonthAndFortnight(_)
+            ));
+        }
+    }
+
+    #[test]
+    fn from_str_invalid() {
+        let invalid_formats = vec![
+            "2024-13",             // Invalid month
+            "2024-00",             // Invalid month
+            "2024-11-11",          // is date, which is invalid
+            "2024-12-third-half",  // Invalid fortnight
+            "2024-12-third",       // Invalid fortnight
+            "2024-12-3",           // Invalid fortnight
+            "2024-12-fourth-half", // Invalid fortnight
+            "2024-12-fourth",      // Invalid fortnight
+            "2024-12-4",           // Invalid fortnight
+        ];
+        for format in invalid_formats {
+            let result: Result<Sut, _> = format.parse();
+            assert!(result.is_err(), "Expected error for format: {}", format);
+        }
+    }
+
+    #[test]
+    fn display_sample() {
+        assert_snapshot!(Sut::sample())
+    }
+
+    #[test]
+    fn display_sample_other() {
+        assert_snapshot!(Sut::sample_other())
     }
 }

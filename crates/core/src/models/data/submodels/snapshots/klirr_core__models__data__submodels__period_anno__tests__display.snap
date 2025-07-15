@@ -1,0 +1,5 @@
+---
+source: crates/core/src/models/data/submodels/period_anno.rs
+expression: "Sut::sample()"
+---
+2025-05

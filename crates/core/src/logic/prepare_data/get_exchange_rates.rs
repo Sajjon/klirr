@@ -148,17 +148,17 @@ impl CachedRates {
 }
 
 impl<T> ExchangeRatesFetcher<T> {
+    fn _path(&self) -> PathBuf {
+        cached_rates_path(&self.path_to_cache)
+    }
     /// Loads the cached exchange rates from disk.
     fn _load_cache(&self) -> Result<CachedRates> {
-        load_data(&self.path_to_cache, DATA_FILE_NAME_CACHED_RATES)
+        deserialize_contents_of_ron(self._path())
     }
 
     /// Saves the cached exchange rates to disk.
     fn _save_cache(&self, rates: &CachedRates) -> Result<()> {
-        save_to_disk(
-            rates,
-            path_to_ron_file_with_base(&self.path_to_cache, DATA_FILE_NAME_CACHED_RATES),
-        )
+        save_to_disk(rates, self._path())
     }
 
     fn do_fetch(
@@ -394,8 +394,7 @@ mod tests {
         let tempdir = tempdir().unwrap();
         let fetcher = ExchangeRatesFetcher::tmp(tempdir);
         fetcher.update_cache_if_needed(&CachedRates::default(), false);
-        let cache_path =
-            path_to_ron_file_with_base(&fetcher.path_to_cache, DATA_FILE_NAME_CACHED_RATES);
+        let cache_path = cached_rates_path(&fetcher.path_to_cache);
         assert!(
             !cache_path.exists(),
             "Cache file should not exist when no new rates are fetched."
@@ -413,7 +412,7 @@ mod tests {
             .insert(Currency::USD, UnitPrice::from(dec!(1.2)));
         fetcher.update_cache_if_needed(&cache, true);
 
-        let loaded: CachedRates = load_data(path, DATA_FILE_NAME_CACHED_RATES).unwrap();
+        let loaded: CachedRates = deserialize_contents_of_ron(cached_rates_path(path)).unwrap();
         assert_eq!(loaded, cache, "Cache should be updated with new rates.");
     }
 
@@ -451,8 +450,7 @@ mod tests {
     fn when_cache_is_filled_with_gibberish_then_it_is_reset() {
         let tempdir = tempdir().unwrap();
         let fetcher = ExchangeRatesFetcher::tmp(tempdir);
-        let cache_path =
-            path_to_ron_file_with_base(&fetcher.path_to_cache, DATA_FILE_NAME_CACHED_RATES);
+        let cache_path = cached_rates_path(&fetcher.path_to_cache);
 
         // Write gibberish to the cache file
         std::fs::write(&cache_path, "gibberish").unwrap();

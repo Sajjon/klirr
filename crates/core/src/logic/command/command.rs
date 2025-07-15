@@ -134,27 +134,49 @@ pub fn validate_email_data_at(
 }
 
 fn mutate<D: Serialize + DeserializeOwned + Clone>(
-    data_path: impl AsRef<Path>,
-    data_file_name: &str,
+    path: impl AsRef<Path>,
     mutate: impl FnOnce(&mut D),
 ) -> Result<()> {
-    let data_path = data_path.as_ref();
-    let mut data = load_data::<D>(data_path, data_file_name)?.clone();
+    let mut data = deserialize_contents_of_ron(&path)?;
     mutate(&mut data);
-    let path = path_to_ron_file_with_base(data_path, data_file_name);
-    save_to_disk(&data, path)?;
+    save_to_disk(&data, &path)?;
     Ok(())
 }
 
+/// Adds `expenses` to the specified `period` in the data file at `data_path`.
+///
+/// # Throws
+/// Throws an error if the period type is incompatible with the service fees cadence.
 pub fn record_expenses_with_base_path<Period: IsPeriod + Serialize + DeserializeOwned>(
     period: &Period,
     expenses: &[Item],
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
+    let data_path = data_path.as_ref();
     info!("Recording #{} expenses for: {:?}", expenses.len(), period);
+
+    // First we assert that we are not mixing months and fortnights
+    let service_fees = service_fees(data_path)?;
+    match (
+        service_fees.cadence(),
+        Into::<PeriodAnno>::into(period.clone()),
+    ) {
+        (Cadence::Monthly, PeriodAnno::YearMonthAndFortnight(_)) => {
+            return Err(Error::CannotExpenseForFortnightWhenCadenceIsMonthly);
+        }
+        (Cadence::BiWeekly, PeriodAnno::YearAndMonth(_)) => {
+            return Err(Error::CannotExpenseForMonthWhenCadenceIsBiWeekly);
+        }
+        (Cadence::Monthly, PeriodAnno::YearAndMonth(_)) => {
+            // Monthly cadence is compatible with YearAndMonth
+        }
+        (Cadence::BiWeekly, PeriodAnno::YearMonthAndFortnight(_)) => {
+            // BiWeekly cadence is compatible with YearMonthAndFortnight
+        }
+    }
+
     mutate(
-        data_path,
-        DATA_FILE_NAME_EXPENSES,
+        expensed_periods_path(data_path),
         |data: &mut ExpensedPeriods<Period>| {
             data.insert_expenses(period, expenses.to_vec());
         },
@@ -166,18 +188,15 @@ pub fn record_expenses_with_base_path<Period: IsPeriod + Serialize + Deserialize
 
 pub fn record_period_off_with_base_path<Period: IsPeriod + Serialize + DeserializeOwned>(
     period: &Period,
-    data_path: impl AsRef<Path>,
+    base_path: impl AsRef<Path>,
 ) -> Result<()> {
-    info!("Recording month off for: {:?}", period);
+    info!("Recording period off for: {:?}", period);
     mutate(
-        data_path,
-        DATA_FILE_NAME_PROTO_INVOICE_INFO,
-        |data: &mut ProtoInvoiceInfo<Period>| {
-            data.insert_period_off(period.clone());
-        },
+        proto_invoice_info_path(base_path),
+        |data: &mut ProtoInvoiceInfo<Period>| data.insert_period_off(period.clone()),
     )
     .inspect(|_| {
-        info!("✅ Month off recorded successfully");
+        info!("✅ Period off recorded successfully");
     })
 }
 
@@ -245,7 +264,7 @@ mod tests {
         let month = YearAndMonth::may(2025);
         save_to_disk(
             &ProtoInvoiceInfo::<YearAndMonth>::sample(),
-            path_to_ron_file_with_base(tempdir.path(), DATA_FILE_NAME_PROTO_INVOICE_INFO),
+            proto_invoice_info_path(tempdir.path()),
         )
         .unwrap();
         record_period_off_with_base_path(&month, tempdir.path()).unwrap();
@@ -258,9 +277,10 @@ mod tests {
     #[test]
     fn test_record_expenses_with_base_path() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        save_to_disk(&ServiceFees::sample(), service_fees_path(tempdir.path())).unwrap();
         save_to_disk(
             &ExpensedPeriods::<YearAndMonth>::sample(),
-            path_to_ron_file_with_base(tempdir.path(), DATA_FILE_NAME_EXPENSES),
+            expensed_periods_path(tempdir.path()),
         )
         .unwrap();
         let month = YearAndMonth::may(2025);
@@ -271,6 +291,40 @@ mod tests {
         // Verify that the month was recorded correctly
         let data = expensed_periods::<YearAndMonth>(tempdir.path()).unwrap();
         assert!(data.contains(&month));
+    }
+
+    #[test]
+    fn test_record_expenses_with_base_path_fail_because_wrong_period_kind() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        save_to_disk(
+            &ExpensedPeriods::<YearAndMonth>::sample(),
+            expensed_periods_path(tempdir.path()),
+        )
+        .unwrap();
+        let period = YearMonthAndFortnight::builder()
+            .year(2025.into())
+            .month(Month::May)
+            .half(MonthHalf::Second)
+            .build();
+        let expenses = vec![Item::sample_expense_breakfast()];
+
+        let result = record_expenses_with_base_path(&period, &expenses, tempdir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_record_expenses_with_base_path_fail_because_wrong_period_kind_ymf() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        save_to_disk(
+            &ExpensedPeriods::<YearMonthAndFortnight>::sample(),
+            expensed_periods_path(tempdir.path()),
+        )
+        .unwrap();
+        let period = YearAndMonth::may(2025);
+        let expenses = vec![Item::sample_expense_breakfast()];
+
+        let result = record_expenses_with_base_path(&period, &expenses, tempdir.path());
+        assert!(result.is_err());
     }
 
     #[test]
@@ -378,7 +432,7 @@ mod tests {
             result
         );
         let loaded_email_settings: EncryptedEmailSettings =
-            load_data(tempdir.path(), DATA_FILE_NAME_EMAIL_SETTINGS).unwrap();
+            deserialize_contents_of_ron(email_settings_path(tempdir.path())).unwrap();
         assert_eq!(email_settings, loaded_email_settings);
     }
 

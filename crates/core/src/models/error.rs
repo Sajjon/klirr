@@ -6,6 +6,10 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError, PartialEq)]
 pub enum Error {
+    /// Not a valid YearAndMonth nor YearMonthAndFortnight
+    #[error("Invalid Period, bad value: {bad_value}")]
+    InvalidPeriod { bad_value: String },
+
     /// Period is not YearAndMonth
     #[error("Period is not YearAndMonth")]
     PeriodIsNotYearAndMonth,
@@ -35,6 +39,14 @@ pub enum Error {
     /// Cannot invoice for month when cadence is bi-weekly.
     #[error("Cannot invoice for month when cadence is bi-weekly")]
     CannotInvoiceForMonthWhenCadenceIsBiWeekly,
+
+    /// Cannot expense for month when cadence is bi-weekly
+    #[error("Cannot expense for month when cadence is bi-weekly")]
+    CannotExpenseForMonthWhenCadenceIsBiWeekly,
+
+    /// Cannot expense for fortnight when cadence is monthly.
+    #[error("Cannot expense for fortnight when cadence is monthly")]
+    CannotExpenseForFortnightWhenCadenceIsMonthly,
 
     /// Password does not match, e.g. when the user tries to set a password
     /// and the confirmation password does not match.

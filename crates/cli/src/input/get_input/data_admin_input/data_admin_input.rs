@@ -31,9 +31,9 @@ pub enum DataAdminInputCommand {
     /// with the existing data as default values so that user can press Enter
     /// to accept the existing values as defaults.
     Edit(EditDataInput),
-    /// Records a month off for the specified month, which is used to calculate the invoice.
-    MonthOff(MonthOffInput),
-    /// Records expenses for the specified month, used to create expenses invoices
+    /// Records a period off for the specified period, which is used to calculate the invoice.
+    PeriodOff(PeriodOffInput),
+    /// Records expenses for the specified period, used to create expenses invoices
     /// and affects invoice number calculation.
     Expenses(ExpensesInput),
 }

@@ -69,12 +69,12 @@ fn validate_data() -> Result<()> {
         })
 }
 
-fn record_expenses(month: &YearAndMonth, expenses: &[Item]) -> Result<()> {
-    record_expenses_with_base_path(month, expenses, data_dir())
+fn record_expenses(period: &PeriodAnno, expenses: &[Item]) -> Result<()> {
+    record_expenses_with_base_path(period, expenses, data_dir())
 }
 
-fn record_month_off(month: &YearAndMonth) -> Result<()> {
-    record_period_off_with_base_path(month, data_dir())
+fn record_period_off(period: &PeriodAnno) -> Result<()> {
+    record_period_off_with_base_path(period, data_dir())
 }
 
 pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
@@ -86,11 +86,11 @@ pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
             ask_for_data,
             Some(DataSelector::from(*input.selector())),
         )),
-        DataAdminInputCommand::MonthOff(month_off_input) => {
-            record_month_off(month_off_input.month())
+        DataAdminInputCommand::PeriodOff(period_off_input) => {
+            record_period_off(period_off_input.period())
         }
         DataAdminInputCommand::Expenses(expenses_input) => {
-            record_expenses(expenses_input.month(), expenses_input.expenses())
+            record_expenses(expenses_input.period(), expenses_input.expenses())
         }
     }
 }

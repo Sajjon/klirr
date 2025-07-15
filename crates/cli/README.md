@@ -12,7 +12,7 @@
 
 # Klirr
 
-Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomatic, **Z**ero-Maintenance, **I**nter-month Idempotent, **N**imble, **G**ratis) invoice solution written in Rust + [Typst](https://github.com/typst/typst)
+Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomatic, **Z**ero-Maintenance, **I**nter-month Idempotent, **N**imble, **G**ratis) invoice solution written in Rust + [Typst][typst]
 
 > [!TIP]
 > Scroll down to example invoice in the bottom to see what the invoice looks like.
@@ -36,7 +36,7 @@ Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomat
         -   [Manually](#data-edit-manual)
     -   [Generate Invoice](#generate-invoice)
         -   [Off for some days/hours?](#off)
-        -   [Took vacation a whole month or parental leave?](#month-off)
+        -   [Took vacation a whole period or parental leave?](#period-off)
     -   [Invoice for expenses](#expenses)
         -   [Add expenses](#expenses-add)
         -   [Generate expenses invoice](#expenses-generate)
@@ -53,17 +53,17 @@ Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomat
 
 # Description<a href="#description" id="description"/>[ ^](#thetoc)
 
--   **A**esthetic – **Produces polished, professional invoices**. Klirr uses Typst templates to generate a beautiful invoice PDF for your services and expenses, so the final result looks as good as a hand-crafted invoice, with consistent styling and formatting.
--   **M**ultiple layouts & languages – **Localized and dynamic with support for multiple layouts**. Klirr dynamically loads invoice labels in different languages via i18n, and currently supports English and Swedish (adding more languages is trivial). This means your invoices can easily be generated in the language that suits you or your client. The invoice format is powered by Typst, and while Klirr comes with one elegant layout by default, the code is prepared to very easily support additional layouts. You can extend or customize the template system to suit different styling needs, ensuring the solution can grow with your business.
--   **A**utomatic – **Automatically accounts for dates and work days**. Klirr uses your system’s calendar to determine the target month’s working days and sets the invoice date to the last day of the month, with the due date calculated based on your specified payment terms. It even allows you to mark any days you were off work, subtracting those from the billable days – all handled automatically so that your invoice reflects the correct time worked.
--   **Z**ero-Maintenance – **One-time configuration** via an interactive Terminal UI captures all company, client, and project info. After this initial setup, no manual editing is required, and no coding or format knowledge (Rust/Typst/[RON][ron]) is needed
--   **I**nter-month Idempotent – **Inter-month idempotence** ensures consistent invoice numbering. No matter how many times you build an invoice in a given month, it will reuse the same invoice number. When a new month begins, Klirr automatically increments to the next number. This guarantees a stable, chronological sequence of invoices without duplicates or gaps.
--   **N**imble - **Quickly and effortlessly generates invoices in no-time**
--   **G**ratis – **Free and open source forever**.
+-   **A**esthetic – **Produces polished, professional invoices**. Klirr uses [Typst][typst] templates to generate a beautiful invoice PDF for your services and expenses.
+-   **M**ultiple Config – **Localized, multiple Layouts, Invoice Granularity and Cadence**. Klirr dynamically loads invoice labels in different languages (currently supports English and Swedish, adding more languages is trivial). This means your invoices can easily be generated in the language that suits you or your client. The invoice format is powered by Typst, and while Klirr comes with one elegant layout by default, the code is prepared to very easily support additional layouts. Klirr supports multiple `granularities` invoicing with fixed rate per hour, day, fortnight or month, and supports multiple `cadence` invoicing bi-weekly or monthy.
+-   **A**utomatic – **Automatically calculates number of worked days/hours**. Klirr uses your system’s calendar to determine the target `period's` (month/fortnight) working days or hours and sets the invoice date to the last day of the `period`, with the due date calculated based on your specified payment terms. Klirr also supports input of a certain number of days/hours _off_, subtracting those from the billable quantity – all handled automatically so that your invoice reflects the correct time worked.
+-   **Z**ero-Maintenance – **One-time configuration** via an interactive Terminal UI captures all company, client, project info etc. After this initial setup, no manual editing is required, and no coding or format knowledge (Rust/Typst/[RON (the data format your information is recorded in)][ron]) is needed
+-   **I**nter-period Idempotent – **Inter-period idempotence** ensures consistent invoice numbering. No matter how many times you build an invoice in a given `period` (month/fortnight), it will reuse the same invoice number. When a new `period` begins, Klirr automatically increments to the next number. This guarantees a stable, chronological sequence of invoices without duplicates or gaps.
+-   **N**imble - **Quickly and effortlessly generates invoices in no-time**, generating a invoice for services takes less than `10 ms`<sup>[1](#footnote1)</sup>
+-   **G**ratis – **Free and open source forever**, Klirr is free and open software licensed under [MIT][license] and installable with `brew install`, `cargo install` or buildable from source.
 
-If that was not enough, klirr also supports generation of expense invoices which automatically fetched currency exchange rates and translates them into your currency at the date of transaction for all your purchases (see below).
+If that was not enough, klirr also supports generation of expense invoices which automatically fetched currency exchange rates and translates them into your currency at the date of transaction for all your purchases (see [#expenses] below).
 
-Klirr also supports automatic emailing of the invoices (see below).
+Klirr also supports automatic emailing of the invoices (see [#email] below).
 
 # Installation<a href="#installation" id="installation"/>[ ^](#thetoc)
 
@@ -89,7 +89,7 @@ If you wanna build your self you can do it with Rust and cargo.
 
 ### Install Rust<a href="#install-rust" id="install-rust"/>[ ^](#thetoc)
 
-You need [Rust](https://www.rust-lang.org/tools/install) to use this software.
+If you want to build the source yourself, you need [Rust](https://www.rust-lang.org/tools/install).
 
 ### Install `klirr`<a href="#install-klirr" id="install-klirr"/>[ ^](#thetoc)
 
@@ -180,20 +180,20 @@ klirr data dump
 klirr invoice
 ```
 
-or for current month instead of last:
+or for _current_ `period` (month) instead of _last_ using `--period`:
 
 ```bash
-klirr invoice -- --month current
+klirr invoice --period current
 ```
 
-or if you want to configure output:
+or if you want to configure output path using `-out`:
 
 ```bash
-klirr invoice -- --output $HOME/my/custom/path/my_custom_name_of_file.pdf
+klirr invoice --out $HOME/my/custom/path/my_custom_name_of_file.pdf
 ```
 
 > [!NOTE]
-> If you don't specify `output` path the invoice will be saved in
+> If you don't specify `out` path the invoice will be saved in
 > `$HOME/invoices`.
 
 ### Off (free) for some days/hours? <a href="#off" id="off"/> [ ^](#thetoc)
@@ -203,42 +203,53 @@ If you did not work for some days/hours, and you need to not invoice for those d
 #### Days off
 
 ```bash
-klirr services-off --quantity 6 --unit days
+klirr invoice services-off --quantity 6 --unit days
 ```
 
 #### Hours off
 
 ```bash
-klirr services-off --quantity 16 --unit hours
+klirr invoice services-off --quantity 16 --unit hours
 ```
 
 > [!IMPORTANT]
-> The unit MUST match the `rate`  specified in the service_fees.ron, e.g.
-> if you are invoicing with a **daily** rate, the value passed to `unit` must
-> be `days` and analogoulsy if you are invoicing with an **hourly** rate you
-> must pass `hours` to `unit`.
+> The `unit` **MUST** match the `rate` specified in the `service_fees.ron`, e.g.
+> if you are invoicing with a **daily** rate, you must pass `--unit days` 
+> and analogoulsy if you are invoicing with an **hourly** rate you
+> must pass `--unit hours`.
 
-### Took vacation a whole month or parental leave? <a href="#month-off" id="month-off"/> [ ^](#thetoc)
+### Took vacation a whole `period` or parental leave? <a href="#period-off" id="period-off"/> [ ^](#thetoc)
 
-You can ensure klirr uses correct invoice number calculations if you need to skip invoicing completely some months by marking said month(s) as "months off". You do it by:
+You can ensure klirr uses correct invoice number calculations if you need to skip invoicing completely some `period`s by marking said period(s) as "period off". You do it by:
+
+#### Whole month off
 
 ```bash
-klirr data month-off --month "2025-06"
+klirr data period-off --period "2025-06"
 ```
 
 Which will write to `$DATA_PATH/klirr/data/invoice_info.ron`
 
+This ensures that there are no gaps in invoice numbers for the month(s) you were off.
+
+#### Whole fortnight off
+
+```bash
+klirr data period-off --period "2025-06-first-half"
+```
+
+This ensures that there are no gaps in invoice numbers for the month(s) you were off.
+
 > [!TIP]
-> There is currently no support for subtracting/removing expenses using Cli, if you made a mistake
-> or otherwise wanna perform some changes, manually edit the file `$DATA_PATH/klirr/data/invoice_info.ron` > $DATA_PATH depends [on OS][data_path], but
-> typically `$HOME/Library/Application Support` on macOS
-> using your favourite text editor.
+> There is currently no support for subtracting/removing periods off using Cli, if you made a mistake
+> or otherwise wanna perform some changes, manually edit the file 
+> `$DATA_PATH/klirr/data/invoice_info.ron` where `$DATA_PATH` depends [on OS][data_path], but typically 
+>`$HOME/Library/Application Support` on macOS using your favourite text editor.
 >
 > After edit you can validate the data with:
 >
 > `cargo run --bin klirr data validate`
 
-This ensures that there are no gaps in invoice numbers.
 
 ## Invoice for expenses<a href="#expenses" id="expenses"/>[ ^](#thetoc)
 
@@ -247,7 +258,7 @@ First add the expense, then generate the invoice.
 ### Add expenses<a href="#expenses-add" id="expenses-add"/>[ ^](#thetoc)
 
 ```bash
-klirr data expenses --month 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lunch, 11, GBP, 2, 2025-05-31"
+klirr data expenses --period 2025-05 -e "Sandwich, 6, EUR, 1, 2025-05-31" -e "Lunch, 11, GBP, 2, 2025-05-31"
 ```
 
 > [!NOTE]
@@ -356,5 +367,11 @@ This is an example of the _Aioo_ `Layout` rendered using `English`.
 
 [![Invoice Preview](crates/cli/assets/example.jpg)](crates/cli/assets/example.jpg)
 
+# Footnotes
+
+1. <a name="footnote1"></a>When run on **Macbook Pro M2 Max** running **macOS 15.5 (24F74)** using a Klirr binary compiled with `--release` flag.
+
 [ron]: https://github.com/ron-rs/ron
 [data_path]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html
+[typst]: https://github.com/typst/typst
+[license]: LICENSE.txt

@@ -31,7 +31,7 @@ You can manually verify the integrity of klirr releases:
 
 ```bash
 # Download the release tag and verify its signature
-git tag -v v0.1.22
+git tag -v v0.1.27
 ```
 
 #### 2. Verify Build Attestations
@@ -41,10 +41,33 @@ GitHub provides build attestations for each binary. You can verify these using t
 ```bash
 # Install GitHub CLI if you haven't already
 # Download the binary you want to verify
-curl -L -o klirr-aarch64-apple-darwin "https://github.com/Sajjon/klirr/releases/download/v0.1.22/klirr-aarch64-apple-darwin"
+curl -L -o klirr-aarch64-apple-darwin "https://github.com/Sajjon/klirr/releases/download/v0.1.27/klirr-aarch64-apple-darwin"
 
 # Verify the attestation
 gh attestation verify klirr-aarch64-apple-darwin --repo Sajjon/klirr
+```
+
+The output should be something like:
+```bash
+Loaded digest sha256:da5a248ba2e8e9cfd28e49f9fb90ecddcbdc73915729bc2bc33f4655e7ae5703 for file://klirr-aarch64-apple-darwin
+Loaded 1 attestation from GitHub API
+
+The following policy criteria will be enforced:
+- Predicate type must match:................ https://slsa.dev/provenance/v1
+- Source Repository Owner URI must match:... https://github.com/Sajjon
+- Source Repository URI must match:......... https://github.com/Sajjon/klirr
+- Subject Alternative Name must match regex: (?i)^https://github.com/Sajjon/klirr/
+- OIDC Issuer must match:................... https://token.actions.githubusercontent.com
+
+✓ Verification succeeded!
+
+The following 1 attestation matched the policy criteria
+
+- Attestation #1
+  - Build repo:..... Sajjon/klirr
+  - Build workflow:. .github/workflows/release.yml@refs/heads/main
+  - Signer repo:.... Sajjon/klirr
+  - Signer workflow: .github/workflows/release.yml@refs/heads/main
 ```
 
 #### 3. Verify SHA256 Checksums

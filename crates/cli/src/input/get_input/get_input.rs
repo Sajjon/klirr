@@ -1,12 +1,12 @@
 use crate::prelude::*;
 
-use clap::{Args, Parser};
+use clap::Parser;
 use derive_more::{Debug, Unwrap};
 
 /// The root argument for the CLI, which contains the subcommands for
 /// generating invoices and managing data.
 #[derive(Debug, Parser)]
-#[command(name = BINARY_NAME, about = "Generate and manage invoices")]
+#[command(name = BINARY_NAME, about = "Generate invoices for services and expenses, with support for emailing them.")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
 pub struct CliArgs {
     /// The command to run, either for generating an invoice or for data management.
@@ -26,20 +26,6 @@ pub enum Command {
 
     /// CLI arguments for admin tasks related to data.
     Data(DataAdminInput),
-}
-
-/// Record a new month off for the specified month.
-#[derive(Debug, Args, Getters, PartialEq)]
-pub struct MonthOffInput {
-    /// The month to be added if not already present in the data directory.
-    #[arg(
-        long,
-        short = 'm',
-        default_value = None,
-        help = "The month and year for which you wanna record a month off, e.g. `2025-05`."
-    )]
-    #[getset(get = "pub")]
-    month: YearAndMonth,
 }
 
 /// The CLI arguments for generating an invoice PDF.
@@ -163,7 +149,7 @@ mod tests {
                 BINARY_NAME,
                 "data",
                 "expenses",
-                "--month",
+                "--period",
                 "2025-05",
                 "-e",
                 item_1_str,
@@ -174,7 +160,7 @@ mod tests {
                 *input.command.unwrap_data().command(),
                 DataAdminInputCommand::Expenses(
                     ExpensesInput::builder()
-                        .month(YearAndMonth::from_str("2025-05").unwrap())
+                        .period(YearAndMonth::from_str("2025-05").unwrap().into())
                         .expenses(vec![item_1, item_2])
                         .build()
                 )

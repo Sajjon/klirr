@@ -72,30 +72,12 @@ pub fn save_data_with_base_path<Period: IsPeriod + Serialize>(
     base_path: impl AsRef<Path>,
 ) -> Result<()> {
     let base_path = base_path.as_ref();
-    save_to_disk(
-        data.vendor(),
-        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_VENDOR),
-    )?;
-    save_to_disk(
-        data.client(),
-        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_CLIENT),
-    )?;
-    save_to_disk(
-        data.information(),
-        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_PROTO_INVOICE_INFO),
-    )?;
-    save_to_disk(
-        data.payment_info(),
-        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_PAYMENT),
-    )?;
-    save_to_disk(
-        data.service_fees(),
-        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_SERVICE_FEES),
-    )?;
-    save_to_disk(
-        data.expensed_periods(),
-        path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EXPENSES),
-    )?;
+    save_to_disk(data.vendor(), vendor_path(base_path))?;
+    save_to_disk(data.client(), client_path(base_path))?;
+    save_to_disk(data.information(), proto_invoice_info_path(base_path))?;
+    save_to_disk(data.payment_info(), payment_info_path(base_path))?;
+    save_to_disk(data.service_fees(), service_fees_path(base_path))?;
+    save_to_disk(data.expensed_periods(), expensed_periods_path(base_path))?;
     Ok(())
 }
 
@@ -107,14 +89,22 @@ pub fn load_data<T: DeserializeOwned>(base_path: impl AsRef<Path>, name: &str) -
     deserialize_contents_of_ron(path_to_ron_file_with_base(base_path, name))
 }
 
-pub const DATA_FILE_NAME_EMAIL_SETTINGS: &str = "email";
-pub const DATA_FILE_NAME_VENDOR: &str = "vendor";
-pub const DATA_FILE_NAME_CLIENT: &str = "client";
-pub const DATA_FILE_NAME_PAYMENT: &str = "payment";
-pub const DATA_FILE_NAME_SERVICE_FEES: &str = "service_fees";
-pub const DATA_FILE_NAME_PROTO_INVOICE_INFO: &str = "invoice_info";
-pub const DATA_FILE_NAME_EXPENSES: &str = "expenses";
-pub const DATA_FILE_NAME_CACHED_RATES: &str = "cached_rates";
+const DATA_FILE_NAME_EMAIL_SETTINGS: &str = "email";
+const DATA_FILE_NAME_VENDOR: &str = "vendor";
+const DATA_FILE_NAME_CLIENT: &str = "client";
+const DATA_FILE_NAME_PAYMENT: &str = "payment";
+const DATA_FILE_NAME_SERVICE_FEES: &str = "service_fees";
+const DATA_FILE_NAME_PROTO_INVOICE_INFO: &str = "invoice_info";
+const DATA_FILE_NAME_EXPENSES: &str = "expenses";
+const DATA_FILE_NAME_CACHED_RATES: &str = "cached_rates";
+
+pub fn email_settings_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EMAIL_SETTINGS)
+}
+
+pub fn cached_rates_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_CACHED_RATES)
+}
 
 pub fn client_path(base_path: impl AsRef<Path>) -> PathBuf {
     path_to_ron_file_with_base(base_path, DATA_FILE_NAME_CLIENT)
@@ -152,7 +142,7 @@ fn payment_info(base_path: impl AsRef<Path>) -> Result<PaymentInformation> {
     deserialize_contents_of_ron(payment_info_path(base_path))
 }
 
-fn service_fees(base_path: impl AsRef<Path>) -> Result<ServiceFees> {
+pub fn service_fees(base_path: impl AsRef<Path>) -> Result<ServiceFees> {
     deserialize_contents_of_ron(service_fees_path(base_path))
 }
 
@@ -171,7 +161,7 @@ pub fn expensed_periods<Period: IsPeriod + DeserializeOwned>(
 pub fn read_email_data_from_disk_with_base_path(
     base_path: impl AsRef<Path>,
 ) -> Result<EncryptedEmailSettings> {
-    load_data(base_path, DATA_FILE_NAME_EMAIL_SETTINGS)
+    deserialize_contents_of_ron(email_settings_path(base_path))
 }
 
 pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result<Data<PeriodAnno>> {
@@ -182,7 +172,7 @@ pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result
     let client = client(base_path)?;
     let vendor = vendor(base_path)?;
     let payment_info = payment_info(base_path)?;
-    let service_prices = service_fees(base_path)?;
+    let service_fees = service_fees(base_path)?;
     let proto_invoice_info = proto_invoice_info(base_path)?;
     let expensed_periods = expensed_periods(base_path)?;
 
@@ -190,7 +180,7 @@ pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result
         .client(client)
         .vendor(vendor)
         .payment_info(payment_info)
-        .service_fees(service_prices)
+        .service_fees(service_fees)
         .information(proto_invoice_info)
         .expensed_periods(expensed_periods)
         .build();

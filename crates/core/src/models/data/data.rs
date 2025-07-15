@@ -2,7 +2,9 @@ use crate::prelude::*;
 
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, WithSetters)]
+#[derive(
+    Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, WithSetters, Setters,
+)]
 pub struct Data<Period: IsPeriod> {
     /// Information about this specific invoice.
     #[getset(get = "pub")]
@@ -27,7 +29,7 @@ pub struct Data<Period: IsPeriod> {
     service_fees: ServiceFees,
 
     /// Any expenses that you might have incurred.
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set = "pub")]
     expensed_periods: ExpensedPeriods<Period>,
 }
 
