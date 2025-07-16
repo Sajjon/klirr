@@ -20,7 +20,7 @@ impl<T: Eq + PartialOrd + Hash + Clone + std::fmt::Debug + Into<PeriodAnno> + Tr
 
 pub trait IsPeriod: PeriodMarker {
     fn max_granularity(&self) -> Granularity;
-    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16;
+    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> Result<u16>;
     fn to_date_end_of_period(&self) -> Date;
     fn year(&self) -> &Year;
     fn month(&self) -> &Month;

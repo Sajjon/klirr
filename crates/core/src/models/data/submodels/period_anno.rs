@@ -67,13 +67,18 @@ impl IsPeriod for PeriodAnno {
     }
 
     /// Number of periods that have elapsed since the given start period.
-    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16 {
+    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> Result<u16> {
         match (self, start.borrow()) {
             (Self::YearAndMonth(lhs), Self::YearAndMonth(rhs)) => lhs.elapsed_periods_since(rhs),
             (Self::YearMonthAndFortnight(lhs), Self::YearMonthAndFortnight(rhs)) => {
                 lhs.elapsed_periods_since(rhs)
             }
-            _ => panic!("Cannot mix period kinds"),
+            (Self::YearAndMonth(_), Self::YearMonthAndFortnight(_)) => {
+                Err(Error::PeriodIsNotYearAndMonth)
+            }
+            (Self::YearMonthAndFortnight(_), Self::YearAndMonth(_)) => {
+                Err(Error::PeriodIsNotYearMonthAndFortnight)
+            }
         }
     }
 
@@ -128,7 +133,7 @@ mod tests {
     fn test_elapsed_periods_since_year_and_month() {
         let early = Sut::YearAndMonth(YearAndMonth::december(2024));
         let late = Sut::YearAndMonth(YearAndMonth::february(2025));
-        assert_eq!(late.elapsed_periods_since(&early), 2);
+        assert_eq!(late.elapsed_periods_since(&early).unwrap(), 2);
     }
 
     #[test]
@@ -147,7 +152,7 @@ mod tests {
                 .half(MonthHalf::First)
                 .build(),
         );
-        assert_eq!(late.elapsed_periods_since(&early), 3); // whole of january (2) + half of december (1)
+        assert_eq!(late.elapsed_periods_since(&early).unwrap(), 3); // whole of january (2) + half of december (1)
     }
 
     #[test]
@@ -208,17 +213,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Cannot mix period kinds")]
-    fn test_mix_ym_ymf() {
-        let _ = Sut::YearAndMonth(YearAndMonth::sample())
+    fn mix_ym_ymf_throws() {
+        let result = Sut::YearAndMonth(YearAndMonth::sample())
             .elapsed_periods_since(Sut::YearMonthAndFortnight(YearMonthAndFortnight::sample()));
+        assert!(result.is_err(), "Expected error when mixing period kinds");
     }
 
     #[test]
-    #[should_panic(expected = "Cannot mix period kinds")]
-    fn test_mix_ymf_ym() {
-        let _ = Sut::YearMonthAndFortnight(YearMonthAndFortnight::sample())
+    fn mix_ymf_ym_throws() {
+        let result = Sut::YearMonthAndFortnight(YearMonthAndFortnight::sample())
             .elapsed_periods_since(Sut::YearAndMonth(YearAndMonth::sample()));
+        assert!(result.is_err(), "Expected error when mixing period kinds");
     }
 
     #[test]

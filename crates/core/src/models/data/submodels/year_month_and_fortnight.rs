@@ -70,18 +70,23 @@ impl IsPeriod for YearMonthAndFortnight {
         Granularity::Fortnight
     }
 
-    fn elapsed_periods_since(&self, start: impl std::borrow::Borrow<Self>) -> u16 {
+    fn elapsed_periods_since(&self, start: impl std::borrow::Borrow<Self>) -> Result<u16> {
         let start = start.borrow();
         let start_ym = start.as_year_and_month();
         let end_ym = self.as_year_and_month();
-        let elapsed = end_ym.elapsed_months_since(start_ym);
+        let elapsed = end_ym.elapsed_months_since(start_ym)?;
         let elapsed_ym = (elapsed * 2) as i16; // two halves per month
         let start_half = i16::from(*start.half());
         let end_half = i16::from(*self.half());
         let half_diff = end_half - start_half; // -1 if start is second half, +1 if end is first half, 0 if both are same half
         let elapsed = elapsed_ym + half_diff;
-        assert!(elapsed >= 0, "Elapsed periods cannot be negative");
-        elapsed as u16
+        if elapsed < 0 {
+            return Err(Error::StartPeriodAfterEndPeriod {
+                start: start.to_string(),
+                end: self.to_string(),
+            });
+        }
+        Ok(elapsed as u16)
     }
 
     fn to_date_end_of_period(&self) -> Date {
@@ -167,7 +172,7 @@ mod tests {
             .half(MonthHalf::First)
             .build();
 
-        assert_eq!(sut.elapsed_periods_since(sut), 0);
+        assert_eq!(sut.elapsed_periods_since(sut).unwrap(), 0);
     }
 
     #[test]
@@ -182,7 +187,7 @@ mod tests {
             .month(Month::July)
             .half(MonthHalf::Second)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 1);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 1);
     }
 
     #[test]
@@ -197,7 +202,7 @@ mod tests {
             .month(Month::July)
             .half(MonthHalf::First)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 1);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 1);
     }
 
     #[test]
@@ -212,7 +217,7 @@ mod tests {
             .month(Month::January)
             .half(MonthHalf::First)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 1);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 1);
     }
 
     #[test]
@@ -228,7 +233,7 @@ mod tests {
             .half(MonthHalf::First)
             .build();
         let expected = 1 + 2 + 2; // second half of 2024-12 plus whole 2025-01 and whole 2025-02
-        assert_eq!(late.elapsed_periods_since(early), expected);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), expected);
     }
 
     #[test]
@@ -243,7 +248,7 @@ mod tests {
             .month(Month::January)
             .half(MonthHalf::First)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 1); // Second half of December only
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 1); // Second half of December only
     }
 
     #[test]
@@ -258,7 +263,7 @@ mod tests {
             .month(Month::June)
             .half(MonthHalf::First)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 1); // Second half of May only
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 1); // Second half of May only
     }
 
     #[test]
@@ -274,7 +279,7 @@ mod tests {
             .half(MonthHalf::First)
             .build();
         let expected = 2 + 2 + 2; // Whole of December, January and February
-        assert_eq!(late.elapsed_periods_since(early), expected);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), expected);
     }
 
     #[test]
@@ -290,7 +295,7 @@ mod tests {
             .half(MonthHalf::Second)
             .build();
         let expected = 1 + 2 + 2 + 1; // half Dec, half March, whole Jan/Feb
-        assert_eq!(late.elapsed_periods_since(early), expected);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), expected);
     }
 
     #[test]
@@ -306,7 +311,7 @@ mod tests {
             .half(MonthHalf::Second)
             .build();
         let expected = 2 + 2 + 2 + 1; // whole Dec/Jan/Feb, half March
-        assert_eq!(late.elapsed_periods_since(early), expected);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), expected);
     }
 
     #[test]
@@ -321,7 +326,7 @@ mod tests {
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 24);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 24);
     }
 
     #[test]
@@ -336,7 +341,7 @@ mod tests {
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 24);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 24);
     }
 
     #[test]
@@ -351,7 +356,7 @@ mod tests {
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 23);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 23);
     }
 
     #[test]
@@ -366,7 +371,7 @@ mod tests {
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
-        assert_eq!(late.elapsed_periods_since(early), 25);
+        assert_eq!(late.elapsed_periods_since(early).unwrap(), 25);
     }
 
     #[test]

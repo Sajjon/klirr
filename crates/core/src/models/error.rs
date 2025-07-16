@@ -6,6 +6,14 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// during PDF generation and manipulation.
 #[derive(Clone, Debug, ThisError, PartialEq)]
 pub enum Error {
+    /// The offset period must not be in the record of periods off.
+    #[error("Records off must not contain offset period: {offset_period}")]
+    RecordsOffMustNotContainOffsetPeriod { offset_period: String },
+
+    /// The start period is after the end period.
+    #[error("Start period ('{start}') is after end period ('{end}')")]
+    StartPeriodAfterEndPeriod { start: String, end: String },
+
     /// Not a valid YearAndMonth nor YearMonthAndFortnight
     #[error("Invalid Period, bad value: {bad_value}")]
     InvalidPeriod { bad_value: String },

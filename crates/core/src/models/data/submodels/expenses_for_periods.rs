@@ -6,9 +6,11 @@ use crate::{define_item_struct, prelude::*};
 #[serde(transparent)]
 pub(super) struct ExpensesForPeriods(Vec<Item>);
 
+/// Ephemeral type used such that expensed items sharing all fields except for quantity
+/// are considered the same, allowing us to merge them into a single item with the total quantity.
 #[derive(Hash, Eq, PartialEq, Display, Clone, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 struct QuantityIgnored;
-define_item_struct!(pub, Marker, QuantityIgnored);
+define_item_struct!(pub, ExpenseIdentifier, QuantityIgnored);
 
 impl ExpensesForPeriods {
     /// Inserts a vector of items into the `ExpensesForPeriods`, merging items that are the same
@@ -16,9 +18,9 @@ impl ExpensesForPeriods {
     pub(super) fn insert(&mut self, items: Vec<Item>) {
         self.0.extend(items);
 
-        let mut map = IndexMap::<Marker, Quantity>::new();
+        let mut map = IndexMap::<ExpenseIdentifier, Quantity>::new();
         for item in &self.0 {
-            let marker = Marker::builder()
+            let identifier = ExpenseIdentifier::builder()
                 .name(item.name().clone())
                 .transaction_date(*item.transaction_date())
                 .unit_price(*item.unit_price())
@@ -26,18 +28,19 @@ impl ExpensesForPeriods {
                 .quantity(QuantityIgnored)
                 .build();
 
-            map.entry(marker)
+            map.entry(identifier)
                 .and_modify(|q| *q += *item.quantity())
                 .or_insert(*item.quantity());
         }
 
-        self.0.retain(|_| false);
-        for (marker, quantity) in map {
+        self.0.clear();
+
+        for (identifier, quantity) in map {
             let item = Item::builder()
-                .name(marker.name().clone())
-                .transaction_date(*marker.transaction_date())
-                .unit_price(*marker.unit_price())
-                .currency(*marker.currency())
+                .name(identifier.name().clone())
+                .transaction_date(*identifier.transaction_date())
+                .unit_price(*identifier.unit_price())
+                .currency(*identifier.currency())
                 .quantity(quantity)
                 .build();
             self.0.push(item);

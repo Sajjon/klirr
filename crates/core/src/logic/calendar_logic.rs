@@ -140,15 +140,20 @@ impl YearAndMonth {
     /// use klirr_core::prelude::*;
     /// let start = YearAndMonth::january(2025);
     /// let end = YearAndMonth::april(2025);
-    /// assert_eq!(end.elapsed_months_since(start), 3);
+    /// assert_eq!(end.elapsed_months_since(start).unwrap(), 3);
     /// ```
     ///
-    /// # Panics
-    /// Panics if the `start` month is after the `end` month.
-    pub fn elapsed_months_since(&self, start: impl Borrow<Self>) -> u16 {
+    /// # Throws
+    /// Throws an error if the `start` month is after the `end` month.
+    pub fn elapsed_months_since(&self, start: impl Borrow<Self>) -> Result<u16> {
         let end = self;
         let start = start.borrow();
-        assert!(start <= end, "Expected start <= end month");
+        if start > end {
+            return Err(Error::StartPeriodAfterEndPeriod {
+                start: start.to_string(),
+                end: end.to_string(),
+            });
+        }
         let start_year = **start.year();
         let start_month = **start.month() as u16;
         let end_year = **end.year();
@@ -159,7 +164,8 @@ impl YearAndMonth {
         let months_per_year = 12;
         let start_months = start_year * months_per_year + start_month;
         let end_months = end_year * months_per_year + end_month;
-        end_months - start_months
+        let months_elapsed = end_months - start_months;
+        Ok(months_elapsed)
     }
 }
 
@@ -192,7 +198,7 @@ impl IsPeriod for YearAndMonth {
         Granularity::Month
     }
 
-    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> u16 {
+    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> Result<u16> {
         self.elapsed_months_since(start)
     }
 
@@ -232,7 +238,7 @@ impl IsPeriod for YearAndMonth {
 ///     &target_month,
 ///     is_expenses,
 ///     &months_off_record,
-/// );
+/// ).unwrap();
 ///
 /// // The expected invoice number is calculated as follows:
 /// // - Offset is 100
@@ -248,13 +254,13 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
     target_period: &Period,
     is_expenses: bool,
     record_of_periods_off: &RecordOfPeriodsOff<Period>,
-) -> InvoiceNumber {
-    assert!(
-        !record_of_periods_off.contains(offset.period()),
-        "Record of periods off contains offset.period(): {:?} but it should not.",
-        offset.period()
-    );
-    let periods_elapsed_since_offset = target_period.elapsed_periods_since(offset.period());
+) -> Result<InvoiceNumber> {
+    if record_of_periods_off.contains(offset.period()) {
+        return Err(Error::RecordsOffMustNotContainOffsetPeriod {
+            offset_period: format!("{:?}", offset.period()),
+        });
+    }
+    let periods_elapsed_since_offset = target_period.elapsed_periods_since(offset.period())?;
 
     let mut periods_off_to_subtract = 0;
     for period_off in record_of_periods_off.iter() {
@@ -271,7 +277,7 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
         // expenses the same month, the expense invoice number is always higher.
         invoice_number += 1;
     }
-    InvoiceNumber::from(invoice_number)
+    Ok(InvoiceNumber::from(invoice_number))
 }
 
 /// Calculates the number of working days in a given month, excluding weekends.
@@ -589,7 +595,8 @@ mod tests {
             &YearAndMonth::from(target_period),
             is_expenses,
             information.record_of_periods_off(),
-        );
+        )
+        .unwrap();
         assert_eq!(invoice_number, expected.into());
     }
 
@@ -859,7 +866,7 @@ mod tests {
     fn test_elapsed_months_since_when_start_month_is_later_in_the_year_than_end_month() {
         let start = YearAndMonth::december(2024);
         let end = YearAndMonth::april(2025);
-        assert_eq!(end.elapsed_months_since(start), 4);
+        assert_eq!(end.elapsed_months_since(start).unwrap(), 4);
         assert!(start < end);
     }
 
@@ -871,16 +878,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn test_elapsed_months_since_panic() {
+    fn elapsed_months_since_throws_when_start_month_is_later_than_end_month() {
         let start = YearAndMonth::april(2025);
         let end = YearAndMonth::march(2025);
-        end.elapsed_months_since(start);
+        assert!(end.elapsed_months_since(start).is_err());
     }
 
     #[test]
-    #[should_panic]
-    fn test_calculate_invoice_number_panics_for_invalid_input() {
+    fn test_calculate_invoice_number_throws_for_invalid_input() {
         let month = YearAndMonth::may(2025);
         let invoice_info = ProtoInvoiceInfo::builder()
             .offset(
@@ -893,12 +898,13 @@ mod tests {
             .purchase_order(PurchaseOrder::sample())
             .build();
 
-        let _ = calculate_invoice_number(
+        let result = calculate_invoice_number(
             invoice_info.offset(),
             &YearAndMonth::december(2025),
             true,
             invoice_info.record_of_periods_off(),
         );
+        assert!(result.is_err());
     }
 
     #[test]

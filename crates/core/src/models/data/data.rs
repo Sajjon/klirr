@@ -106,7 +106,7 @@ impl<Period: IsPeriod> Data<Period> {
             &target_period,
             is_expenses,
             self.information().record_of_periods_off(),
-        );
+        )?;
         let is_expenses_str_or_empty = if is_expenses { "_expenses" } else { "" };
         let vendor_name = self.vendor.company_name().replace(' ', "_");
 
