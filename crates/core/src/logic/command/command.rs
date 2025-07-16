@@ -646,7 +646,7 @@ mod tests {
         let result = record_expenses_with_base_path(
             &period,
             &[Item::sample_expense_breakfast()],
-            tempdir.path().to_path_buf(),
+            tempdir.path(),
         );
         assert!(
             result.is_err(),
@@ -670,7 +670,7 @@ mod tests {
         let result = record_expenses_with_base_path(
             &period,
             &[Item::sample_expense_breakfast()],
-            tempdir.path().to_path_buf(),
+            tempdir.path(),
         );
         assert!(
             result.is_err(),

@@ -996,10 +996,24 @@ mod tests {
     }
 
     #[test]
-    fn test_one_half_earlier_second() {
+    fn ymf_one_half_earlier_month_half_first_half() {
         let ym = YearAndMonth::january(2025);
-        let month = YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::Second);
-        let one_half_earlier = month.one_half_earlier();
+        let ymf = YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::First);
+        let one_half_earlier = ymf.one_half_earlier();
+        assert_eq!(
+            one_half_earlier,
+            YearMonthAndFortnight::year_and_month_with_half(
+                YearAndMonth::december(2024),
+                MonthHalf::Second
+            )
+        );
+    }
+
+    #[test]
+    fn ymf_one_half_earlier_month_half_second_half() {
+        let ym = YearAndMonth::january(2025);
+        let ymf = YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::Second);
+        let one_half_earlier = ymf.one_half_earlier();
         assert_eq!(
             one_half_earlier,
             YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::First)

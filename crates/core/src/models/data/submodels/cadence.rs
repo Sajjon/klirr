@@ -16,18 +16,13 @@ pub enum Cadence {
 
 impl Cadence {
     pub fn validate(&self, granularity: impl Into<Granularity>) -> Result<()> {
+        use Cadence::*;
+        use Granularity::*;
         let granularity = granularity.into();
         match (self, granularity) {
-            (Self::BiWeekly, Granularity::Month) => {
-                Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly)
-            }
-            (Self::BiWeekly, Granularity::Fortnight | Granularity::Day | Granularity::Hour) => {
-                Ok(())
-            }
-            (
-                Self::Monthly,
-                Granularity::Fortnight | Granularity::Day | Granularity::Hour | Granularity::Month,
-            ) => Ok(()),
+            (BiWeekly, Month) => Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly),
+            (BiWeekly, Fortnight | Day | Hour) => Ok(()),
+            (Monthly, Fortnight | Day | Hour | Month) => Ok(()),
         }
     }
 }
@@ -61,15 +56,15 @@ mod tests {
     }
 
     #[test]
-    fn validate() {
-        assert!(Sut::sample().validate(Granularity::Month).is_ok());
-        assert!(Sut::sample().validate(Granularity::Fortnight).is_ok());
-        assert!(Sut::sample().validate(Granularity::Day).is_ok());
-        assert!(Sut::sample().validate(Granularity::Hour).is_ok());
+    fn validate_successful() {
+        assert!(Sut::Monthly.validate(Granularity::Month).is_ok());
+        assert!(Sut::Monthly.validate(Granularity::Fortnight).is_ok());
+        assert!(Sut::Monthly.validate(Granularity::Day).is_ok());
+        assert!(Sut::Monthly.validate(Granularity::Hour).is_ok());
 
-        assert!(Sut::sample_other().validate(Granularity::Month).is_err());
-        assert!(Sut::sample_other().validate(Granularity::Fortnight).is_ok());
-        assert!(Sut::sample_other().validate(Granularity::Day).is_ok());
-        assert!(Sut::sample_other().validate(Granularity::Hour).is_ok());
+        assert!(Sut::BiWeekly.validate(Granularity::Month).is_err());
+        assert!(Sut::BiWeekly.validate(Granularity::Fortnight).is_ok());
+        assert!(Sut::BiWeekly.validate(Granularity::Day).is_ok());
+        assert!(Sut::BiWeekly.validate(Granularity::Hour).is_ok());
     }
 }

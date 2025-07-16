@@ -20,11 +20,15 @@ pub struct ServiceFees {
 #[bon]
 impl ServiceFees {
     #[builder]
-    pub fn new(name: String, rate: impl Into<Rate>, cadence: Cadence) -> Result<Self, Error> {
+    pub fn new(
+        name: impl AsRef<str>,
+        rate: impl Into<Rate>,
+        cadence: Cadence,
+    ) -> Result<Self, Error> {
         let rate = rate.into();
         cadence.validate(rate.granularity())?;
         Ok(Self {
-            name,
+            name: name.as_ref().to_owned(),
             rate,
             cadence,
         })

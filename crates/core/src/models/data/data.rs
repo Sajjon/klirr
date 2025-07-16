@@ -59,12 +59,10 @@ impl<Period: IsPeriod> Data<Period> {
         cadence: Cadence,
         time_off: &Option<TimeOff>,
     ) -> Result<Quantity> {
-        let quantity_in_period = quantity_in_period(
-            target_period,
-            self.service_fees().rate().granularity(),
-            cadence,
-            self.information().record_of_periods_off(),
-        )?;
+        let granularity = self.service_fees().rate().granularity();
+        let periods_off = self.information().record_of_periods_off();
+        let quantity_in_period =
+            quantity_in_period(target_period, granularity, cadence, periods_off)?;
         let billable_quantity = quantity_in_period - time_off.map(|d| *d).unwrap_or(Quantity::ZERO);
         Ok(billable_quantity)
     }
