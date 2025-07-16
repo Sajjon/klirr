@@ -374,4 +374,42 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_to_partial_when_offset_is_year_month_and_fortnight() {
+        let offset_period = YearMonthAndFortnight::builder()
+            .year(2025.into())
+            .month(Month::May)
+            .half(MonthHalf::First)
+            .build();
+        let sut = Data::<YearMonthAndFortnight>::builder()
+            .information(
+                ProtoInvoiceInfo::builder()
+                    .offset(
+                        TimestampedInvoiceNumber::<YearMonthAndFortnight>::builder()
+                            .offset(100.into())
+                            .period(offset_period)
+                            .build(),
+                    )
+                    .build(),
+            )
+            .vendor(CompanyInformation::sample_vendor())
+            .client(CompanyInformation::sample_client())
+            .payment_info(PaymentInformation::sample())
+            .service_fees(ServiceFees::sample())
+            .expensed_periods(ExpensedPeriods::sample())
+            .build();
+        let target_period = YearMonthAndFortnight::builder()
+            .year(2025.into())
+            .month(Month::May)
+            .half(MonthHalf::First)
+            .build();
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .period(target_period)
+            .build();
+        let partial = sut.to_partial(input).unwrap();
+        let invoice_date = partial.information().invoice_date();
+        assert_eq!(*invoice_date, target_period.to_date_end_of_period());
+    }
 }

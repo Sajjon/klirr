@@ -932,4 +932,77 @@ mod tests {
         );
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn try_from_period_anno_for_year_and_month() {
+        let sut = YearAndMonth::sample();
+        let period_anno = PeriodAnno::YearAndMonth(sut);
+        let outcome = YearAndMonth::try_from_period_anno(period_anno).unwrap();
+        assert_eq!(outcome, sut);
+    }
+
+    #[test]
+    fn try_from_period_anno_for_year_month_and_fortnight() {
+        let sut = YearMonthAndFortnight::sample();
+        let period_anno = PeriodAnno::YearMonthAndFortnight(sut);
+        let outcome = YearMonthAndFortnight::try_from_period_anno(period_anno).unwrap();
+        assert_eq!(outcome, sut);
+    }
+
+    #[test]
+    fn test_quantity_in_period_throws_when_cadence_is_biweekly_and_granularity_is_month() {
+        let target_period = YearAndMonth::january(2025);
+        let record_of_periods_off = RecordOfPeriodsOff::new([]);
+        let result = quantity_in_period(
+            &target_period,
+            Granularity::Month,
+            Cadence::BiWeekly,
+            &record_of_periods_off,
+        );
+        assert!(result.is_err());
+        if let Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly) = result {
+            // Expected error
+        } else {
+            panic!("Expected CannotInvoiceForMonthWhenCadenceIsBiWeekly error");
+        }
+    }
+
+    #[test]
+    fn test_quantity_in_period_granularity_fortnight_cadence_monthly_is_two() {
+        let target_period = YearAndMonth::january(2025);
+        let record_of_periods_off = RecordOfPeriodsOff::new([]);
+        let result = quantity_in_period(
+            &target_period,
+            Granularity::Fortnight,
+            Cadence::Monthly,
+            &record_of_periods_off,
+        );
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Quantity::TWO);
+    }
+
+    #[test]
+    fn test_quantity_in_period_granularity_fortnight_cadence_biweekly_is_one() {
+        let target_period = YearAndMonth::january(2025);
+        let record_of_periods_off = RecordOfPeriodsOff::new([]);
+        let result = quantity_in_period(
+            &target_period,
+            Granularity::Fortnight,
+            Cadence::BiWeekly,
+            &record_of_periods_off,
+        );
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Quantity::ONE);
+    }
+
+    #[test]
+    fn test_one_half_earlier_second() {
+        let ym = YearAndMonth::january(2025);
+        let month = YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::Second);
+        let one_half_earlier = month.one_half_earlier();
+        assert_eq!(
+            one_half_earlier,
+            YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::First)
+        );
+    }
 }

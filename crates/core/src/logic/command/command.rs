@@ -626,4 +626,56 @@ mod tests {
             email_settings.smtp_app_password().expose_secret()
         );
     }
+
+    #[test]
+    fn test_record_expenses_with_base_path_throws_when_cadence_is_monthly_and_period_is_fortnight()
+    {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let period = YearMonthAndFortnight::builder()
+            .year(Year::from(2025))
+            .month(Month::January)
+            .half(MonthHalf::First)
+            .build();
+        let services_fees: ServiceFees = ServiceFees::builder()
+            .cadence(Cadence::Monthly)
+            .rate(Rate::daily(UnitPrice::ONE))
+            .name("Sample Service Fees".to_owned())
+            .build()
+            .unwrap();
+        save_to_disk(&services_fees, service_fees_path(tempdir.path())).unwrap();
+        let result = record_expenses_with_base_path(
+            &period,
+            &[Item::sample_expense_breakfast()],
+            tempdir.path().to_path_buf(),
+        );
+        assert!(
+            result.is_err(),
+            "Expected error when recording expenses for fortnight with monthly cadence, got: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_record_expenses_with_base_path_throws_when_cadence_is_bi_weekly_and_period_is_year_and_month()
+     {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let period = YearAndMonth::may(2025);
+        let services_fees: ServiceFees = ServiceFees::builder()
+            .cadence(Cadence::BiWeekly)
+            .rate(Rate::daily(UnitPrice::ONE))
+            .name("Sample Service Fees".to_owned())
+            .build()
+            .unwrap();
+        save_to_disk(&services_fees, service_fees_path(tempdir.path())).unwrap();
+        let result = record_expenses_with_base_path(
+            &period,
+            &[Item::sample_expense_breakfast()],
+            tempdir.path().to_path_buf(),
+        );
+        assert!(
+            result.is_err(),
+            "Expected error when recording expenses for year and month with bi-weekly cadence, got: {:?}",
+            result
+        );
+    }
 }
