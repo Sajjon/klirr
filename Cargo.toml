@@ -1,11 +1,19 @@
 [workspace]
 resolver = "3"
-members = ["crates/cli", "crates/render", "crates/core"]
+members = [
+    "crates/cli",
+    "crates/core-invoice",
+    "crates/core-pdf",
+    "crates/render-invoice",
+    "crates/render-pdf",
+]
 
 [workspace.dependencies]
 # Internal dependencies
-klirr-core = { path = "crates/core", version = "0.2.1" }
-klirr-render = { path = "crates/render", version = "0.2.1" }
+klirr-core-invoice = { path = "crates/core-invoice", version = "0.2.1" }
+klirr-core-pdf = { path = "crates/core-pdf", version = "0.2.1" }
+klirr-render-invoice = { path = "crates/render-invoice", version = "0.2.1" }
+klirr-render-pdf = { path = "crates/render-pdf", version = "0.2.1" }
 
 # External dependencies
 aes-gcm = { version = "=0.10.3", default-features = false, features = [

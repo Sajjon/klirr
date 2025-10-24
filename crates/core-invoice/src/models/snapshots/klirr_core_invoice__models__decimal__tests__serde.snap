@@ -1,0 +1,5 @@
+---
+source: crates/core-invoice/src/models/decimal.rs
+expression: "Sut::from(dec!(3.14159265))"
+---
+3.14159265

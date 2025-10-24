@@ -17,7 +17,7 @@ pub struct TimeOffInput {
 }
 
 impl TryFrom<TimeOffInput> for TimeOff {
-    type Error = klirr_core::Error;
+    type Error = klirr_core_invoice::Error;
 
     fn try_from(input: TimeOffInput) -> Result<Self, Self::Error> {
         let decimal = Decimal::try_from(input.quantity)?;

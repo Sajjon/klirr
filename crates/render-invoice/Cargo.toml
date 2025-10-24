@@ -1,37 +1,29 @@
 [package]
-name = "klirr"
+name = "klirr-render-invoice"
 rust-version = "1.85.1"
 version = "0.2.1"
 edition = "2024"
 description = "Zero-maintenance and smart FOSS generating beautiful invoices for services and expenses."
 license = "MIT"
-documentation = "https://docs.rs/klirr"
+documentation = "https://docs.rs/klirr-render-invoice"
 repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
 # Internal dependencies
 klirr-core-invoice.workspace = true
-klirr-render-invoice.workspace = true
+klirr-render-pdf.workspace = true
 
 # External dependencies
 bon.workspace = true
 chrono.workspace = true
-clap = { version = "4.5.39", features = ["derive"] }
-colored = "3.0.0"
 derive_more.workspace = true
-dirs-next.workspace = true
-fern = "0.7.1"
-inquire = { version = "0.7.5", features = ["date"] }
 log.workspace = true
-rand.workspace = true
-rpassword.workspace = true
-ron.workspace = true
-serde.workspace = true
-secrecy.workspace = true
-strum.workspace = true
-thiserror.workspace = true
+serde_json.workspace = true
+getset.workspace = true
+dirs-next.workspace = true
 
 [dev-dependencies]
-serde_json.workspace = true
+image-compare = "0.4.2"
+image = { version = "0.25", default-features = false, features = ["png"] }
 tempfile.workspace = true
 test-log.workspace = true

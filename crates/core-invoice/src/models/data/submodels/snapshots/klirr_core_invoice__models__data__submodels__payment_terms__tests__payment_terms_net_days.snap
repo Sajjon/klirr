@@ -1,0 +1,5 @@
+---
+source: crates/core-invoice/src/models/data/submodels/payment_terms.rs
+expression: net_days
+---
+"Net 30"

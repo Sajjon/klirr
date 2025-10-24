@@ -1,5 +1,0 @@
----
-source: crates/core/src/models/decimal.rs
-expression: "Sut::EIGHT"
----
-8

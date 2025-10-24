@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use klirr_render::prelude::render;
+use klirr_render_invoice::prelude::render;
 use secrecy::SecretString;
 
 fn init_email_data(

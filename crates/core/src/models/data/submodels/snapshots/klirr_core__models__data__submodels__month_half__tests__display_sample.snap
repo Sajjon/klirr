@@ -1,5 +1,0 @@
----
-source: crates/core/src/models/data/submodels/month_half.rs
-expression: "Sut::sample()"
----
-first-half

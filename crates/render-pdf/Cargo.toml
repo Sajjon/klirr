@@ -1,0 +1,22 @@
+[package]
+name = "klirr-render-pdf"
+rust-version = "1.85.1"
+version = "0.2.1"
+edition = "2024"
+description = "Typst-based PDF renderer used by Klirr."
+license = "MIT"
+repository = "https://github.com/Sajjon/klirr"
+
+[dependencies]
+klirr-core-pdf.workspace = true
+chrono.workspace = true
+getset.workspace = true
+indexmap.workspace = true
+log.workspace = true
+thiserror.workspace = true
+typst = "0.13.1"
+typst-kit = "0.13.1"
+typst-pdf = "0.13.1"
+
+[dev-dependencies]
+test-log.workspace = true

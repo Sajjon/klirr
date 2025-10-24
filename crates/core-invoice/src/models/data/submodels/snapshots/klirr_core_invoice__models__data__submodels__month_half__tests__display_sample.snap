@@ -1,0 +1,5 @@
+---
+source: crates/core-invoice/src/models/data/submodels/month_half.rs
+expression: "Sut::sample()"
+---
+first-half

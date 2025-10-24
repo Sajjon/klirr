@@ -94,13 +94,17 @@ pub fn render(l18n: L18n, data: PreparedData, layout: Layout) -> Result<Pdf> {
     "#,
         TYPST_VIRTUAL_NAME_DATA, TYPST_VIRTUAL_NAME_L18N, TYPST_VIRTUAL_NAME_LAYOUT
     );
+    let plan = DocumentPlan::new(
+        layout.required_fonts(),
+        InlineModule::new(TYPST_VIRTUAL_NAME_MAIN, main),
+    )
+    .with_modules(vec![
+        InlineModule::new(TYPST_VIRTUAL_NAME_LAYOUT, layout_typst_str),
+        InlineModule::new(TYPST_VIRTUAL_NAME_L18N, l18n_typst_str),
+        InlineModule::new(TYPST_VIRTUAL_NAME_DATA, data_typst_str),
+    ]);
 
-    let context =
-        TypstContext::with_inline(main, layout_typst_str, l18n_typst_str, data_typst_str)?;
-
-    let doc = typst::compile::<PagedDocument>(&context)?;
-    // convert to PDF
-    typst_pdf::pdf(doc)
+    render_document(&plan)
 }
 ```
 
