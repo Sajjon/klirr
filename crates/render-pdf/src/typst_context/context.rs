@@ -78,9 +78,11 @@ impl World for TypstContext {
     }
 
     fn font(&self, index: usize) -> Option<Font> {
-        self.environment().fonts().get(index).cloned().or_else(|| {
+        if let Some(font) = self.environment().fonts().get(index).cloned() {
+            Some(font)
+        } else {
             panic!("Font not found at index: {}", index);
-        })
+        }
     }
 
     fn today(&self, offset: Option<i64>) -> Option<Datetime> {
