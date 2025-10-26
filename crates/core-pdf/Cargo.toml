@@ -9,6 +9,7 @@ repository = "https://github.com/Sajjon/klirr"
 [dependencies]
 derive_more.workspace = true
 indoc = "2.0.6"
+log.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 strum.workspace = true

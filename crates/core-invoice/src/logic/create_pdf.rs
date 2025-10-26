@@ -27,25 +27,13 @@ pub fn create_pdf_with_data<Period: IsPeriod>(
     create_folder_to_parent_of_path_if_needed(&output_path)?;
     let prepared_data = data.clone();
     let pdf = render(l18n, data, layout)?;
-    save_pdf(pdf.clone(), &output_path)?;
+    save_pdf(pdf.clone(), &output_path).map_err(|underlying| Error::SavePdf { underlying })?;
     Ok(NamedPdf::builder()
         .pdf(pdf)
         .saved_at(output_path.clone())
         .name(name)
         .prepared_data(prepared_data)
         .build())
-}
-
-/// Saves the PDF file `pdf` to the specified path `pdf_path`.
-fn save_pdf(pdf: Pdf, pdf_path: impl AsRef<Path>) -> Result<PathBuf> {
-    info!("Saving PDF to: '{}'", pdf_path.as_ref().display());
-    // now save the PDF to a file
-    let output_path = PathBuf::from(pdf_path.as_ref());
-    std::fs::write(&output_path, pdf.as_ref()).map_err(|e| Error::SavePdf {
-        underlying: format!("Write PDF to {}: {}", output_path.display(), e),
-    })?;
-    info!("✅ Saved PDF to: '{}'", pdf_path.as_ref().display());
-    Ok(output_path)
 }
 
 #[cfg(test)]

@@ -34,9 +34,9 @@ pub struct DocumentPlan {
 }
 
 impl DocumentPlan {
-    pub fn new(fonts: IndexSet<FontIdentifier>, main: InlineModule) -> Self {
+    pub fn new(fonts: impl IntoIterator<Item = FontIdentifier>, main: InlineModule) -> Self {
         Self {
-            fonts,
+            fonts: fonts.into_iter().collect(),
             main,
             modules: Vec::new(),
         }

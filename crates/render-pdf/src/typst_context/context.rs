@@ -115,7 +115,7 @@ mod tests {
 
     fn plan() -> DocumentPlan {
         DocumentPlan::new(
-            IndexSet::from_iter([FontIdentifier::ComputerModern(FontWeight::Regular)]),
+            [FontIdentifier::ComputerModern(FontWeight::Regular)],
             InlineModule::new("main.typ", "main"),
         )
         .with_modules(vec![

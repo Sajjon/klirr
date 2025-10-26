@@ -27,14 +27,13 @@ pub fn render_document(plan: &DocumentPlan) -> Result<Pdf> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use indexmap::IndexSet;
     use klirr_core_pdf::{FontIdentifier, FontWeight};
     use test_log::test;
 
     #[test]
     fn renders_simple_document() {
         let plan = DocumentPlan::new(
-            IndexSet::from_iter([FontIdentifier::ComputerModern(FontWeight::Regular)]),
+            [FontIdentifier::ComputerModern(FontWeight::Regular)],
             crate::module::InlineModule::new("main.typ", "#box(\"hello\")"),
         );
         assert!(render_document(&plan).is_ok());

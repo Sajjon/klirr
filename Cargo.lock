@@ -2456,6 +2456,7 @@ version = "0.2.1"
 dependencies = [
  "derive_more",
  "indoc",
+ "log",
  "serde",
  "serde_json",
  "strum 0.27.1",
