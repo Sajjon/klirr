@@ -73,8 +73,8 @@ impl World for TypstContext {
         }
     }
 
-    fn file(&self, _id: FileId) -> typst::diag::FileResult<Bytes> {
-        panic!("File access not implemented in this minimal example")
+    fn file(&self, id: FileId) -> typst::diag::FileResult<Bytes> {
+        panic!("Tried to access non-virtual file with ID: {:?}", id);
     }
 
     fn font(&self, index: usize) -> Option<Font> {
