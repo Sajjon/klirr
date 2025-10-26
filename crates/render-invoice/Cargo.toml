@@ -23,7 +23,5 @@ getset.workspace = true
 dirs-next.workspace = true
 
 [dev-dependencies]
-image-compare = "0.4.2"
-image = { version = "0.25", default-features = false, features = ["png"] }
 tempfile.workspace = true
 test-log.workspace = true

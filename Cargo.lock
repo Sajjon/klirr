@@ -2472,8 +2472,6 @@ dependencies = [
  "derive_more",
  "dirs-next",
  "getset",
- "image",
- "image-compare",
  "klirr-core-invoice",
  "klirr-render-pdf",
  "log",
@@ -2488,6 +2486,8 @@ version = "0.2.1"
 dependencies = [
  "chrono",
  "getset",
+ "image",
+ "image-compare",
  "indexmap 2.9.0",
  "klirr-core-pdf",
  "log",

@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
+pub mod compare_images;
 mod error;
 mod module;
 mod render;

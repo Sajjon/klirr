@@ -10,29 +10,6 @@ pub fn path_to_resource(relative: impl AsRef<Path>) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(relative)
 }
 
-/// Checks if ImageMagick is installed by trying to run `magick -version` or `convert -version`.
-pub fn is_imagemagick_installed() -> bool {
-    // Try `magick` (modern) first
-    if std::process::Command::new("magick")
-        .arg("-version")
-        .output()
-        .is_ok()
-    {
-        return true;
-    }
-
-    // Fallback to `convert` (legacy)
-    if std::process::Command::new("convert")
-        .arg("-version")
-        .output()
-        .is_ok()
-    {
-        return true;
-    }
-
-    false
-}
-
 /// Resolves a path relative to the crate this function is defined in.
 ///
 /// The base is the folder containing this crate’s `Cargo.toml`.
@@ -53,10 +30,6 @@ pub fn compare_image_against_expected<Period: IsPeriod>(
     path_to_expected_image: impl AsRef<Path>,
     fetcher: impl FetchExchangeRates,
 ) {
-    assert!(
-        is_imagemagick_installed(),
-        "Imagemagick not installed, but required to run. `brew install imagemagick`"
-    );
     let new_image =
         match generate_pdf_into_png_image(L18n::new(Language::EN).unwrap(), sample, input, fetcher)
         {
@@ -66,60 +39,11 @@ pub fn compare_image_against_expected<Period: IsPeriod>(
                 return;
             }
         };
-
-    let save_new_image_as_expected = |new_image: Vec<u8>| {
-        if !running_in_ci() {
-            // save newly produced image as expected.
-            std::fs::write(&path_to_expected_image, new_image)
-                .inspect_err(|e| {
-                    panic!(
-                        "should be able to write image, got error: {:?}, when using path: {:?}",
-                        e,
-                        path_to_expected_image.as_ref()
-                    )
-                })
-                .unwrap();
-        }
-    };
-
-    save_new_image_as_expected(new_image.clone());
-
-    let image_one = image::load_from_memory(&new_image)
-        .expect("Could convert new image bytes to image")
-        .into_rgb8();
-    let Ok(image_two) = image::open(&path_to_expected_image) else {
-        warn!(
-            "Failed to locate the expected image at {:?}, saving new image as expected (if not CI).",
-            path_to_expected_image.as_ref()
-        );
-        save_new_image_as_expected(new_image);
-        return;
-    };
-
-    let image_two = image_two.into_rgb8();
-    let comparison_result = image_compare::rgb_similarity_structure(
-        &image_compare::Algorithm::RootMeanSquared,
-        &image_one,
-        &image_two,
+    klirr_render_pdf::compare_images::compare_image_against_expected(
+        new_image,
+        path_to_expected_image,
+        !running_in_ci(),
     );
-    if let Err(failure) = comparison_result {
-        let msg = format!(
-            "Failed to compare images, did you change DPI or the image format? Image compare error: {:?}",
-            failure
-        );
-        save_new_image_as_expected(new_image);
-        panic!("{}, replacing expected image.", msg);
-    };
-    let similarity = comparison_result.expect("Already checked for error above");
-
-    if similarity.score != 1.0 {
-        save_new_image_as_expected(new_image);
-
-        panic!(
-            "Expected similarity to be 1.0, but was {}",
-            similarity.score
-        )
-    }
 }
 
 #[cfg(test)]
