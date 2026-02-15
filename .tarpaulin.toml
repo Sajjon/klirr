@@ -1,7 +1,7 @@
 [all]
 exclude-files = [
     "crates/core/src/logic/prepare_data/fetch_exchange_rate_with_reqwest.rs",
-    "crates/render/src/render_test_helpers.rs",
+    "crates/render-pdf/src/compare_images.rs",
     "crates/render/src/render.rs",
     "crates/cli/src/init_logging.rs",
     "crates/cli/src/input/tui/**",
