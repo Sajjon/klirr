@@ -1,0 +1,5 @@
+---
+source: crates/core-invoice/src/models/unit_price.rs
+expression: "UnitPrice::sample()"
+---
+UnitPrice(350.0)

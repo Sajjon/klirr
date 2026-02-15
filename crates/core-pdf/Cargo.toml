@@ -1,0 +1,19 @@
+[package]
+name = "klirr-core-pdf"
+version = "0.2.1"
+edition = "2024"
+description = "Shared PDF-focused primitives for Klirr."
+license = "MIT"
+repository = "https://github.com/Sajjon/klirr"
+
+[dependencies]
+derive_more.workspace = true
+indoc = "2.0.6"
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+strum.workspace = true
+
+[dev-dependencies]
+test-log.workspace = true
+ttf-parser = "0.25.1"

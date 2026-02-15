@@ -2396,8 +2396,8 @@ dependencies = [
  "dirs-next",
  "fern",
  "inquire",
- "klirr-core",
- "klirr-render",
+ "klirr-core-invoice",
+ "klirr-render-invoice",
  "log",
  "rand 0.9.1",
  "ron 0.10.1",
@@ -2412,7 +2412,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "klirr-core"
+name = "klirr-core-invoice"
 version = "0.2.1"
 dependencies = [
  "aes-gcm",
@@ -2428,6 +2428,7 @@ dependencies = [
  "indexmap 2.9.0",
  "indoc",
  "insta",
+ "klirr-core-pdf",
  "lazy_static",
  "lettre",
  "log",
@@ -2450,7 +2451,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "klirr-render"
+name = "klirr-core-pdf"
+version = "0.2.1"
+dependencies = [
+ "derive_more",
+ "indoc",
+ "log",
+ "serde",
+ "serde_json",
+ "strum 0.27.1",
+ "test-log",
+ "ttf-parser 0.25.1",
+]
+
+[[package]]
+name = "klirr-render-invoice"
 version = "0.2.1"
 dependencies = [
  "bon",
@@ -2458,13 +2473,27 @@ dependencies = [
  "derive_more",
  "dirs-next",
  "getset",
- "image",
- "image-compare",
- "klirr-core",
+ "klirr-core-invoice",
+ "klirr-render-pdf",
  "log",
  "serde_json",
  "tempfile",
  "test-log",
+]
+
+[[package]]
+name = "klirr-render-pdf"
+version = "0.2.1"
+dependencies = [
+ "chrono",
+ "getset",
+ "image",
+ "image-compare",
+ "indexmap 2.9.0",
+ "klirr-core-pdf",
+ "log",
+ "test-log",
+ "thiserror 2.0.12",
  "typst",
  "typst-kit",
  "typst-pdf",

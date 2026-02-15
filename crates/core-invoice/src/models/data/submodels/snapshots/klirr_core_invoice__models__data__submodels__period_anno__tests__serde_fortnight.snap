@@ -1,0 +1,5 @@
+---
+source: crates/core-invoice/src/models/data/submodels/period_anno.rs
+expression: "Sut::YearMonthAndFortnight(YearMonthAndFortnight::builder().year(2025.into()).month(Month::May).half(MonthHalf::Second).build())"
+---
+"2025-05-second-half"

@@ -1,5 +1,0 @@
----
-source: crates/core/src/models/decimal.rs
-expression: "Decimal::from(dec!(3.14159265))"
----
-3.14159265

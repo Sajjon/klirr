@@ -1,5 +1,0 @@
----
-source: crates/core/src/models/data/submodels/period_anno.rs
-expression: "Sut::sample_other()"
----
-2025-07-second-half

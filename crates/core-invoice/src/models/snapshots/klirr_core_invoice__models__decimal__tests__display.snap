@@ -1,0 +1,5 @@
+---
+source: crates/core-invoice/src/models/decimal.rs
+expression: "Sut::EIGHT"
+---
+8

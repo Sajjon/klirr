@@ -1,9 +1,0 @@
----
-source: crates/core/src/models/data/submodels/service_fees.rs
-expression: "ServiceFees::sample()"
----
-ServiceFees(
-  name: "Discreet Investigative Services",
-  rate: Daily(UnitPrice(777.0)),
-  cadence: Monthly,
-)
