@@ -97,7 +97,7 @@
           data.information.number,
         ))]])
       // Conditionally display purchase order if it exists
-      #if "purchase_order" in data.information {
+      #if "purchase_order" in data.information and data.information.purchase_order != none {
         ovalbox(100%, [#strong[#l10n.invoice_info.purchase_order] #text(fill: emphasize_color)[#strong(
             data.information.purchase_order,
           )]])
@@ -167,7 +167,7 @@
   v(30pt)
 
   // Conditionally display the purchase order if it exists
-  if "purchase_order" in data.information {
+  if "purchase_order" in data.information and data.information.purchase_order != none {
     ovalbox(100%, [
       #Large([#strong(l10n.invoice_info.purchase_order) #text(fill: emphasize_color)[#strong(
           data.information.purchase_order,
