@@ -19,10 +19,13 @@ pub struct CliArgs {
 /// and performing data management tasks.
 #[derive(Debug, Subcommand, Unwrap)]
 pub enum Command {
+    /// Generate a sample invoice
     Sample,
+
+    /// CLI arguments for email command, see [`EmailInput`].
     Email(EmailInput),
 
-    /// CLI arguments for generating an invoice PDF.
+    /// CLI arguments for generating an invoice PDF, see [`InvoiceInput`].
     Invoice(InvoiceInput),
 
     /// CLI arguments for admin tasks related to data.
