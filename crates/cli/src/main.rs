@@ -16,6 +16,8 @@ pub mod prelude {
     pub(crate) use crate::run::*;
 }
 
+/// Main function of the CLI program, runs the specified command according to the
+/// args passed.
 fn main() {
     use clap::Parser;
     use prelude::*;

@@ -2,7 +2,8 @@ use crate::prelude::*;
 
 use std::env::consts::OS;
 
-fn open_path(path: impl AsRef<std::path::Path>) {
+/// Opens the file at `path`.
+fn open_file_at(path: impl AsRef<std::path::Path>) {
     let path = path.as_ref().display().to_string();
     let result = match OS {
         "macos" => std::process::Command::new("open").arg(&path).spawn(),
@@ -18,6 +19,7 @@ fn open_path(path: impl AsRef<std::path::Path>) {
     }
 }
 
+/// Run CLI program with [`CliArgs`]
 pub fn run(input: CliArgs) {
     match input.command {
         Command::Email(email_input) => {
@@ -33,14 +35,14 @@ pub fn run(input: CliArgs) {
                     error!("Error creating sample invoice: {}", e);
                 })
                 .inspect(|outcome| {
-                    open_path(outcome.saved_at());
+                    open_file_at(outcome.saved_at());
                 });
         }
         Command::Invoice(invoice_input) => {
             let _ = run_invoice_command(invoice_input)
                 .inspect_err(|e| error!("Error creating PDF: {}", e))
                 .inspect(|outcome| {
-                    open_path(outcome.saved_at());
+                    open_file_at(outcome.saved_at());
                 });
         }
         Command::Data(data_admin_input) => {

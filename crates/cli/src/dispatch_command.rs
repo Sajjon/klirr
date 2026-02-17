@@ -59,7 +59,7 @@ fn dump_data() -> Result<()> {
             fn load_contents<F>(get_path: F) -> String where F: FnOnce(&Path) -> PathBuf {
                 let path = get_path(&data_dir());
                 std::fs::read_to_string(&path).unwrap_or_else(|_| {
-                    panic!("Failed to read file at: {}", path.display())
+                    panic!("\nFailed to read file at: '{}'\n\n💡 You can initialize your data with `klirr data init`\n", path.display())
                 })
             }
             let information = load_contents(|path| proto_invoice_info_path(path));
