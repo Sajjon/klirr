@@ -1,6 +1,6 @@
 mod calendar_logic;
 mod command;
-mod create_pdf;
+mod create_invoice_pdf;
 mod encryption;
 mod file_path_logic;
 mod functional;
@@ -11,7 +11,7 @@ mod send_email;
 
 pub use calendar_logic::*;
 pub use command::*;
-pub use create_pdf::*;
+pub use create_invoice_pdf::*;
 pub use encryption::*;
 pub use file_path_logic::*;
 pub use functional::*;

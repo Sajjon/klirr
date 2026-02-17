@@ -258,7 +258,7 @@ pub enum Error {
 
     /// Failed to find the localization file for a specific language.
     #[error("Failed to find the localization file for language: {language}")]
-    L18nNotFound {
+    L10nNotFound {
         /// The language that was not found, e.g. "EN" for English.
         language: Language,
     },

@@ -1,15 +1,15 @@
 ---
-source: crates/core-invoice/src/models/l18n/localization.rs
-expression: "&L18n::new(Language::EN).unwrap()"
+source: crates/core-invoice/src/models/l10n/localization.rs
+expression: "&L10n::new(Language::EN).unwrap()"
 ---
-L18n(
+L10n(
   language: "english",
-  content: L18nContent(
-    client_info: L18nClientInfo(
+  content: L10nContent(
+    client_info: L10nClientInfo(
       to_company: "To:",
       vat_number: "VAT:",
     ),
-    invoice_info: L18nInvoiceInfo(
+    invoice_info: L10nInvoiceInfo(
       purchase_order: "Purchase order:",
       invoice_identifier: "Invoice no:",
       invoice_date: "Invoice date:",
@@ -18,7 +18,7 @@ L18n(
       vendor_contact: "Our reference:",
       terms: "Terms:",
     ),
-    vendor_info: L18nVendorInfo(
+    vendor_info: L10nVendorInfo(
       address: "Address",
       bank: "Bank",
       iban: "IBAN",
@@ -26,7 +26,7 @@ L18n(
       organisation_number: "Org. No.",
       vat_number: "VAT No.",
     ),
-    line_items: L18nLineItems(
+    line_items: L10nLineItems(
       description: "Item",
       when: "When",
       quantity: "Quantity",

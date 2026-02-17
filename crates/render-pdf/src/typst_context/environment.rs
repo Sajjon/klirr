@@ -1,8 +1,7 @@
-use crate::error::{Error, Result};
+use crate::prelude::*;
 use chrono::{DateTime, Local};
 use getset::Getters;
 use indexmap::IndexSet;
-use klirr_core_pdf::FontIdentifier;
 
 use typst::{
     Library,

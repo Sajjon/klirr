@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// Localization for invoice information, such as purchase order,
 /// invoice number, dates, and terms.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
-pub struct L18nInvoiceInfo {
+pub struct L10nInvoiceInfo {
     /// EN: "Purchase order:"
     #[getset(get = "pub")]
     purchase_order: String,
@@ -33,7 +33,7 @@ pub struct L18nInvoiceInfo {
     terms: String,
 }
 
-impl L18nInvoiceInfo {
+impl L10nInvoiceInfo {
     pub fn english() -> Self {
         Self::builder()
             .purchase_order("Purchase order:".to_string())

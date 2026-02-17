@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// Localization for vendor information in the invoice,
 /// such as bank details and organization information.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
-pub struct L18nVendorInfo {
+pub struct L10nVendorInfo {
     /// EN: "Address"
     #[getset(get = "pub")]
     address: String,
@@ -29,7 +29,7 @@ pub struct L18nVendorInfo {
     vat_number: String,
 }
 
-impl L18nVendorInfo {
+impl L10nVendorInfo {
     pub fn english() -> Self {
         Self::builder()
             .address("Address".to_string())

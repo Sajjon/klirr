@@ -30,14 +30,11 @@ impl ApplicationPdf for ContentType {
 impl From<Attachment> for SinglePart {
     fn from(attachment: Attachment) -> Self {
         match attachment {
-            Attachment::Pdf(named_pdf) => named_pdf.into(),
+            Attachment::Pdf(named_pdf) => {
+                lettre::message::Attachment::new(named_pdf.name().clone())
+                    .body(named_pdf.pdf().as_ref().clone(), ContentType::pdf())
+            }
         }
-    }
-}
-impl From<NamedPdf> for SinglePart {
-    fn from(named_pdf: NamedPdf) -> Self {
-        lettre::message::Attachment::new(named_pdf.name().clone())
-            .body(named_pdf.pdf().as_ref().clone(), ContentType::pdf())
     }
 }
 
@@ -113,6 +110,7 @@ impl From<EmailCredentials> for Credentials {
 mod tests {
     use super::*;
     use base64::{Engine, prelude::BASE64_STANDARD};
+    use klirr_foundation::Pdf;
     use lettre::transport::smtp::authentication::Mechanism;
     use test_log::test;
 

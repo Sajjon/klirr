@@ -1,10 +1,9 @@
-use crate::FontWeight;
-use derive_more::Display;
+use crate::prelude::*;
 
 /// Regular weight of Computer Modern font. For more info see [`FontIdentifier::ComputerModern`].
-const FONT_COMPUTER_MODERN_REGULAR: &[u8] = include_bytes!("../assets/cmunrm.ttf");
+const FONT_COMPUTER_MODERN_REGULAR: &[u8] = include_bytes!("../../assets/cmunrm.ttf");
 /// Bold weight of Computer Modern font. For more info see [`FontIdentifier::ComputerModern`].
-const FONT_COMPUTER_MODERN_BOLD: &[u8] = include_bytes!("../assets/cmunbx.ttf");
+const FONT_COMPUTER_MODERN_BOLD: &[u8] = include_bytes!("../../assets/cmunbx.ttf");
 
 /// An identifier for a font used in typst layouts.
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash)]

@@ -3,13 +3,15 @@ name = "klirr-core-invoice"
 rust-version = "1.85.1"
 version = "0.2.1"
 edition = "2024"
-description = "Zero-maintenance and smart FOSS generating beautiful invoices for services and expenses."
+description = "Shared primitives for working with generation of invoices."
 license = "MIT"
 documentation = "https://docs.rs/klirr-core-invoice"
 repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
-klirr-core-pdf.workspace = true
+klirr-foundation.workspace = true
+klirr-render-pdf.workspace = true
+
 aes-gcm.workspace = true
 bon.workspace = true
 chrono.workspace = true
@@ -19,12 +21,15 @@ getset.workspace = true
 hex.workspace = true
 hkdf.workspace = true
 indexmap = { version = "2.9.0", features = ["serde"] }
-indoc = "2.0.6"
 lazy_static = "1.5.0"
 lettre.workspace = true
 log.workspace = true
 rand.workspace = true
-reqwest = { version = "0.12.19", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+reqwest = { version = "0.12.19", default-features = false, features = [
+    "blocking",
+    "json",
+    "rustls-tls",
+] }
 ron.workspace = true
 rust_decimal.workspace = true
 secrecy.workspace = true

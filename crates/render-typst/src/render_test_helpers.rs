@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use klirr_core_invoice::prelude::*;
 
 use std::{env, error::Error, io::Write, process::Command};
 use tempfile::NamedTempFile;
@@ -31,7 +32,7 @@ pub fn compare_image_against_expected<Period: IsPeriod>(
     fetcher: impl FetchExchangeRates,
 ) {
     let new_image =
-        match generate_pdf_into_png_image(L18n::new(Language::EN).unwrap(), sample, input, fetcher)
+        match generate_pdf_into_png_image(L10n::new(Language::EN).unwrap(), sample, input, fetcher)
         {
             Ok(bytes) => bytes,
             Err(err) => {
@@ -65,14 +66,14 @@ impl FetchExchangeRates for MockedExchangeRatesFetcher {
 
 /// Generates a PNG image from a PDF rendered from the given layout path and input data.
 fn generate_pdf_into_png_image<Period: IsPeriod>(
-    l18n: L18n,
+    l10n: L10n,
     sample: Data<Period>,
     input: ValidInput,
     fetcher: impl FetchExchangeRates,
 ) -> Result<Vec<u8>, Box<dyn Error>> {
     let layout = *input.layout();
     let data = prepare_invoice_input_data(sample, input, fetcher).unwrap();
-    let pdf = render(l18n, data, layout).unwrap();
+    let pdf = render(l10n, data, layout, |e| panic!("Got unexpected error: {e}")).unwrap();
     convert_pdf_to_pngs(pdf.as_ref(), 85.0)
 }
 

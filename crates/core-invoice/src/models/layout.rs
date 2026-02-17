@@ -1,11 +1,12 @@
 use crate::prelude::*;
 use derive_more::FromStr;
+use klirr_foundation::{FontIdentifier, FontRequiring, FontWeight, ToTypst, ToTypstFn};
 
 /// The Typst layout "Aioo" as a string.
 const TYPST_LAYOUT_AIOO: &str = include_str!("../../layouts/aioo.typ");
 
 /// A layout used for testing only.
-const TYPST_LAYOUT_TEST: &str = include_str!("../../layouts/test.typ");
+const TYPST_LAYOUT_TEST: &str = include_str!("../../../foundation/layout/test.typ");
 
 /// Represents different Typst layouts used to render the invoice.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Display, Default, FromStr, EnumIter)]
@@ -33,8 +34,8 @@ impl ToTypstFn for Layout {
     }
 }
 
-impl Layout {
-    pub fn required_fonts(&self) -> IndexSet<FontIdentifier> {
+impl FontRequiring for Layout {
+    fn required_fonts(&self) -> IndexSet<FontIdentifier> {
         match self {
             Self::Aioo => {
                 let mut fonts = IndexSet::new();
@@ -49,7 +50,9 @@ impl Layout {
             }
         }
     }
+}
 
+impl Layout {
     /// Returns all available layouts as an iterator.
     /// This can be used to iterate over all supported layouts.
     /// # Examples
@@ -70,30 +73,6 @@ mod tests {
 
     use super::*;
     use test_log::test;
-
-    /// Returns the family names of the fonts used in the given layout.
-    fn used_fonts_in_typst_file(layout: &Layout) -> HashSet<String> {
-        let typst = layout.to_typst_fn();
-        let mut fonts = HashSet::new();
-        for line in typst.lines() {
-            // we will now for each line check for patterns:
-            // '    #set text(font: "CMU Serif", size: 12pt)'
-            // and extract `CMU Serif` as a String
-            if let Some(font) = line.split("font: ").nth(1) {
-                let font_name = font
-                    .split(',')
-                    .next()
-                    .unwrap_or("")
-                    .trim()
-                    .trim_matches('"')
-                    .to_string();
-                if !font_name.is_empty() {
-                    fonts.insert(font_name);
-                }
-            }
-        }
-        fonts
-    }
 
     /// Returns
     fn used_font_weights_in_typst_file(layout: &Layout) -> HashSet<FontWeight> {
@@ -136,7 +115,7 @@ mod tests {
         for layout in Layout::all() {
             let typst = layout.to_typst_fn();
             assert!(
-                typst.contains("#let render_invoice(data, l18n) = {"),
+                typst.contains("#let render(data, l10n) = {"),
                 "Layout {:?} does not define a render function in its Typst source: {}",
                 layout,
                 typst
@@ -164,7 +143,7 @@ mod tests {
                 .into_iter()
                 .map(|f| f.family_name().to_string())
                 .collect::<HashSet<String>>();
-            let all_identifier_fonts = used_fonts_in_typst_file(&layout);
+            let all_identifier_fonts = layout.used_fonts();
             assert_eq!(
                 all_claimed_fonts, all_identifier_fonts,
                 "Layout {:?} has mismatched fonts: claimed {:?}, found {:?}",
