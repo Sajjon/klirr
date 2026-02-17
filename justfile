@@ -6,13 +6,13 @@ service: (_make-and-open "cargo run --bin klirr invoice")
 
 # Show CLI help for the invoice binary
 help:
-  cargo run --bin invoice -- --help
+  cargo run --bin klirr -- --help
 
 # Generate expenses invoice and open the produced PDF
 expense: (_make-and-open "cargo run --bin klirr invoice expenses")
 
 # Usage: `just ooo 5`
-ooo days_off: (_make-and-open "cargo run --bin klirr invoice ooo {{days_off}}")
+ooo days_off: (_make-and-open ("klirr invoice services-off --unit days --quantity " + days_off))
 
 _make-and-open cmd:
   #!/usr/bin/env bash
