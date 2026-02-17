@@ -1,5 +1,7 @@
 pub const INVOICES_FOLDER_NAME: &str = "invoices";
 
+use klirr_foundation::ToTypst;
+
 use crate::prelude::*;
 
 pub type DataWithItemsPricedInSourceCurrency =

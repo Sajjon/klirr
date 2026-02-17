@@ -1,8 +1,8 @@
 // Attention! This is advanced typst code for rendering invoices.
 // This typ file ONLY declares functions, it MUST be called by some other typ file.
-// Typically we only want to call the `render_invoice` function from this file.
+// Typically we only want to call the `render` function from this file.
 // In the beginning of this file we declare other helper functions which the
-// render_invoice function uses. The input to the render_invoice function
+// render function uses. The input to the render function
 // is a data structure and a localization structure, which are typst dictionary
 // variables that we pass to the function - typically we create these typst
 // dictionaries as strings from RON data which we format into valid typst.
@@ -11,103 +11,11 @@
 // modify the data and localization files that are used to generate the input
 // to this function. Not a single string visible to the user is hardcoded
 // in this file, everything is passed as data to the function.
-#let hline(
-  length: 100%,
-  thickness: 0.2pt,
-  color: black,
-) = {
-  block[
-    #line(length: length, stroke: (thickness: thickness, paint: color))
-  ]
-}
-
-#let double-line(
-  length: 100%,
-  thickness: 0.2pt,
-  color: black,
-) = {
-  block[
-    #hline(length: length, thickness: thickness, color: color)
-    #v(-11pt)
-    #hline(length: length, thickness: thickness, color: color)
-  ]
-}
-#let format_item_date(l18n, is_expenses, date) = {
-  if is_expenses {
-    // For expenses, format as "YYYY-MM-DD"
-    str(date)
-  } else {
-    // For services, format as "MMM YYYY"
-    let parts = str.split(date, "-")
-    let year = parts.at(0)
-    let month = int(parts.at(1))
-    l18n.month_names.at(month - 1) + " " + year
-  }
-}
-
-// Function to format numbers to two decimals
-#let format_amount(amount, currency) = {
-  let amt = amount * 1.0
-  let integer = calc.floor(amt)
-  let frac = int(calc.round((amt - integer) * 100, digits: 0))
-  let frac_str = str(frac)
-  if frac < 10 { frac_str = "0" + frac_str }
-  let without_currency = str(integer) + "." + frac_str
-  without_currency + " " + currency
-}
-
-#let display_if_non_empty(value) = {
-  if value != "" {
-    value
-  }
-}
-
-#let footnotesize(content) = {
-  set text(size: 9pt)
-  content
-}
-
-#let small(content) = {
-  set text(size: 10pt)
-  content
-}
-
-#let normalsize(content) = {
-  set text(size: 11pt)
-  content
-}
-
-#let large(content) = {
-  set text(size: 12pt)
-  content
-}
-
-#let Large(content) = {
-  set text(size: 13pt)
-  content
-}
-
-#let LARGE(content) = {
-  set text(size: 20pt)
-  content
-}
-
-// Wraps content in a rounded box with a stroke and fill.
-#let ovalbox(width, content) = {
-  box(
-    inset: 12pt,
-    radius: 8pt,
-    width: width,
-    stroke: 0.2pt + black,
-    fill: none,
-    content,
-  )
-}
 
 // This is the main function that renders the invoice.
-// It takes two parameters: data and l18n.
+// It takes two parameters: data and l10n.
 // - data: a dictionary containing invoice data
-// - l18n: a dictionary containing localization strings
+// - l10n: a dictionary containing localization strings
 // The function uses these parameters to render the invoice layout, including
 // the header, recipient information, invoice items, and footer.
 // The function is designed to be called with the appropriate data and localization
@@ -115,7 +23,9 @@
 // The function does not return any value, it directly renders the invoice layout.
 // It uses various helper functions defined above to format the content, such as
 // formatting dates, amounts, and rendering lines and boxes.
-#let render_invoice(data, l18n) = {
+#import "foundation.typ": *
+
+#let render(data, l10n) = {
   let is_expenses = data.line_items.is_expenses
 
   // ** Invoice Data Variables **
@@ -131,18 +41,18 @@
         columns: (1fr, auto, auto),
         align: (left, left, left),
         stroke: none,
-        [#strong(l18n.vendor_info.address)],
-        [#strong(l18n.vendor_info.iban)],
-        [#strong(l18n.vendor_info.organisation_number)],
+        [#strong(l10n.vendor_info.address)],
+        [#strong(l10n.vendor_info.iban)],
+        [#strong(l10n.vendor_info.organisation_number)],
 
         [#data.vendor.company_name], [#data.payment_info.iban], [#data.vendor.organisation_number],
         [#data.vendor.postal_address.street_address.line_1],
-        [#strong(l18n.vendor_info.bank)],
-        [#strong(l18n.vendor_info.vat_number)],
+        [#strong(l10n.vendor_info.bank)],
+        [#strong(l10n.vendor_info.vat_number)],
 
         [#data.vendor.postal_address.street_address.line_2], [#data.payment_info.bank_name], [#data.vendor.vat_number],
 
-        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(l18n.vendor_info.bic)], [],
+        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(l10n.vendor_info.bic)], [],
         [#data.vendor.postal_address.country], [#data.payment_info.bic], [],
       )
       #hline()
@@ -171,42 +81,42 @@
         #data.vendor.company_name
       ]
 
-      #text(l18n.client_info.to_company, weight: "bold")\
+      #text(l10n.client_info.to_company, weight: "bold")\
       #data.client.company_name (#data.client.organisation_number)\
       #data.client.postal_address.street_address.line_1\
       #display_if_non_empty(data.client.postal_address.street_address.line_2)
       #data.client.postal_address.city, #data.client.postal_address.country\
       #data.client.postal_address.zip\
       #v(7mm)
-      #text(l18n.client_info.vat_number, weight: "bold")\
+      #text(l10n.client_info.vat_number, weight: "bold")\
       #data.client.vat_number
     ]),
     block(fill: none, inset: 0pt, stroke: none, width: 100%, [
       // align the following block to the right margin
-      #ovalbox(100%, [#Large(strong[#l18n.invoice_info.invoice_identifier]) #text(fill: emphasize_color)[#strong(str(
-            data.information.number,
-          ))]])
+      #ovalbox(100%, [#Large(strong[#l10n.invoice_info.invoice_identifier]) #text(fill: emphasize_color)[#strong(str(
+          data.information.number,
+        ))]])
       // Conditionally display purchase order if it exists
       #if "purchase_order" in data.information {
-        ovalbox(100%, [#strong[#l18n.invoice_info.purchase_order] #text(fill: emphasize_color)[#strong(
-              data.information.purchase_order,
-            )]])
+        ovalbox(100%, [#strong[#l10n.invoice_info.purchase_order] #text(fill: emphasize_color)[#strong(
+            data.information.purchase_order,
+          )]])
       }
       #block(fill: none, [
-        #ovalbox(49%, [#strong[#l18n.invoice_info.invoice_date] #data.information.invoice_date])
-        #ovalbox(49%, [#strong[#l18n.invoice_info.due_date] #data.information.due_date])
+        #ovalbox(49%, [#strong[#l10n.invoice_info.invoice_date] #data.information.invoice_date])
+        #ovalbox(49%, [#strong[#l10n.invoice_info.due_date] #data.information.due_date])
       ])
       #if (
         "contact_person" in data.client and data.client.contact_person != none and data.client.contact_person != ""
       ) {
         block[
-          #strong[#l18n.invoice_info.client_contact]
+          #strong[#l10n.invoice_info.client_contact]
           #data.client.contact_person
           #v(-2mm)
         ]
       }
-      #strong[#l18n.invoice_info.vendor_contact] #data.vendor.contact_person \
-      #strong[#l18n.invoice_info.terms] #data.payment_info.terms
+      #strong[#l10n.invoice_info.vendor_contact] #data.vendor.contact_person \
+      #strong[#l10n.invoice_info.terms] #data.payment_info.terms
     ]),
   )
 
@@ -226,17 +136,17 @@
     align: (left, left, center, center, right),
     stroke: none,
     table.header(
-      [#strong(l18n.line_items.description)],
-      [#strong(l18n.line_items.when)],
-      [#strong(l18n.line_items.unit_price)],
-      [#strong(l18n.line_items.quantity)],
-      [#strong(l18n.line_items.total_cost)],
+      [#strong(l10n.line_items.description)],
+      [#strong(l10n.line_items.when)],
+      [#strong(l10n.line_items.unit_price)],
+      [#strong(l10n.line_items.quantity)],
+      [#strong(l10n.line_items.total_cost)],
     ),
     table.hline(stroke: 0.2pt),
     ..for row in data.line_items.items {
       (
         row.name,
-        format_item_date(l18n, is_expenses, row.transaction_date),
+        format_item_date(l10n, is_expenses, row.transaction_date),
         format_amount(row.unit_price, row.currency),
         str(row.quantity),
         format_amount(row.total_cost, row.currency),
@@ -247,7 +157,7 @@
   // Grand Total Row
   align(right)[
     #set text(weight: "bold")
-    #l18n.line_items.grand_total
+    #l10n.line_items.grand_total
     #set text(fill: emphasize_color)
     #format_amount(grand_total, data.payment_info.currency)
   ]
@@ -259,9 +169,9 @@
   // Conditionally display the purchase order if it exists
   if "purchase_order" in data.information {
     ovalbox(100%, [
-      #Large([#strong(l18n.invoice_info.purchase_order) #text(fill: emphasize_color)[#strong(
-            data.information.purchase_order,
-          )]])
+      #Large([#strong(l10n.invoice_info.purchase_order) #text(fill: emphasize_color)[#strong(
+          data.information.purchase_order,
+        )]])
     ])
   }
 }

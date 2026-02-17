@@ -1,7 +1,7 @@
 [files]
 extend-exclude = [
-    "crates/core-invoice/src/models/l18n/swedish.rs",
-    "crates/core-invoice/src/models/l18n/snapshots/klirr_core_invoice__models__l18n__localization__tests__l18n_swedish.snap",
+    "crates/core-invoice/src/models/l10n/swedish.rs",
+    "crates/core-invoice/src/models/l10n/snapshots/klirr_core_invoice__models__l10n__localization__tests__l10n_swedish.snap",
 ]
 
 [default.extend-words]

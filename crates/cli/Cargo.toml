@@ -10,8 +10,10 @@ repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
 # Internal dependencies
+klirr-foundation.workspace = true
 klirr-core-invoice.workspace = true
-klirr-render-invoice.workspace = true
+klirr-render-typst.workspace = true
+klirr-render-pdf.workspace = true
 
 # External dependencies
 bon.workspace = true

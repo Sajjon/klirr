@@ -1,15 +1,15 @@
 use crate::prelude::*;
 
-impl L18n {
+impl L10n {
     pub fn swedish() -> Self {
         Self::builder()
             .language(Language::SV)
-            .content(L18nContent::swedish())
+            .content(L10nContent::swedish())
             .build()
     }
 }
 
-impl L18nClientInfo {
+impl L10nClientInfo {
     pub fn swedish() -> Self {
         Self::builder()
             .to_company("Till:".to_string())
@@ -18,7 +18,7 @@ impl L18nClientInfo {
     }
 }
 
-impl L18nInvoiceInfo {
+impl L10nInvoiceInfo {
     pub fn swedish() -> Self {
         Self::builder()
             .purchase_order("Inköpsorder:".to_string())
@@ -32,7 +32,7 @@ impl L18nInvoiceInfo {
     }
 }
 
-impl L18nVendorInfo {
+impl L10nVendorInfo {
     pub fn swedish() -> Self {
         Self::builder()
             .address("Address".to_string())
@@ -45,7 +45,7 @@ impl L18nVendorInfo {
     }
 }
 
-impl L18nLineItems {
+impl L10nLineItems {
     pub fn swedish() -> Self {
         Self::builder()
             .description("Artikel".to_string())
@@ -58,13 +58,13 @@ impl L18nLineItems {
     }
 }
 
-impl L18nContent {
+impl L10nContent {
     pub fn swedish() -> Self {
         Self::builder()
-            .client_info(L18nClientInfo::swedish())
-            .invoice_info(L18nInvoiceInfo::swedish())
-            .vendor_info(L18nVendorInfo::swedish())
-            .line_items(L18nLineItems::swedish())
+            .client_info(L10nClientInfo::swedish())
+            .invoice_info(L10nInvoiceInfo::swedish())
+            .vendor_info(L10nVendorInfo::swedish())
+            .line_items(L10nLineItems::swedish())
             .month_names([
                 "Januari".to_string(),
                 "Februari".to_string(),

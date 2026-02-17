@@ -14,4 +14,8 @@ pub mod prelude {
     pub use crate::error::{Error, Result};
     pub use crate::module::{DocumentPlan, InlineModule};
     pub use crate::render::render_document;
+
+    pub use klirr_foundation::prelude::*;
+
+    pub use indexmap::IndexSet;
 }

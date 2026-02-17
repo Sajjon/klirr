@@ -1,5 +1,6 @@
 use insta::assert_snapshot;
 use klirr_core_invoice::prelude::*;
+use klirr_foundation::ToTypstFn;
 
 fn sample_exchange_rates() -> ExchangeRates {
     ExchangeRates::builder()
@@ -54,7 +55,7 @@ fn data_services_to_typst() {
 }
 
 #[test]
-fn l18n_english_to_typst() {
-    let typst = L18n::new(Language::EN).unwrap().content().to_typst_fn();
-    assert_snapshot!("l18n_english_to_typst", typst);
+fn l10n_english_to_typst() {
+    let typst = L10n::new(Language::EN).unwrap().content().to_typst_fn();
+    assert_snapshot!("l10n_english_to_typst", typst);
 }

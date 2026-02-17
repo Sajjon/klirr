@@ -1,10 +1,10 @@
 use crate::prelude::*;
 
-pub fn get_localization(language: &Language) -> Result<L18n> {
+pub fn get_localization(language: &Language) -> Result<L10n> {
     debug!("☑️ Reading localisation data...");
-    let l18n = L18n::new(*language)?;
+    let l10n = L10n::new(*language)?;
     debug!("✅ Read localisation data!");
-    Ok(l18n)
+    Ok(l10n)
 }
 
 #[cfg(test)]
@@ -15,10 +15,10 @@ mod tests {
     #[test]
     fn test_get_localization() {
         let language = Language::EN;
-        let l18n = get_localization(&language).unwrap();
-        assert_eq!(*l18n.language(), language);
+        let l10n = get_localization(&language).unwrap();
+        assert_eq!(*l10n.language(), language);
         assert_eq!(
-            *l18n.content().invoice_info().invoice_identifier(),
+            *l10n.content().invoice_info().invoice_identifier(),
             "Invoice no:"
         );
     }

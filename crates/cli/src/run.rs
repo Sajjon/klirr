@@ -23,12 +23,12 @@ pub fn run(input: CliArgs) {
         Command::Email(email_input) => {
             let _ = run_email_command(
                 email_input.command(),
-                curry1(render_sample_with_nonce, true),
+                curry1(render_invoice_sample_with_nonce, true),
             )
             .inspect_err(|e| error!("Failed to execute email command: {}", e));
         }
         Command::Sample => {
-            let _ = render_sample()
+            let _ = render_invoice_sample()
                 .inspect_err(|e| {
                     error!("Error creating sample invoice: {}", e);
                 })

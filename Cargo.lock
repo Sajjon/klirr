@@ -2397,7 +2397,9 @@ dependencies = [
  "fern",
  "inquire",
  "klirr-core-invoice",
- "klirr-render-invoice",
+ "klirr-foundation",
+ "klirr-render-pdf",
+ "klirr-render-typst",
  "log",
  "rand 0.9.1",
  "ron 0.10.1",
@@ -2426,9 +2428,9 @@ dependencies = [
  "hkdf",
  "httpmock",
  "indexmap 2.9.0",
- "indoc",
  "insta",
- "klirr-core-pdf",
+ "klirr-foundation",
+ "klirr-render-pdf",
  "lazy_static",
  "lettre",
  "log",
@@ -2451,34 +2453,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "klirr-core-pdf"
-version = "0.2.1"
-dependencies = [
- "derive_more",
- "indoc",
- "log",
- "serde",
- "serde_json",
- "strum 0.27.1",
- "test-log",
- "ttf-parser 0.25.1",
-]
-
-[[package]]
-name = "klirr-render-invoice"
+name = "klirr-foundation"
 version = "0.2.1"
 dependencies = [
  "bon",
  "chrono",
  "derive_more",
- "dirs-next",
  "getset",
- "klirr-core-invoice",
- "klirr-render-pdf",
+ "indexmap 2.9.0",
+ "indoc",
  "log",
+ "pretty_assertions",
+ "serde",
  "serde_json",
+ "strum 0.27.1",
  "tempfile",
  "test-log",
+ "ttf-parser 0.25.1",
 ]
 
 [[package]]
@@ -2490,13 +2481,31 @@ dependencies = [
  "image",
  "image-compare",
  "indexmap 2.9.0",
- "klirr-core-pdf",
+ "klirr-foundation",
  "log",
  "test-log",
  "thiserror 2.0.12",
  "typst",
  "typst-kit",
  "typst-pdf",
+]
+
+[[package]]
+name = "klirr-render-typst"
+version = "0.2.1"
+dependencies = [
+ "bon",
+ "chrono",
+ "derive_more",
+ "dirs-next",
+ "getset",
+ "klirr-core-invoice",
+ "klirr-foundation",
+ "klirr-render-pdf",
+ "log",
+ "serde_json",
+ "tempfile",
+ "test-log",
 ]
 
 [[package]]

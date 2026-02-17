@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// Localization for line items in the invoice, used in the
 /// table of items being billed for.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
-pub struct L18nLineItems {
+pub struct L10nLineItems {
     /// EN: "Item"
     #[getset(get = "pub")]
     description: String,
@@ -29,7 +29,7 @@ pub struct L18nLineItems {
     grand_total: String,
 }
 
-impl L18nLineItems {
+impl L10nLineItems {
     pub fn english() -> Self {
         Self::builder()
             .description("Item".to_string())

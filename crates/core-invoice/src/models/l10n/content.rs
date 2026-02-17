@@ -1,33 +1,35 @@
+use klirr_foundation::ToTypst;
+
 use crate::prelude::*;
 
 /// The content of the localization file, which includes
 /// client information, invoice information, vendor information,
 /// and line items.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
-pub struct L18nContent {
+pub struct L10nContent {
     #[getset(get = "pub")]
-    client_info: L18nClientInfo,
+    client_info: L10nClientInfo,
 
     #[getset(get = "pub")]
-    invoice_info: L18nInvoiceInfo,
+    invoice_info: L10nInvoiceInfo,
 
     #[getset(get = "pub")]
-    vendor_info: L18nVendorInfo,
+    vendor_info: L10nVendorInfo,
 
     #[getset(get = "pub")]
-    line_items: L18nLineItems,
+    line_items: L10nLineItems,
 
     #[getset(get = "pub")]
     month_names: [String; 12],
 }
-impl ToTypst for L18nContent {}
-impl L18nContent {
+impl ToTypst for L10nContent {}
+impl L10nContent {
     pub fn english() -> Self {
         Self::builder()
-            .client_info(L18nClientInfo::english())
-            .invoice_info(L18nInvoiceInfo::english())
-            .vendor_info(L18nVendorInfo::english())
-            .line_items(L18nLineItems::english())
+            .client_info(L10nClientInfo::english())
+            .invoice_info(L10nInvoiceInfo::english())
+            .vendor_info(L10nVendorInfo::english())
+            .line_items(L10nLineItems::english())
             .month_names([
                 "January".to_string(),
                 "February".to_string(),

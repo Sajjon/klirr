@@ -1,16 +1,16 @@
 [package]
-name = "klirr-render-invoice"
+name = "klirr-render-typst"
 rust-version = "1.85.1"
 version = "0.2.1"
 edition = "2024"
-description = "Zero-maintenance and smart FOSS generating beautiful invoices for services and expenses."
+description = "Typst specific PDF rendering tools."
 license = "MIT"
-documentation = "https://docs.rs/klirr-render-invoice"
+documentation = "https://docs.rs/klirr-render-typst"
 repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
 # Internal dependencies
-klirr-core-invoice.workspace = true
+klirr-foundation.workspace = true
 klirr-render-pdf.workspace = true
 
 # External dependencies
@@ -23,5 +23,6 @@ getset.workspace = true
 dirs-next.workspace = true
 
 [dev-dependencies]
+klirr-core-invoice.workspace = true
 tempfile.workspace = true
 test-log.workspace = true

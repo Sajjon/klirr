@@ -1,6 +1,6 @@
-use crate::prelude::*;
+use klirr_foundation::Pdf;
 
-pub use klirr_core_pdf::Pdf;
+use crate::prelude::*;
 
 impl HasSample for Pdf {
     fn sample() -> Self {

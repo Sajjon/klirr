@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
-pub struct L18nClientInfo {
+pub struct L10nClientInfo {
     /// EN: "To:"
     #[getset(get = "pub")]
     to_company: String,
@@ -11,7 +11,7 @@ pub struct L18nClientInfo {
     vat_number: String,
 }
 
-impl L18nClientInfo {
+impl L10nClientInfo {
     pub fn english() -> Self {
         Self::builder()
             .to_company("To:".to_string())

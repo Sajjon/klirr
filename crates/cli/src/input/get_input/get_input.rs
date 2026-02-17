@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 use clap::Parser;
 use derive_more::{Debug, Unwrap};
+use klirr_core_invoice::Layout as InvoiceLayout;
 
 /// The root argument for the CLI, which contains the subcommands for
 /// generating invoices and managing data.
@@ -21,7 +22,7 @@ pub enum Command {
     Sample,
     Email(EmailInput),
 
-    /// The CLI arguments for generating an invoice PDF.
+    /// CLI arguments for generating an invoice PDF.
     Invoice(InvoiceInput),
 
     /// CLI arguments for admin tasks related to data.
@@ -49,7 +50,7 @@ pub struct InvoiceInput {
     #[arg(long, short = 't', default_value_t)]
     #[builder(default)]
     #[getset(get = "pub")]
-    layout: Layout,
+    layout: InvoiceLayout,
 
     /// The items to be invoiced, either expenses our consulting services
     /// with an optional number of days off.

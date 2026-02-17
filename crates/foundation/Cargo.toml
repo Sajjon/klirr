@@ -1,19 +1,27 @@
 [package]
-name = "klirr-core-pdf"
+name = "klirr-foundation"
+rust-version = "1.85.1"
 version = "0.2.1"
 edition = "2024"
-description = "Shared PDF-focused primitives for Klirr."
+description = "Shared primitives for all crates of Klirr."
 license = "MIT"
+documentation = "https://docs.rs/klirr-foundation"
 repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
+bon.workspace = true
+chrono.workspace = true
 derive_more.workspace = true
+getset.workspace = true
 indoc = "2.0.6"
+indexmap.workspace = true
 log.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 strum.workspace = true
 
 [dev-dependencies]
+pretty_assertions.workspace = true
+tempfile.workspace = true
 test-log.workspace = true
 ttf-parser = "0.25.1"

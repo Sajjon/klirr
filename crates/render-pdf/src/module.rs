@@ -1,5 +1,4 @@
-use indexmap::IndexSet;
-use klirr_core_pdf::FontIdentifier;
+use crate::prelude::*;
 
 /// Represents an inline Typst module backed by a virtual path.
 #[derive(Clone, Debug)]

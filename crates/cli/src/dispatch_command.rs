@@ -1,6 +1,25 @@
 use crate::prelude::*;
-use klirr_render_invoice::prelude::render;
+use klirr_core_invoice::prelude::L10n as InvoiceL10n;
+use klirr_core_invoice::prelude::PreparedData as InvoiceDataPrepared;
+use klirr_foundation::prelude::Pdf;
+use klirr_render_pdf::Error as RenderPdfError;
+use klirr_render_typst::prelude::render as render_base;
 use secrecy::SecretString;
+
+fn render_invoice(
+    i18n: InvoiceL10n,
+    data: InvoiceDataPrepared,
+    layout: klirr_core_invoice::Layout,
+) -> Result<Pdf, klirr_core_invoice::Error> {
+    render_base(i18n, data, layout, |error| match error {
+        RenderPdfError::LoadSource { underlying } => Error::LoadSource { underlying },
+        RenderPdfError::BuildPdf { underlying } => Error::BuildPdf { underlying },
+        RenderPdfError::ExportDocumentToPdf { underlying } => {
+            Error::ExportDocumentToPdf { underlying }
+        }
+        RenderPdfError::FailedToLoadFont { family_name } => Error::FailedToLoadFont { family_name },
+    })
+}
 
 fn init_email_data(
     provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
@@ -95,15 +114,15 @@ pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
     }
 }
 
-pub fn render_sample() -> Result<NamedPdf> {
-    render_sample_with_nonce(false)
+pub fn render_invoice_sample() -> Result<NamedPdf> {
+    render_invoice_sample_with_nonce(false)
 }
 
 /// The nonce is used to ensure that the PDF is unique each time it is rendered.
 /// This is useful for testing purposes, to avoid email spamming protection mechanisms.
 /// It is not meant to be used in production, where in fact we WANT the PDF to
 /// be identical each time it is rendered.
-pub fn render_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
+pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
     let path = dirs_next::home_dir()
         .expect("Expected to be able to find HOME dir")
         .join("klirr_sample.pdf");
@@ -114,13 +133,13 @@ pub fn render_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
             .clone()
             .with_client(data.client().clone().with_vat_number(vat));
     }
-    create_pdf_with_data(
+    create_invoice_pdf_with_data(
         data,
         ValidInput::builder()
             .maybe_output_path(path)
             .period(YearMonthAndFortnight::last())
             .build(),
-        render,
+        render_invoice,
     )
 }
 
@@ -129,9 +148,9 @@ fn run_invoice_command_with_base_path(
     data_path: impl AsRef<Path>,
 ) -> Result<NamedPdf> {
     let input = input.parsed()?;
-    info!("🔮 Starting PDF creation, input: {:?}...", input);
+    info!("🔮 Starting invoice PDF creation, input: {:?}...", input);
     let email_settings = input.email().clone();
-    let named_pdf = create_pdf_with_data_base_path(data_path, input, render)?;
+    let named_pdf = create_invoice_pdf_with_data_base_path(data_path, input, render_invoice)?;
     save_pdf_location_to_tmp_file(named_pdf.saved_at().clone())?;
     if let Some(email_settings) = email_settings {
         send_email_with_settings_for_pdf(&named_pdf, &email_settings)?

@@ -5,9 +5,33 @@ use serde_json::{self, Value};
 /// Empty Marker trait
 pub trait ToTypst {}
 
-pub trait ToTypstFn: ToTypst {
+pub trait ToTypstFn {
     /// Converts the implementing type into a Typst function returning a dictionary.
     fn to_typst_fn(&self) -> String;
+
+    /// Returns the family names of the fonts used in the given layout.
+    fn used_fonts(&self) -> std::collections::HashSet<String> {
+        let typst = self.to_typst_fn();
+        let mut fonts = std::collections::HashSet::new();
+        for line in typst.lines() {
+            // we will now for each line check for patterns:
+            // '    #set text(font: "CMU Serif", size: 12pt)'
+            // and extract `CMU Serif` as a String
+            if let Some(font) = line.split("font: ").nth(1) {
+                let font_name = font
+                    .split(',')
+                    .next()
+                    .unwrap_or("")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
+                if !font_name.is_empty() {
+                    fonts.insert(font_name);
+                }
+            }
+        }
+        fonts
+    }
 }
 
 impl<T: ToTypst + Serialize> ToTypstFn for T {

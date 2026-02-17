@@ -3,7 +3,7 @@ use crate::{
     module::DocumentPlan,
     typst_context::TypstContext,
 };
-use klirr_core_pdf::Pdf;
+use klirr_foundation::prelude::*;
 use log::debug;
 use typst::layout::PagedDocument;
 use typst_pdf::{PdfOptions, pdf};
@@ -27,7 +27,6 @@ pub fn render_document(plan: &DocumentPlan) -> Result<Pdf> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use klirr_core_pdf::{FontIdentifier, FontWeight};
     use test_log::test;
 
     #[test]
