@@ -63,7 +63,7 @@ Klirr is an **AMAZING** (**A**esthetic, **M**ulti-layouts/-language, **A**utomat
 
 If that was not enough, klirr also supports generation of expense invoices which automatically fetched currency exchange rates and translates them into your currency at the date of transaction for all your purchases (see [#expenses] below).
 
-Klirr also supports automatic emailing of the invoices (see [#email] below).
+Klirr also supports automatic emailing of the invoices (see [email](#email) below).
 
 # Installation<a href="#installation" id="installation"/>[ ^](#thetoc)
 
