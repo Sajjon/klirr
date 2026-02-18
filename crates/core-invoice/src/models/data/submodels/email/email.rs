@@ -49,6 +49,7 @@ impl From<(DecryptedEmailSettings, NamedPdf)> for Email {
         Email::builder()
             .subject(subject)
             .body(body)
+            .maybe_reply_to(settings.reply_to().clone())
             .public_recipients(settings.recipients().clone())
             .cc_recipients(settings.cc_recipients().clone())
             .bcc_recipients(settings.bcc_recipients().clone())
@@ -86,6 +87,8 @@ impl HasSample for Email {
 
 #[cfg(test)]
 mod tests {
+    use secrecy::SecretString;
+
     use super::*;
 
     type Sut = Email;
@@ -99,5 +102,33 @@ mod tests {
     #[test]
     fn inequality() {
         assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn reply_to() {
+        let address = EmailAddress::from_str("my@reply.to").unwrap();
+        let reply_to = EmailAccount::builder()
+            .email(address)
+            .name("Satoshi Nakamoto".to_owned())
+            .build();
+        let email_settings = DecryptedEmailSettings::builder()
+            .reply_to(reply_to.clone())
+            .smtp_app_password(SecretString::sample())
+            .salt(Salt::sample())
+            .template(Template::default())
+            .smtp_server(SmtpServer::default())
+            .sender(EmailAccount::sample())
+            .recipients(IndexSet::from([
+                EmailAddress::sample_alice(),
+                EmailAddress::sample_bob(),
+            ]))
+            .cc_recipients(IndexSet::from([EmailAddress::sample_carol()]))
+            .bcc_recipients(IndexSet::from([
+                EmailAddress::sample_dave(),
+                EmailAddress::sample_erin(),
+            ]))
+            .build();
+        let email = Sut::from((email_settings, NamedPdf::sample()));
+        assert_eq!(email.reply_to(), &Some(reply_to));
     }
 }

@@ -9,17 +9,7 @@ pub type EncryptedEmailSettings = EmailSettings<EncryptedAppPassword>;
 /// Represents the settings for sending emails, including SMTP server details,
 /// sender information, and recipient lists.
 #[derive(
-    derive_more::Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Builder,
-    Getters,
-    WithSetters,
-    Serialize,
-    Deserialize,
-    Zeroize,
-    ZeroizeOnDrop,
+    derive_more::Debug, Clone, PartialEq, Eq, Builder, Getters, WithSetters, Serialize, Deserialize,
 )]
 pub struct EmailSettings<AppPassword: Zeroize> {
     /// The password for the SMTP server, typically an "App Password".
@@ -34,40 +24,48 @@ pub struct EmailSettings<AppPassword: Zeroize> {
 
     /// The template for the email, containing subject and body formats.
     #[getset(get = "pub")]
-    #[zeroize(skip)]
     template: Template,
 
     /// The email address to reply to, if different from the sender, use None
     /// to indicate that the reply should go to the sender's email address.
     #[getset(get = "pub")]
-    #[zeroize(skip)]
     reply_to: Option<EmailAccount>,
 
     /// The SMTP server to use for sending the email.
     #[getset(get = "pub")]
-    #[zeroize(skip)]
     smtp_server: SmtpServer,
 
     /// The email account that will send the email.
     #[getset(get = "pub", set_with = "pub")]
-    #[zeroize(skip)]
     sender: EmailAccount,
 
     /// Public recipients of the email.
     #[getset(get = "pub")]
-    #[zeroize(skip)]
     recipients: IndexSet<EmailAddress>,
 
     // CC recipients of the email.
     #[getset(get = "pub")]
-    #[zeroize(skip)]
     cc_recipients: IndexSet<EmailAddress>,
 
     /// BCC recipients of the email (Blind Carbon Copy).
     #[getset(get = "pub")]
-    #[zeroize(skip)]
     bcc_recipients: IndexSet<EmailAddress>,
 }
+
+impl<AppPassword: Zeroize> Zeroize for EmailSettings<AppPassword> {
+    fn zeroize(&mut self) {
+        self.smtp_app_password.zeroize();
+        self.salt.zeroize();
+    }
+}
+
+impl<AppPassword: Zeroize> Drop for EmailSettings<AppPassword> {
+    fn drop(&mut self) {
+        self.zeroize();
+    }
+}
+
+impl<AppPassword: Zeroize> ZeroizeOnDrop for EmailSettings<AppPassword> {}
 
 impl DecryptedEmailSettings {
     pub fn compose(&self, pdf: &NamedPdf) -> (Email, EmailCredentials) {

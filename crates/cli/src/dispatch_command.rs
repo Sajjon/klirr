@@ -163,6 +163,7 @@ fn validate_email_data_with(
 ) -> Result<DecryptedEmailSettings> {
     validate_email_data_at(data_dir(), get_email_password)
 }
+
 pub fn validate_email_data() -> Result<DecryptedEmailSettings> {
     validate_email_data_with(get_email_encryption_password)
 }
