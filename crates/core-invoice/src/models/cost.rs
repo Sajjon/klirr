@@ -1,4 +1,10 @@
-use crate::prelude::*;
+use crate::{Decimal, HasSample};
+use derive_more::Deref;
+use derive_more::Display;
+use derive_more::From;
+use rust_decimal::dec;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The total cost of an item, e.g. the total cost of a consulting service.
 /// Being the quantity multiplied by the unit price.
@@ -21,6 +27,7 @@ impl HasSample for Cost {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = Cost;
 

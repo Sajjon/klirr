@@ -1,6 +1,6 @@
 use inquire::{CustomType, Text, error::InquireResult};
 
-use crate::prelude::*;
+use crate::{Currency, Error, PaymentInformation, PaymentTerms, Result};
 
 pub fn build_payment_info(default: &PaymentInformation) -> Result<PaymentInformation> {
     fn inner(default: &PaymentInformation) -> InquireResult<PaymentInformation> {

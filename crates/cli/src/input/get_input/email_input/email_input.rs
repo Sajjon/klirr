@@ -1,7 +1,9 @@
 use clap::Args;
 use derive_more::Unwrap;
 
-use crate::prelude::*;
+use crate::EditEmailInput;
+use clap::Subcommand;
+use getset::Getters;
 
 /// Email command input, see [`EmailInputCommand`]
 #[derive(Debug, Args, Getters, PartialEq)]

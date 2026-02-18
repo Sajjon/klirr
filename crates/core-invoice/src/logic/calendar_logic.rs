@@ -1,6 +1,13 @@
 use std::{borrow::Borrow, ops::Mul};
 
-use crate::prelude::*;
+use crate::{
+    Cadence, Date, Day, Error, Granularity, InvoiceNumber, IsPeriod, Month, MonthHalf, PeriodAnno,
+    Quantity, RecordOfPeriodsOff, Result, TimestampedInvoiceNumber, TryFromPeriodAnno, Year,
+    YearAndMonth, YearMonthAndFortnight,
+};
+use chrono::Datelike;
+use chrono::NaiveDate;
+use chrono::Weekday;
 
 impl Year {
     /// Checks if this year is a leap year, if it is, `true` is returned, else
@@ -66,7 +73,7 @@ impl YearAndMonth {
     /// 29 is returned.
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     ///
     /// let year_and_month = YearAndMonth::january(2025);
     /// assert_eq!(year_and_month.last_day_of_month(), Day::try_from(31).unwrap());
@@ -79,7 +86,7 @@ impl YearAndMonth {
     ///
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let month = YearAndMonth::january(2025);
     /// let date = month.to_date_end_of_month();
     /// assert_eq!(date.year(), &Year::from(2025));
@@ -102,7 +109,7 @@ impl YearAndMonth {
     /// If the month is January, it will return December of the previous year.
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let month = YearAndMonth::january(2025);
     /// let one_month_earlier = month.one_month_earlier();
     /// assert_eq!(one_month_earlier, YearAndMonth::december(2024));
@@ -137,7 +144,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let start = YearAndMonth::january(2025);
     /// let end = YearAndMonth::april(2025);
     /// assert_eq!(end.elapsed_months_since(start).unwrap(), 3);
@@ -225,7 +232,7 @@ impl IsPeriod for YearAndMonth {
 ///
 /// ```
 /// extern crate klirr_core_invoice;
-/// use klirr_core_invoice::prelude::*;
+/// use klirr_core_invoice::*;
 /// let offset = TimestampedInvoiceNumber::<YearAndMonth>::builder().offset(100.into()).period(YearAndMonth::january(2024)).build();
 /// let target_month = YearAndMonth::august(2024);
 /// let is_expenses = true;
@@ -287,7 +294,8 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
 ///
 /// ```
 /// extern crate klirr_core_invoice;
-/// use klirr_core_invoice::prelude::*;
+/// use klirr_core_invoice::*;
+/// use rust_decimal::dec;
 ///
 /// let target_month = YearAndMonth::january(2024);
 /// let working_days = quantity_in_period(&target_month, Granularity::Day, Cadence::Monthly, &RecordOfPeriodsOff::default());
@@ -391,6 +399,10 @@ mod tests {
     #![allow(non_snake_case)]
     #![allow(unused)]
     use super::*;
+    use crate::HasSample;
+    use crate::{InvoicedItems, ProtoInvoiceInfo, PurchaseOrder, ValidInput};
+    use rust_decimal::dec;
+    use std::str::FromStr;
     use test_log::test;
 
     /// 2025 is not a leap year
@@ -602,11 +614,17 @@ mod tests {
 
     mod services {
         use super::*;
+        use crate::HasSample;
+        use rust_decimal::dec;
+        use std::str::FromStr;
         use test_log::test;
 
         mod no_months_off {
 
             use super::*;
+            use crate::HasSample;
+            use rust_decimal::dec;
+            use std::str::FromStr;
             use test_log::test;
 
             #[test]
@@ -642,6 +660,9 @@ mod tests {
         mod months_off {
 
             use super::*;
+            use crate::HasSample;
+            use rust_decimal::dec;
+            use std::str::FromStr;
             use test_log::test;
 
             #[test]
@@ -724,11 +745,17 @@ mod tests {
 
     mod expenses {
         use super::*;
+        use crate::HasSample;
+        use rust_decimal::dec;
+        use std::str::FromStr;
         use test_log::test;
 
         mod no_months_off {
 
             use super::*;
+            use crate::HasSample;
+            use rust_decimal::dec;
+            use std::str::FromStr;
             use test_log::test;
 
             #[test]
@@ -764,6 +791,9 @@ mod tests {
         mod months_off {
 
             use super::*;
+            use crate::HasSample;
+            use rust_decimal::dec;
+            use std::str::FromStr;
             use test_log::test;
 
             #[test]

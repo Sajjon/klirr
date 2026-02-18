@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{
+    Data, Error, ExchangeRatesFetcher, IsPeriod, L10n, Layout, NamedPdf, Path, PreparedData,
+    Result, ValidInput, create_folder_to_parent_of_path_if_needed, get_localization,
+    prepare_invoice_input_data, read_data_from_disk_with_base_path,
+};
 use klirr_foundation::{Pdf, save_pdf};
 
 /// Compile the Typst source into a PDF and save it at the specified path, by
@@ -40,6 +44,8 @@ pub fn create_invoice_pdf_with_data<Period: IsPeriod>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use crate::{PathBuf, YearAndMonth, YearMonthAndFortnight};
 
     use tempfile::NamedTempFile;
     use test_log::test;

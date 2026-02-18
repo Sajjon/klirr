@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::{PathBuf, Result};
+use log::trace;
+use log::warn;
 
 /// Tries to get the path to a temporary file where the path to the PDF will be saved.
 /// This is determined by the environment variable `TMP_FILE_FOR_PATH_TO_PDF`.

@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::{AesGcmSealedBox, AesNonce, EncryptionKey, Error, Result};
+use log::error;
 
 use aes_gcm::{
     Key,
@@ -68,7 +69,7 @@ impl AesGcm256 {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let secret = "super secret data";
     /// let encryption_key = EncryptionKey([0xabu8; 32]);
     /// // Seal the plaintext
@@ -91,7 +92,7 @@ impl AesGcm256 {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let secret = "super secret data";
     /// let encryption_key = EncryptionKey([0xabu8; 32]);
     /// // Seal the plaintext

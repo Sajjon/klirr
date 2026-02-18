@@ -1,4 +1,16 @@
-use crate::prelude::*;
+use crate::{
+    Cadence, CompanyInformation, DataFromDiskWithItemsOfKind, DataWithItemsPricedInSourceCurrency,
+    Error, ExpensedPeriods, HasSample, InvoiceInfoFull, InvoicedItems, IsPeriod, Item,
+    LineItemsPricedInSourceCurrency, OutputPath, PaymentInformation, PeriodAnno, ProtoInvoiceInfo,
+    Quantity, Result, ServiceFees, TimeOff, ValidInput, YearAndMonth, calculate_invoice_number,
+    quantity_in_period,
+};
+use bon::Builder;
+use getset::Getters;
+use getset::Setters;
+use getset::WithSetters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
@@ -43,7 +55,7 @@ impl<Period: IsPeriod> Data<Period> {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let data = Data::<YearAndMonth>::sample();
     /// let result = data.validate();
     /// assert!(result.is_ok(), "Expected validation to succeed, got: {:?}", result);
@@ -78,7 +90,7 @@ impl<Period: IsPeriod> Data<Period> {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let data = Data::<YearAndMonth>::sample();
     /// let input = ValidInput::sample();
     /// let result = data.to_partial(input);
@@ -209,6 +221,11 @@ mod tests {
     use insta::assert_ron_snapshot;
 
     use super::*;
+    use crate::HasSample;
+    use crate::{
+        Granularity, Month, MonthHalf, Rate, TimestampedInvoiceNumber, YearMonthAndFortnight,
+    };
+    use rust_decimal::dec;
     use test_log::test;
 
     type Sut = Data<YearAndMonth>;

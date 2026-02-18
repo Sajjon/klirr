@@ -1,6 +1,6 @@
 use inquire::CustomType;
 
-use crate::prelude::*;
+use crate::{Error, Result, SmtpServer};
 
 pub fn ask_for_smtp_server(default: &SmtpServer) -> Result<SmtpServer> {
     CustomType::<SmtpServer>::new("SMTP server?")

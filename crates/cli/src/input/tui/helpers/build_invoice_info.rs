@@ -1,6 +1,10 @@
 use inquire::{CustomType, error::InquireResult};
 
-use crate::prelude::*;
+use crate::{
+    Cadence, Error, FooterText, HexColor, InvoiceNumber, PeriodAnno, ProtoInvoiceInfo,
+    PurchaseOrder, Result, TimestampedInvoiceNumber, WithOptionalDefault, YearAndMonth,
+    build_period, format_help_skippable,
+};
 
 pub fn build_invoice_info(
     default: &ProtoInvoiceInfo<PeriodAnno>,

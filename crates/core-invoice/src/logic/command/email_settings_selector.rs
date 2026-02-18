@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::Select;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EmailSettingsSelector {

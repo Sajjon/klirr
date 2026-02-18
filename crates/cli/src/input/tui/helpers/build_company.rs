@@ -1,6 +1,9 @@
 use inquire::{Text, error::InquireResult};
 
-use crate::prelude::*;
+use crate::{
+    CompanyInformation, Error, Result, WithOptionalDefault, build_postal_address,
+    format_help_skippable,
+};
 
 pub fn build_company(
     owner: impl AsRef<str>,

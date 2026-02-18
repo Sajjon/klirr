@@ -1,4 +1,10 @@
-use crate::prelude::*;
+use crate::{Cadence, Error, HasSample, Rate, Result, UnitPrice};
+use bon::bon;
+use getset::Getters;
+use getset::WithSetters;
+use rust_decimal::dec;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Represents the fees for a consulting service, including the name, rate,
 /// and billing cadence.
@@ -64,6 +70,7 @@ impl HasSample for ServiceFees {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use insta::assert_ron_snapshot;
     use test_log::test;
 

@@ -1,7 +1,16 @@
 use secrecy::SecretString;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use crate::prelude::*;
+use crate::{
+    Email, EmailAccount, EmailAddress, EmailCredentials, EncryptedAppPassword, EncryptionKey,
+    HasSample, NamedPdf, PbHkdfSha256, Result, Salt, SmtpServer, Template,
+};
+use bon::Builder;
+use getset::Getters;
+use getset::WithSetters;
+use indexmap::IndexSet;
+use serde::Deserialize;
+use serde::Serialize;
 
 pub type DecryptedEmailSettings = EmailSettings<SecretString>;
 pub type EncryptedEmailSettings = EmailSettings<EncryptedAppPassword>;
@@ -146,6 +155,7 @@ impl EncryptedEmailSettings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = EncryptedEmailSettings;
 

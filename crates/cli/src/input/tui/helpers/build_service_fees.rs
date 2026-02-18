@@ -1,6 +1,8 @@
 use inquire::{CustomType, Text, error::InquireResult};
 
-use crate::prelude::*;
+use crate::{
+    Cadence, Error, Granularity, Rate, Result, ServiceFees, UnitPrice, WithPossibleValues,
+};
 
 pub fn build_service_fees(default: &ServiceFees) -> Result<ServiceFees> {
     fn inner(default: &ServiceFees) -> InquireResult<ServiceFees> {

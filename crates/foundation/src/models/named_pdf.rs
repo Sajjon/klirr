@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use crate::prelude::*;
+use crate::Pdf;
+use bon::Builder;
+use getset::Getters;
 
 /// The outcome of generating a PDF with the produced PDF, its name, save location,
 /// and the prepared data used to generate it.

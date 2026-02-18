@@ -1,7 +1,10 @@
 use aes_gcm::Key;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use crate::prelude::*;
+use derive_more::Deref;
+use derive_more::From;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A 32 bytes symmetric encryption key for AES GCM 256 encryption.
 /// This key is used to encrypt and decrypt data securely.

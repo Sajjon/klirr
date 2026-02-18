@@ -1,4 +1,6 @@
-use crate::{logic::Salt, prelude::*};
+use crate::{
+    AesGcm256, AesGcmSealedBox, EncryptionKey, Error, HasSample, PbHkdfSha256, Result, logic::Salt,
+};
 
 use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
@@ -98,6 +100,7 @@ impl EncryptedAppPassword {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = EncryptedAppPassword;
 

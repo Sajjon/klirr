@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::FontIdentifier;
+use indexmap::IndexSet;
 
 /// Represents an inline Typst module backed by a virtual path.
 #[derive(Clone, Debug)]

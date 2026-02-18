@@ -5,7 +5,9 @@ use lettre::{
 };
 use secrecy::ExposeSecret;
 
-use crate::prelude::*;
+use crate::{Attachment, Email, EmailAccount, EmailAddress, EmailCredentials, Result};
+use bon::Builder;
+use getset::Getters;
 
 /// An ephemeral helper struct to hold an email and its sender.
 /// This is used to convert the email into a `lettre::Message`.
@@ -109,7 +111,10 @@ impl From<EmailCredentials> for Credentials {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use crate::{NamedPdf, PathBuf, PreparedData};
     use base64::{Engine, prelude::BASE64_STANDARD};
+    use indexmap::IndexSet;
     use klirr_foundation::Pdf;
     use lettre::transport::smtp::authentication::Mechanism;
     use test_log::test;

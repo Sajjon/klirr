@@ -2395,6 +2395,8 @@ dependencies = [
  "derive_more",
  "dirs-next",
  "fern",
+ "getset",
+ "indexmap 2.9.0",
  "inquire",
  "klirr-core-invoice",
  "klirr-foundation",

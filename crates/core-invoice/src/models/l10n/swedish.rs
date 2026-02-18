@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::{
+    L10n, L10nClientInfo, L10nContent, L10nInvoiceInfo, L10nLineItems, L10nVendorInfo, Language,
+};
 
 impl L10n {
     pub fn swedish() -> Self {

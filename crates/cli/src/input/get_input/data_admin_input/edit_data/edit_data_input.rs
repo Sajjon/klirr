@@ -1,7 +1,9 @@
 use clap::{Args, ValueEnum};
 use derive_more::Unwrap;
 
-use crate::prelude::*;
+use crate::DataSelector;
+use clap::Subcommand;
+use getset::Getters;
 
 #[derive(Debug, Args, Getters, PartialEq)]
 pub struct EditDataInput {

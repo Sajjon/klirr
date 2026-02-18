@@ -1,6 +1,10 @@
-use crate::prelude::*;
-use klirr_core_invoice::prelude::*;
+use crate::render::render;
+use klirr_core_invoice::{
+    Currency, Data, ExchangeRates, ExchangeRatesMap, FetchExchangeRates, IsPeriod, Item, L10n,
+    Language, ValidInput, prepare_invoice_input_data,
+};
 
+use std::path::{Path, PathBuf};
 use std::{env, error::Error, io::Write, process::Command};
 use tempfile::NamedTempFile;
 
@@ -56,7 +60,7 @@ impl FetchExchangeRates for MockedExchangeRatesFetcher {
         &self,
         target_currency: Currency,
         _items: Vec<Item>,
-    ) -> Result<ExchangeRates> {
+    ) -> klirr_core_invoice::Result<ExchangeRates> {
         Ok(ExchangeRates::builder()
             .rates(self.0.clone())
             .target_currency(target_currency)

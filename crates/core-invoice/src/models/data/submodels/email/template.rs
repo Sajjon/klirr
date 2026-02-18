@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{PreparedData, TemplatePart};
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Template is a struct that contains the subject and body format for an email.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Builder, Getters, Serialize, Deserialize)]
@@ -26,6 +30,7 @@ impl Template {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     #[test]
     fn test_template_materialization() {

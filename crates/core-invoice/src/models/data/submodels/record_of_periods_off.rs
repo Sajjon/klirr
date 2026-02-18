@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{HasSample, IsPeriod, PeriodAnno, YearAndMonth, YearMonthAndFortnight};
+use derive_more::Deref;
+use derive_more::From;
+use indexmap::IndexSet;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A record of periods off, e.g. `2025-05-1` for the first half of May 2025.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Deref, From)]
@@ -45,6 +50,7 @@ impl<Period: IsPeriod + HasSample> HasSample for RecordOfPeriodsOff<Period> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = RecordOfPeriodsOff<YearAndMonth>;
 

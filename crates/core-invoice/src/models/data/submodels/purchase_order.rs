@@ -1,6 +1,11 @@
 use derive_more::FromStr;
 
-use crate::prelude::*;
+use crate::HasSample;
+use derive_more::Deref;
+use derive_more::Display;
+use derive_more::From;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A purchase order number associated with this invoice, e.g. `"PO-12345"`
 /// Typically agreed upon between the vendor and client before the
@@ -25,6 +30,7 @@ impl HasSample for PurchaseOrder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = PurchaseOrder;
 

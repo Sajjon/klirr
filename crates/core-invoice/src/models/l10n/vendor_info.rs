@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Localization for vendor information in the invoice,
 /// such as bank details and organization information.

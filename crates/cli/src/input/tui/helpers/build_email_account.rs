@@ -1,6 +1,9 @@
 use inquire::Text;
 
-use crate::prelude::*;
+use crate::{
+    EmailAccount, EmailAddressRole, Error, Result, WithOptionalRefDefault, ask_for_email_address,
+    ask_for_email_address_skippable, format_help_skippable,
+};
 
 pub fn ask_for_email_account(
     role: EmailAddressRole,

@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::{DecryptedEmailSettings, Email, EmailCredentials, EmailWithSender, NamedPdf, Result};
+use log::warn;
 
 use lettre::{Message, SmtpTransport, Transport, transport::smtp::authentication::Credentials};
 

@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{Date, FooterText, HasSample, HexColor, InvoiceNumber, PurchaseOrder};
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A full invoice information structure that includes the derived
 /// invoice number, invoice date, due date and other
@@ -60,6 +64,7 @@ impl HasSample for InvoiceInfoFull {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use test_log::test;
 
     type Sut = InvoiceInfoFull;

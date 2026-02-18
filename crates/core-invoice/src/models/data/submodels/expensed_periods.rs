@@ -1,5 +1,9 @@
 use super::expenses_for_periods::ExpensesForPeriods;
-use crate::prelude::*;
+use crate::{Error, HasSample, IsPeriod, Item, Result};
+use getset::Getters;
+use indexmap::IndexMap;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Periods for which expenses have been recorded.
 #[derive(Clone, Debug, Serialize, PartialEq, Deserialize, Getters)]
@@ -47,7 +51,8 @@ impl<Period: IsPeriod> ExpensedPeriods<Period> {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
+    /// use indexmap::IndexMap;
     /// let month = YearAndMonth::january(2024);
     /// let expenses = ExpensedPeriods::new(IndexMap::from_iter([
     ///     (month.clone(), vec![Item::sample_expense_coffee()]),
@@ -67,7 +72,8 @@ impl<Period: IsPeriod> ExpensedPeriods<Period> {
     ///
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
+    /// use indexmap::IndexMap;
     /// let target_month = YearAndMonth::january(2024);
     /// let expenses_for_months = IndexMap::from_iter([(YearAndMonth::january(2024), vec![Item::sample_expense_breakfast()])]);
     /// let expensed_months = ExpensedPeriods::new(expenses_for_months);
@@ -91,7 +97,9 @@ impl<Period: IsPeriod> ExpensedPeriods<Period> {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
+    /// use indexmap::IndexMap;
+    /// use rust_decimal::dec;
     /// let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
     /// let month = YearAndMonth::january(2024);
     /// let items = vec![Item::sample_expense_coffee()];
@@ -118,6 +126,10 @@ impl<Period: IsPeriod> ExpensedPeriods<Period> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use crate::{Currency, Date, Quantity, UnitPrice, YearAndMonth};
+    use rust_decimal::dec;
+    use std::str::FromStr;
 
     type Sut = ExpensedPeriods<YearAndMonth>;
 

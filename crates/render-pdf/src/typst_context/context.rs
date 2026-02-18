@@ -109,7 +109,7 @@ impl World for TypstContext {
 mod tests {
     use super::*;
     use indexmap::IndexSet;
-    use klirr_foundation::prelude::{FontIdentifier, FontWeight};
+    use klirr_foundation::{FontIdentifier, FontWeight};
     use std::path::Path;
     use test_log::test;
     use typst::syntax::VirtualPath;

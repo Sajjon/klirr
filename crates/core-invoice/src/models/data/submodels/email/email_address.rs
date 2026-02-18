@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{FromStr, HasSample};
+use derive_more::Deref;
+use derive_more::From;
+use serde_with::DeserializeFromStr;
+use serde_with::SerializeDisplay;
 
 /// A valid email address.
 #[derive(
@@ -54,6 +58,7 @@ mod tests {
     use std::collections::HashSet;
 
     use super::*;
+    use crate::HasSample;
 
     type Sut = EmailAddress;
 

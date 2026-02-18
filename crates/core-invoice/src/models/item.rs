@@ -1,6 +1,16 @@
 use std::str::FromStr;
 
-use crate::prelude::*;
+use crate::{
+    Cost, Currency, Date, Day, Decimal, Error, ExchangeRates, HasSample,
+    ItemConvertedIntoTargetCurrency, Month, Quantity, Result, UnitPrice,
+};
+use bon::Builder;
+use derive_more::Display;
+use getset::Getters;
+use getset::Setters;
+use rust_decimal::dec;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[macro_export]
 macro_rules! define_item_struct {
@@ -104,7 +114,8 @@ impl Item {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
+    /// use rust_decimal::dec;
     /// let item = Item::from_str("Coffee,2.5, EUR,3.0, 2025-05-31").expect("Failed to parse Item");
     /// let exchange_rates = ExchangeRates::builder()
     ///     .target_currency(Currency::USD)
@@ -132,7 +143,8 @@ impl Item {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
+    /// use rust_decimal::dec;
     /// let item = Item::from_str("Coffee,2.5, EUR,3.0, 2025-05-31").expect("Failed to parse Item");
     /// let converted_item = item.with_total_cost();
     /// assert_eq!(**converted_item.total_cost(), dec!(7.50)); // 2.5 * 3.0
@@ -160,7 +172,7 @@ impl Item {
 }
 
 impl FromStr for Item {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a string in the format: "name, unit_price, currency, quantity, transaction_date", or
     /// without spaces after commas, even mixed, e.g. "Coffee, 2.5,EUR, 3.0,2025-05-31".
@@ -220,6 +232,9 @@ impl FromStr for Item {
 mod tests {
 
     use super::*;
+    use crate::HasSample;
+    use rust_decimal::dec;
+    use std::str::FromStr;
     use test_log::test;
 
     type Sut = Item;

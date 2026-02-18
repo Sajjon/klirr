@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{HasSample, MaybeIsExpenses, Quantity, TimeOff};
+use derive_more::Display;
+use derive_more::IsVariant;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The items being invoiced this month, either services or expenses.
 #[derive(Clone, Debug, Display, Serialize, Deserialize, IsVariant, PartialEq)]
@@ -34,6 +38,7 @@ impl HasSample for InvoicedItems {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use test_log::test;
 
     type Sut = InvoicedItems;

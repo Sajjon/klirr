@@ -1,6 +1,10 @@
 use core::fmt;
 
-use crate::prelude::*;
+use crate::{FromStr, Result};
+use serde_with::DeserializeFromStr;
+use serde_with::SerializeDisplay;
+use strum::EnumIter;
+use strum::IntoEnumIterator;
 
 #[derive(
     Clone, Copy, PartialEq, Eq, Default, Hash, DeserializeFromStr, SerializeDisplay, EnumIter,
@@ -22,7 +26,7 @@ impl VariantIterable for Language {
     /// This can be used to iterate over all supported languages.
     /// # Examples
     /// ```
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// for lang in Language::all() {
     ///     println!("Supported language: {}", lang);
     /// }
@@ -65,7 +69,7 @@ impl FromStr for Language {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let lang: Language = "en".parse().unwrap();
     /// assert_eq!(lang, Language::EN);
     /// let lang: Language = "swedish".parse().unwrap();

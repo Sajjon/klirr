@@ -1,6 +1,9 @@
 use inquire::{Confirm, CustomType};
 
-use crate::prelude::*;
+use crate::{EmailAddress, Error, Result, WithOptionalRefDefault, format_help_skippable};
+use derive_more::Display;
+use indexmap::IndexSet;
+use log::warn;
 
 #[derive(Display, Clone, Copy, Debug)]
 pub enum EmailAddressRole {

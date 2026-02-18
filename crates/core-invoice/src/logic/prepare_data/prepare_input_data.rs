@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{
+    Currency, Data, ExchangeRates, ExchangeRatesMap, IsPeriod, Item,
+    LineItemsPricedInSourceCurrency, PreparedData, Result, ValidInput,
+};
+use log::debug;
+use log::info;
 
 pub trait FetchExchangeRates {
     fn fetch_for_items(&self, target_currency: Currency, items: Vec<Item>)

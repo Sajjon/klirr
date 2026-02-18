@@ -1,6 +1,10 @@
 use klirr_foundation::ToTypst;
 
-use crate::prelude::*;
+use crate::{L10nClientInfo, L10nInvoiceInfo, L10nLineItems, L10nVendorInfo};
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The content of the localization file, which includes
 /// client information, invoice information, vendor information,

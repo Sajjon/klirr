@@ -1,4 +1,11 @@
-use crate::{define_item_struct, prelude::*};
+use crate::{Currency, Date, Item, Quantity, UnitPrice, define_item_struct};
+use bon::Builder;
+use derive_more::Display;
+use getset::Getters;
+use getset::Setters;
+use indexmap::IndexMap;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A collection of expenses for a specific period, merging items that are the same
 /// except for their quantity.

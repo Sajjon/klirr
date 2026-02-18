@@ -1,6 +1,11 @@
 use derive_more::Constructor;
 
-use crate::prelude::*;
+use crate::{Error, Result};
+use derive_more::Deref;
+use derive_more::Display;
+use derive_more::From;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Years since birth of Jesus christ, e.g. 2025
 #[derive(
@@ -22,7 +27,7 @@ use crate::prelude::*;
 pub struct Year(u16);
 
 impl std::str::FromStr for Year {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a year from a string, e.g. "2025".
     /// # Errors
@@ -30,7 +35,7 @@ impl std::str::FromStr for Year {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let year: Year = "2025".parse().unwrap();
     /// assert_eq!(*year, 2025);
     /// ```
@@ -48,7 +53,7 @@ impl From<i32> for Year {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let year: Year = 2025.into();
     /// assert_eq!(*year, 2025);
     /// ```

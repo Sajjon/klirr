@@ -1,4 +1,12 @@
-use crate::prelude::*;
+use crate::{Day, Error, HasSample, Month, PaymentTerms, Result, Year};
+use bon::Builder;
+use chrono::Datelike;
+use chrono::NaiveDate;
+use chrono::NaiveDateTime;
+use derive_more::Display;
+use getset::Getters;
+use serde_with::DeserializeFromStr;
+use serde_with::SerializeDisplay;
 
 /// A date relevant for the invoice, e.g. invoice date, due date or a transaction
 /// date for an expense.
@@ -31,7 +39,7 @@ pub struct Date {
 }
 
 impl std::str::FromStr for Date {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a date in the format "YYYY-MM-DD", e.g. "2025-05-23".
     /// # Errors
@@ -41,7 +49,7 @@ impl std::str::FromStr for Date {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let date: Date = "2025-05-23".parse().unwrap();
     /// assert_eq!(date.year(), &Year::from(2025));
     /// assert_eq!(date.month(), &Month::May);
@@ -130,6 +138,8 @@ impl HasSample for Date {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{HasSample, YearAndMonth};
+    use std::str::FromStr;
     use test_log::test;
 
     type Sut = Date;
