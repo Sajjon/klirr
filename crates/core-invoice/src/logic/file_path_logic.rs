@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{Error, Path, PathBuf, Result, fs};
 
 /// Returns the workspace root by going up from `cli` to the root.
 pub fn workspace_root() -> PathBuf {

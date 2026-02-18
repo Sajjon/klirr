@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 pub struct L10nClientInfo {

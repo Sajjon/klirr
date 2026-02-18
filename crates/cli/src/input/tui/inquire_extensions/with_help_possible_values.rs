@@ -1,6 +1,6 @@
 use inquire::{CustomType, Text};
 
-use crate::prelude::*;
+use strum::IntoEnumIterator;
 
 pub trait PossibleValues: IntoEnumIterator + std::fmt::Display {
     fn format_possible_values() -> String {

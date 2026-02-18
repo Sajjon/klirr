@@ -1,6 +1,10 @@
 use std::ops::Mul;
 
-use crate::prelude::*;
+use crate::{Currency, Error, ExchangeRatesMap, Result, UnitPrice};
+use bon::Builder;
+use getset::Getters;
+use rust_decimal::dec;
+use serde::Serialize;
 
 /// Represents exchange rates for a specific target currency in relation to other currencies.
 #[derive(Clone, Debug, Serialize, Builder, Getters)]
@@ -34,7 +38,8 @@ impl ExchangeRates {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
+    /// use rust_decimal::dec;
     /// let exchange_rates = ExchangeRates::builder()
     ///     .target_currency(Currency::EUR)
     ///     .rates(ExchangeRatesMap::from([
@@ -92,6 +97,7 @@ impl ExchangeRates {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rust_decimal::dec;
     use test_log::test;
 
     #[test]

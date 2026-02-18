@@ -1,6 +1,6 @@
 use inquire::{Text, error::InquireResult};
 
-use crate::prelude::*;
+use crate::{PostalAddress, StreetAddress, format_help_skippable};
 
 pub fn build_postal_address(
     owner: impl AsRef<str>,

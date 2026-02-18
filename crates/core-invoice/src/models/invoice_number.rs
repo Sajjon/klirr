@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{Error, HasSample, Result};
+use derive_more::Deref;
+use derive_more::Display;
+use derive_more::From;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A unique number for the invoice, e.g. `90`
 #[derive(
@@ -8,7 +13,7 @@ use crate::prelude::*;
 pub struct InvoiceNumber(u16);
 
 impl std::str::FromStr for InvoiceNumber {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a string into an `InvoiceNumber`.
     /// Returns an error if the string is not a valid number or is out of range.
@@ -18,7 +23,7 @@ impl std::str::FromStr for InvoiceNumber {
     ///
     /// # Examples
     /// ```
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let invoice_number = InvoiceNumber::from_str("1234").unwrap();
     /// assert_eq!(*invoice_number, 1234);
     /// ```
@@ -43,6 +48,8 @@ impl HasSample for InvoiceNumber {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use std::str::FromStr;
 
     type Sut = InvoiceNumber;
 

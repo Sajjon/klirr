@@ -2,7 +2,15 @@ pub const INVOICES_FOLDER_NAME: &str = "invoices";
 
 use klirr_foundation::ToTypst;
 
-use crate::prelude::*;
+use crate::{
+    CompanyInformation, Error, ExchangeRates, InvoiceInfoFull, LineItemsFlat,
+    LineItemsPricedInSourceCurrency, MaybeIsExpenses, OutputPath, PathBuf, PaymentInformation,
+    Result,
+};
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 pub type DataWithItemsPricedInSourceCurrency =
     DataFromDiskWithItemsOfKind<LineItemsPricedInSourceCurrency>;
@@ -58,7 +66,7 @@ impl<Items: Serialize + MaybeIsExpenses> DataFromDiskWithItemsOfKind<Items> {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let data = DataWithItemsPricedInSourceCurrency::builder()
     ///    .information(InvoiceInfoFull::sample())
     ///   .vendor(CompanyInformation::sample())
@@ -139,7 +147,8 @@ impl DataWithItemsPricedInSourceCurrency {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
+    /// use rust_decimal::dec;
     /// let data = DataWithItemsPricedInSourceCurrency::sample();
     /// let exchange_rates = ExchangeRates::builder().rates(ExchangeRatesMap::from_iter([(Currency::GBP, UnitPrice::from(dec!(10.0))), (Currency::EUR, UnitPrice::from(dec!(8.0)))])).target_currency(Currency::EUR).build();
     /// let result = data.to_typst(exchange_rates);
@@ -161,6 +170,7 @@ impl DataWithItemsPricedInSourceCurrency {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use test_log::test;
 
     #[test]

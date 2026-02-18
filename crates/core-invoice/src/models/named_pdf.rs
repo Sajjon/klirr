@@ -1,6 +1,6 @@
 use klirr_foundation::{AbstractNamedPdf, Pdf};
 
-use crate::prelude::*;
+use crate::{HasSample, PathBuf, PreparedData};
 
 pub type NamedPdf = AbstractNamedPdf<PreparedData>;
 
@@ -27,6 +27,7 @@ impl HasSample for NamedPdf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = NamedPdf;
 

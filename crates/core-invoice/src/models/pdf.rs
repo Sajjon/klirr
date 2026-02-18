@@ -1,6 +1,6 @@
 use klirr_foundation::Pdf;
 
-use crate::prelude::*;
+use crate::HasSample;
 
 impl HasSample for Pdf {
     fn sample() -> Self {
@@ -15,6 +15,7 @@ impl HasSample for Pdf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = Pdf;
 

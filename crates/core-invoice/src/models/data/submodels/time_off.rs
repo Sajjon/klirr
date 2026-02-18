@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::{Granularity, HasSample, Quantity};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Represents the free quantity of items, e.g. the number of days off during a
 /// period, or the number of hours off during a period. Month is not part of this
@@ -45,6 +47,7 @@ impl HasSample for TimeOff {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = TimeOff;
 

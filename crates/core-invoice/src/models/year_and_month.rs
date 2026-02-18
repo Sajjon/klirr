@@ -1,6 +1,11 @@
 use derive_more::Constructor;
 
-use crate::prelude::*;
+use crate::{Date, Error, HasSample, Month, Result, Year, YearMonthAndFortnight};
+use bon::Builder;
+use derive_more::Display;
+use getset::Getters;
+use serde_with::DeserializeFromStr;
+use serde_with::SerializeDisplay;
 
 /// A date relevant for the invoice, e.g. invoice date, due date or a transaction
 /// date for an expense.
@@ -49,7 +54,7 @@ impl From<Date> for YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let date = Date::builder().year(2025.into()).month(Month::May).day(Day::try_from(23).unwrap()).build();
     /// let year_and_month: YearAndMonth = date.into();
     /// assert_eq!(year_and_month.year(), &Year::new(2025));
@@ -68,7 +73,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let january = YearAndMonth::january(2025);
     /// assert_eq!(*january.month(), Month::January);
     /// ```
@@ -80,7 +85,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let february = YearAndMonth::february(2025);
     /// assert_eq!(*february.month(), Month::February);
     /// ```
@@ -92,7 +97,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let march = YearAndMonth::march(2025);
     /// assert_eq!(*march.month(), Month::March);
     /// ```
@@ -104,7 +109,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;    
+    /// use klirr_core_invoice::*;    
     /// let april = YearAndMonth::april(2025);
     /// assert_eq!(*april.month(), Month::April);
     /// ```
@@ -116,7 +121,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let may = YearAndMonth::may(2025);
     /// assert_eq!(*may.month(), Month::May);
     /// ```
@@ -128,7 +133,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let june = YearAndMonth::june(2025);
     /// assert_eq!(*june.month(), Month::June);
     /// ```
@@ -140,7 +145,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let july = YearAndMonth::july(2025);
     /// assert_eq!(*july.month(), Month::July);
     /// ```
@@ -152,7 +157,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let august = YearAndMonth::august(2025);
     /// assert_eq!(*august.month(), Month::August);
     /// ```
@@ -164,7 +169,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let september = YearAndMonth::september(2025);
     /// assert_eq!(*september.month(), Month::September);
     /// ```
@@ -176,7 +181,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let october = YearAndMonth::october(2025);
     /// assert_eq!(*october.month(), Month::October);
     /// ```
@@ -188,7 +193,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let november = YearAndMonth::november(2025);
     /// assert_eq!(*november.month(), Month::November);
     /// ```
@@ -200,7 +205,7 @@ impl YearAndMonth {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let december = YearAndMonth::december(2025);
     /// assert_eq!(*december.month(), Month::December);
     /// ```
@@ -236,13 +241,13 @@ impl PartialOrd for YearAndMonth {
 }
 
 impl std::str::FromStr for YearAndMonth {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a `YearAndMonth` from a string in the format "YYYY-MM".
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let year_and_month: YearAndMonth = "2025-05".parse().unwrap();
     /// assert_eq!(year_and_month.year(), &Year::new(2025));
     /// assert_eq!(year_and_month.month(), &Month::May);
@@ -269,7 +274,10 @@ impl std::str::FromStr for YearAndMonth {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Day;
+    use crate::HasSample;
     use insta::assert_debug_snapshot;
+    use std::str::FromStr;
     use test_log::test;
 
     type Sut = YearAndMonth;

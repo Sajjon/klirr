@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::{Day, FromStr, HasSample, NetDays, Result};
+use derive_more::Display;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The payment terms of this invoice, e.g. `Net { due_in: 30 }`
 #[derive(Clone, Debug, Display, Serialize, PartialEq, Eq, Hash, Deserialize)]
@@ -9,7 +12,7 @@ pub enum PaymentTerms {
 }
 
 impl FromStr for PaymentTerms {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a string into `PaymentTerms`, e.g. "Net 30" into `PaymentTerms::Net(NetDays { due_in: 30 })`.
     /// # Errors
@@ -18,7 +21,7 @@ impl FromStr for PaymentTerms {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let payment_terms: PaymentTerms = "Net 30".parse().unwrap();
     /// assert!(matches!(payment_terms, PaymentTerms::Net(_)));
     /// ```
@@ -58,6 +61,7 @@ impl HasSample for PaymentTerms {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use insta::assert_ron_snapshot;
 
     type Sut = PaymentTerms;

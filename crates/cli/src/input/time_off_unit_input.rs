@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::HasSample;
 
 #[derive(clap::ValueEnum, Debug, Clone, PartialEq)]
 pub enum TimeUnitInput {

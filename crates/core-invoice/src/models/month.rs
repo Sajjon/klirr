@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{Error, FromStr, Result};
+use derive_more::Display;
+use derive_more::IsVariant;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A month of the year, e.g. 1 for January, 2 for February, etc.
 #[derive(
@@ -32,7 +36,7 @@ impl Month {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// assert_eq!(Month::January.month(), &1);
     /// assert_eq!(Month::December.month(), &12);
     /// ```
@@ -61,7 +65,7 @@ impl std::ops::Deref for Month {
 }
 
 impl TryFrom<i32> for Month {
-    type Error = crate::prelude::Error;
+    type Error = crate::Error;
 
     /// Attempts to convert an integer to a `Month`.
     /// The integer must be between 1 and 12, inclusive.
@@ -70,7 +74,7 @@ impl TryFrom<i32> for Month {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let march = Month::try_from(3).unwrap();
     /// assert_eq!(march.to_string(), "3".to_owned());
     /// ```
@@ -97,7 +101,7 @@ impl TryFrom<i32> for Month {
 }
 
 impl FromStr for Month {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a month from a string.
     /// The string must be a valid month number (1-12).
@@ -106,7 +110,7 @@ impl FromStr for Month {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let month: Month = "3".parse().unwrap();
     /// assert_eq!(month, Month::March);
     /// ```
@@ -119,14 +123,14 @@ impl FromStr for Month {
 }
 
 impl TryFrom<u8> for Month {
-    type Error = crate::prelude::Error;
+    type Error = crate::Error;
     fn try_from(month: u8) -> Result<Self> {
         Self::try_from(month as i32)
     }
 }
 
 impl TryFrom<u32> for Month {
-    type Error = crate::prelude::Error;
+    type Error = crate::Error;
     fn try_from(month: u32) -> Result<Self> {
         Self::try_from(month as i32)
     }

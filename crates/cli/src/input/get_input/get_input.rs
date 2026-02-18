@@ -1,4 +1,10 @@
-use crate::prelude::*;
+use crate::{
+    BINARY_NAME, DataAdminInput, EmailInput, Error, InvoicedItems, Language, PathBuf, Result,
+    TargetItems, TargetPeriod, TimeOff, ValidInput, validate_email_data,
+};
+use bon::Builder;
+use clap::Subcommand;
+use getset::Getters;
 
 use clap::Parser;
 use derive_more::{Debug, Unwrap};
@@ -127,6 +133,13 @@ impl InvoiceInput {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input::{
+        DataAdminInputCommand, EditDataInputSelector, EditEmailInputSelector, ExpensesInput,
+        TimeOffInput, TimeUnitInput,
+    };
+    use klirr_core_invoice::{
+        DataSelector, Decimal, EmailSettingsSelector, FromStr, Item, Quantity, YearAndMonth,
+    };
 
     mod data_admin_input {
         use super::*;

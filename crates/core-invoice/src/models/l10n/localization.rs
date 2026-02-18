@@ -1,6 +1,10 @@
 use klirr_foundation::ToTypstFn;
 
-use crate::prelude::*;
+use crate::{L10nContent, Language, Result, VariantIterable};
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 use std::collections::HashMap;
 
 /// The language used and the content of the localization file.

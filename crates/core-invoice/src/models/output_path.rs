@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::PathBuf;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum OutputPath {

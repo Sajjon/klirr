@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{HasSample, InvoiceNumber, IsPeriod};
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// An invoice number timestamp with year and month, e.g. `(237, 2025-05)`.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters)]
@@ -31,6 +35,7 @@ impl<Period: IsPeriod + HasSample> HasSample for TimestampedInvoiceNumber<Period
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{HasSample, YearAndMonth};
 
     type Sut = TimestampedInvoiceNumber<YearAndMonth>;
 

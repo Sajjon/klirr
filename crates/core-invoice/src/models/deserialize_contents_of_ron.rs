@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::{Error, Path, Result};
+use log::trace;
 use serde::de::DeserializeOwned;
 
 /// Returns the type name of the generic type `T` as a `String`.
@@ -6,7 +7,7 @@ use serde::de::DeserializeOwned;
 /// # Examples
 /// ```
 /// extern crate klirr_core_invoice;
-/// use klirr_core_invoice::prelude::*;
+/// use klirr_core_invoice::*;
 /// let type_name = type_name::<CompanyInformation>();
 /// assert!(type_name.ends_with("CompanyInformation"));
 /// ```
@@ -46,6 +47,9 @@ pub fn deserialize_ron_str<T: DeserializeOwned>(ron_str: &str) -> Result<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{CompanyInformation, Rate, ServiceFees};
+    use rust_decimal::dec;
+    use std::fs;
     use test_log::test;
 
     #[test]

@@ -1,4 +1,10 @@
-use crate::prelude::*;
+use crate::{
+    ExchangeRates, HasSample, ItemConvertedIntoTargetCurrency, LineItemsPricedInSourceCurrency,
+    MaybeIsExpenses, Result,
+};
+use bon::Builder;
+use getset::Getters;
+use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, Hash, Getters, Builder)]
 pub struct LineItemsFlat {
@@ -18,7 +24,7 @@ impl MaybeIsExpenses for LineItemsFlat {
 }
 
 impl TryFrom<(LineItemsPricedInSourceCurrency, ExchangeRates)> for LineItemsFlat {
-    type Error = crate::prelude::Error;
+    type Error = crate::Error;
 
     /// Converts the line items priced in source currency into a flat list of items
     /// priced in the target currency, using the provided exchange rates.
@@ -68,6 +74,9 @@ impl HasSample for LineItemsFlat {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use crate::{Currency, ExchangeRatesMap, UnitPrice};
+    use rust_decimal::dec;
     use test_log::test;
 
     type Sut = LineItemsFlat;

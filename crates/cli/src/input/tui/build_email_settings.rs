@@ -1,4 +1,10 @@
-use crate::prelude::*;
+use crate::{
+    EmailAddressRole, EmailSettingsSelector, EncryptedAppPassword, EncryptedEmailSettings, Error,
+    Result, Salt, ask_for_email_account, ask_for_email_account_skippable,
+    ask_for_email_encryption_password_with_confirmation, ask_for_many_email_addresses,
+    ask_for_password, ask_for_smtp_server, ask_for_template, config_render, select_or_default,
+};
+use log::info;
 
 pub fn ask_for_email(
     default: EncryptedEmailSettings,

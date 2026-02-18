@@ -1,6 +1,6 @@
 use inquire::CustomType;
 
-use crate::prelude::*;
+use crate::{Error, Result, Template, TemplatePart};
 
 fn ask_for_proto_email_atom_template(part: &str, default: &TemplatePart) -> Result<TemplatePart> {
     CustomType::<TemplatePart>::new(&format!("Email template for {}", part))

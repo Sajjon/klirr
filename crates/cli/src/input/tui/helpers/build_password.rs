@@ -1,7 +1,7 @@
 use rpassword::prompt_password;
 use secrecy::{ExposeSecret as _, SecretString};
 
-use crate::prelude::*;
+use crate::{Error, Result, curry2};
 
 fn validate(input: SecretString, min_length: usize) -> Result<SecretString> {
     let length = input.expose_secret().len();

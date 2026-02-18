@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::{L10n, Language, Result};
+use log::debug;
 
 pub fn get_localization(language: &Language) -> Result<L10n> {
     debug!("☑️ Reading localisation data...");

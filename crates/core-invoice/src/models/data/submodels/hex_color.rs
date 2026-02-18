@@ -1,6 +1,8 @@
 use serde_with::DeserializeFromStr;
 
-use crate::prelude::*;
+use crate::{Error, FromStr, HasSample, Result};
+use getset::Getters;
+use serde_with::SerializeDisplay;
 
 #[derive(
     Clone,
@@ -41,7 +43,7 @@ impl HasSample for HexColor {
 }
 
 impl FromStr for HexColor {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a hex color string in the format "#RRGGBB" or "#RRGGBBAA".
     /// The string must start with a '#' and be followed by 6 hexadecimal
@@ -50,7 +52,7 @@ impl FromStr for HexColor {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let color: HexColor = "#e6007a".parse().unwrap();
     /// assert_eq!(*color.red(), 230);
     /// assert_eq!(*color.green(), 0);
@@ -83,6 +85,8 @@ impl FromStr for HexColor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use std::str::FromStr;
     use test_log::test;
 
     type Sut = HexColor;

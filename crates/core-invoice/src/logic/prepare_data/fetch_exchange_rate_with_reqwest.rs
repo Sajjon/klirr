@@ -1,4 +1,6 @@
-use crate::{logic::prepare_data::_get_exchange_rate_with_fetcher, prelude::*};
+use crate::{
+    Currency, Date, Error, Result, UnitPrice, logic::prepare_data::_get_exchange_rate_with_fetcher,
+};
 
 /// Makes blocking requests to the Frankfurter API to get the exchange rate
 pub(super) fn get_exchange_rate(date: &Date, from: Currency, to: Currency) -> Result<UnitPrice> {

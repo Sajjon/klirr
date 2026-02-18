@@ -1,5 +1,10 @@
-use crate::prelude::*;
+use crate::{Error, Result};
+use derive_more::Deref;
+use derive_more::Display;
+use derive_more::From;
 use derive_more::FromStr;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A wrapper around `rust_decimal::Decimal` which serializes to and from `f64`.
 ///
@@ -85,6 +90,7 @@ impl<'de> Deserialize<'de> for Decimal {
 mod tests {
     use super::*;
     use insta::{assert_ron_snapshot, assert_snapshot};
+    use rust_decimal::dec;
     use test_log::test;
 
     type Sut = Decimal;

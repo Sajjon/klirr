@@ -1,6 +1,10 @@
 use insta::assert_snapshot;
-use klirr_core_invoice::prelude::*;
+use klirr_core_invoice::{
+    Currency, Data, ExchangeRates, ExchangeRatesMap, HasSample, InvoicedItems, L10n, Language,
+    Month, MonthHalf, PreparedData, UnitPrice, ValidInput, YearAndMonth, YearMonthAndFortnight,
+};
 use klirr_foundation::ToTypstFn;
+use rust_decimal::dec;
 
 fn sample_exchange_rates() -> ExchangeRates {
     ExchangeRates::builder()

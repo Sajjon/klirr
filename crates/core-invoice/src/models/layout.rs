@@ -1,6 +1,9 @@
-use crate::prelude::*;
+use derive_more::Display;
 use derive_more::FromStr;
+use indexmap::IndexSet;
 use klirr_foundation::{FontIdentifier, FontRequiring, FontWeight, ToTypst, ToTypstFn};
+use strum::EnumIter;
+use strum::IntoEnumIterator;
 
 /// The Typst layout "Aioo" as a string.
 const TYPST_LAYOUT_AIOO: &str = include_str!("../../layouts/aioo.typ");
@@ -57,7 +60,7 @@ impl Layout {
     /// This can be used to iterate over all supported layouts.
     /// # Examples
     /// ```
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// for layout in Layout::all() {
     ///     println!("Supported layout: {}", layout);
     /// }

@@ -1,7 +1,12 @@
 use serde_with::serde_as;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use crate::prelude::*;
+use crate::HasSample;
+use derive_more::AsRef;
+use derive_more::Deref;
+use derive_more::From;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A cryptographically secure random salt used for key derivation.
 /// It is used to ensure that the derived keys are unique even if the
@@ -47,6 +52,7 @@ impl HasSample for Salt {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = Salt;
 

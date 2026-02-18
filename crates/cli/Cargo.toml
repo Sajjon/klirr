@@ -23,6 +23,8 @@ colored = "3.0.0"
 derive_more.workspace = true
 dirs-next.workspace = true
 fern = "0.7.1"
+getset.workspace = true
+indexmap.workspace = true
 inquire = { version = "0.7.5", features = ["date"] }
 log.workspace = true
 rand.workspace = true

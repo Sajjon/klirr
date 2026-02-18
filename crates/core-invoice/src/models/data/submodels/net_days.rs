@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{Day, Error, FromStr, HasSample, Result};
+use bon::Builder;
+use derive_more::Display;
+use getset::Getters;
+use serde_with::DeserializeFromStr;
+use serde_with::SerializeDisplay;
 
 /// A typical payment terms structure that includes net payment due in a
 /// specified number of days, e.g. `Net 30`.
@@ -23,7 +28,7 @@ pub struct NetDays {
 }
 
 impl FromStr for NetDays {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Tries to parse a string in the format "Net {days}", e.g. "Net 30".
     /// /// # Errors
@@ -32,7 +37,7 @@ impl FromStr for NetDays {
     /// /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let net_days: NetDays = "Net 30".parse().unwrap();
     /// assert_eq!(net_days.due_in(), &Day::try_from(30).unwrap());
     /// ```
@@ -70,6 +75,7 @@ impl HasSample for NetDays {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = NetDays;
 

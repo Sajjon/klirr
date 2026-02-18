@@ -1,5 +1,10 @@
-use crate::prelude::*;
+use crate::HasSample;
+use derive_more::Deref;
+use derive_more::Display;
+use derive_more::From;
 use derive_more::FromStr;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Footer text for the invoice, e.g. "Reverse VAT according to chapter 1 2§ first section 4b in the VAT regulation."
 /// This is typically used to provide additional information about the invoice,
@@ -30,6 +35,7 @@ impl HasSample for FooterText {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use test_log::test;
 
     type Sut = FooterText;

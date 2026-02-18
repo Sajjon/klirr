@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::{Attachment, DecryptedEmailSettings, EmailAccount, EmailAddress, HasSample, NamedPdf};
+use bon::Builder;
+use getset::Getters;
+use indexmap::IndexSet;
 
 /// An email message that can be sent using an SMTP server.
 #[derive(Debug, Clone, Builder, Getters, PartialEq)]
@@ -90,6 +93,9 @@ mod tests {
     use secrecy::SecretString;
 
     use super::*;
+    use crate::HasSample;
+    use crate::{Salt, SmtpServer, Template};
+    use std::str::FromStr;
 
     type Sut = Email;
 

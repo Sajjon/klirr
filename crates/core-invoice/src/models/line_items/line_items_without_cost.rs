@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{HasSample, Item};
+use derive_more::From;
+use derive_more::IsVariant;
+use derive_more::TryUnwrap;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Trait for types that can determine if they are expenses.
 pub trait MaybeIsExpenses {
@@ -36,6 +41,7 @@ impl HasSample for LineItemsPricedInSourceCurrency {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use test_log::test;
 
     type Sut = LineItemsPricedInSourceCurrency;

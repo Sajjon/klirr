@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::FontWeight;
+use derive_more::Display;
 
 /// Regular weight of Computer Modern font. For more info see [`FontIdentifier::ComputerModern`].
 const FONT_COMPUTER_MODERN_REGULAR: &[u8] = include_bytes!("../../assets/cmunrm.ttf");

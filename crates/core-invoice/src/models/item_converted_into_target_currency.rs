@@ -1,4 +1,10 @@
-use crate::prelude::*;
+use crate::{Cost, HasSample, Item};
+use bon::Builder;
+use derive_more::Deref;
+use derive_more::From;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// An item with a total cost, calculated as `unit_price * quantity`.
 #[derive(
@@ -34,6 +40,7 @@ impl HasSample for ItemConvertedIntoTargetCurrency {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use test_log::test;
 
     type Sut = ItemConvertedIntoTargetCurrency;

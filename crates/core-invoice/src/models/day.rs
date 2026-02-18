@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{Error, HasSample, Result};
+use derive_more::Deref;
+use derive_more::Display;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The day of the month, e.g. 1 for the first day, 31 for the last day of a month.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Display, Serialize, Deserialize, Deref)]
@@ -14,7 +18,7 @@ impl HasSample for Day {
 }
 
 impl std::str::FromStr for Day {
-    type Err = crate::prelude::Error;
+    type Err = crate::Error;
 
     /// Parses a day from a string, e.g. "1" for the first day, "31" for the last day of a month.
     /// # Errors
@@ -22,7 +26,7 @@ impl std::str::FromStr for Day {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let day: Day = "15".parse().unwrap();
     /// assert_eq!(*day, 15);
     /// ```
@@ -36,7 +40,7 @@ impl std::str::FromStr for Day {
 }
 
 impl TryFrom<i32> for Day {
-    type Error = crate::prelude::Error;
+    type Error = crate::Error;
     fn try_from(day: i32) -> Result<Self> {
         if !(1..=31).contains(&day) {
             return Err(Error::InvalidDay {
@@ -49,14 +53,14 @@ impl TryFrom<i32> for Day {
 }
 
 impl TryFrom<u8> for Day {
-    type Error = crate::prelude::Error;
+    type Error = crate::Error;
     fn try_from(day: u8) -> Result<Self> {
         Self::try_from(day as i32)
     }
 }
 
 impl TryFrom<u32> for Day {
-    type Error = crate::prelude::Error;
+    type Error = crate::Error;
     fn try_from(day: u32) -> Result<Self> {
         Self::try_from(day as i32)
     }
@@ -65,6 +69,8 @@ impl TryFrom<u32> for Day {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use std::str::FromStr;
     use test_log::test;
 
     type Sut = Day;

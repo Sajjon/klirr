@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::PreparedData;
+use derive_more::From;
+use serde_with::DeserializeFromStr;
+use serde_with::SerializeDisplay;
 
 /// A formatting taking one argument: Invoice number, e.g. "Invoice{}".
 /// At time of composing the email, the subject will be
@@ -68,6 +71,7 @@ impl Default for TemplatePart {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     #[test]
     fn test_replace() {

@@ -1,6 +1,11 @@
 use derive_more::FromStr;
 
-use crate::prelude::*;
+use crate::HasSample;
+use derive_more::Display;
+use derive_more::IsVariant;
+use serde::Deserialize;
+use serde::Serialize;
+use strum::EnumIter;
 
 /// The granularity of invoiced quantity, i.e. if you are invoicing fixed rate
 /// per month, per day or per hour.
@@ -53,6 +58,7 @@ impl HasSample for Granularity {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     type Sut = Granularity;
 
     #[test]

@@ -1,4 +1,12 @@
-use crate::prelude::*;
+use crate::{
+    Error, FooterText, HasSample, HexColor, IsPeriod, PurchaseOrder, RecordOfPeriodsOff, Result,
+    TimestampedInvoiceNumber, type_name,
+};
+use bon::Builder;
+use getset::Getters;
+use getset::Setters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Partial information about the invoice which can be used to derive a [`InvoiceInfoFull`]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, Setters)]
@@ -35,7 +43,7 @@ impl<Period: IsPeriod> ProtoInvoiceInfo<Period> {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let mut invoice_info = ProtoInvoiceInfo::<YearAndMonth>::sample();
     /// let month = YearAndMonth::may(2025);
     /// invoice_info.insert_period_off(month);
@@ -77,7 +85,7 @@ impl<Period: IsPeriod> ProtoInvoiceInfo<Period> {
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::prelude::*;
+    /// use klirr_core_invoice::*;
     /// let invoice_info = ProtoInvoiceInfo::<YearAndMonth>::sample();
     /// assert!(invoice_info.validate().is_ok());
     /// ```
@@ -94,8 +102,9 @@ impl<Period: IsPeriod> ProtoInvoiceInfo<Period> {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
+    use crate::{Date, HasSample, PaymentTerms, YearAndMonth};
+    use std::str::FromStr;
     use test_log::test;
 
     type Sut = ProtoInvoiceInfo<YearAndMonth>;

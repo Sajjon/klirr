@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{Currency, HasSample, PaymentTerms};
+use bon::Builder;
+use getset::Getters;
+use getset::WithSetters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Bank account details for the vendor, used for international transfers.
 /// This includes the IBAN, bank name, and BIC.
@@ -53,6 +58,7 @@ impl HasSample for PaymentInformation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = PaymentInformation;
 

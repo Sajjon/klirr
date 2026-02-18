@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::prelude::*;
+use crate::{HasSample, Result};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, DeserializeFromStr, SerializeDisplay)]
 pub enum Currency {
@@ -172,7 +172,9 @@ impl FromStr for Currency {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use insta::assert_debug_snapshot;
+    use std::str::FromStr;
     use test_log::test;
 
     type Sut = Currency;

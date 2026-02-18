@@ -1,4 +1,4 @@
-use crate::{logic::Salt, prelude::*};
+use crate::{EncryptionKey, logic::Salt};
 use hkdf::Hkdf;
 use secrecy::{ExposeSecret, SecretString};
 use sha2::Sha256;

@@ -44,7 +44,10 @@ pub fn render<I: ToTypstFn, D: ToTypstFn, L: ToTypstFn + FontRequiring, E>(
 #[cfg(test)]
 mod tests {
     use crate::render_test_helpers::*;
-    use klirr_core_invoice::prelude::*;
+    use klirr_core_invoice::{
+        Currency, Data, ExchangeRatesMap, HasSample, InvoicedItems, Language, Month, MonthHalf,
+        UnitPrice, ValidInput, YearAndMonth, YearMonthAndFortnight,
+    };
     use test_log::test;
 
     #[test]

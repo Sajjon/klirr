@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{HasSample, PostalAddress};
+use bon::Builder;
+use getset::Getters;
+use getset::WithSetters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Information about a company
 #[derive(
@@ -60,6 +65,7 @@ impl CompanyInformation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = CompanyInformation;
 

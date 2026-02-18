@@ -1,6 +1,10 @@
 use derive_more::FromStr;
 
-use crate::prelude::*;
+use crate::{Error, Granularity, HasSample, Result};
+use derive_more::Display;
+use serde::Deserialize;
+use serde::Serialize;
+use strum::EnumIter;
 
 /// How often you invoice, e.g. once or twice per month
 #[derive(
@@ -40,6 +44,7 @@ impl HasSample for Cadence {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use test_log::test;
 
     type Sut = Cadence;

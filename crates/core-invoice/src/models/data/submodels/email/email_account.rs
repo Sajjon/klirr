@@ -1,4 +1,8 @@
-use crate::prelude::*;
+use crate::{EmailAddress, HasSample};
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// A named sender and an email address.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Builder, Getters, Serialize, Deserialize)]
@@ -40,6 +44,7 @@ mod tests {
     use std::collections::HashSet;
 
     use super::*;
+    use crate::HasSample;
 
     type Sut = EmailAccount;
 

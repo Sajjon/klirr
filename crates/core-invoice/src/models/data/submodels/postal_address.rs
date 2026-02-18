@@ -1,4 +1,9 @@
-use crate::prelude::*;
+use crate::{HasSample, StreetAddress};
+use bon::Builder;
+use getset::Getters;
+use getset::WithSetters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The postal address of a company
 #[derive(
@@ -66,6 +71,7 @@ impl PostalAddress {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use insta::assert_debug_snapshot;
     use test_log::test;
 

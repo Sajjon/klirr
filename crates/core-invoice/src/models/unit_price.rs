@@ -1,5 +1,11 @@
-use crate::prelude::*;
+use crate::{Decimal, HasSample};
+use derive_more::Deref;
+use derive_more::Display;
+use derive_more::From;
 use derive_more::FromStr;
+use rust_decimal::dec;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// The cost of a single item, e.g. the cost of one day of consulting service.
 #[derive(
@@ -38,7 +44,9 @@ impl HasSample for UnitPrice {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
     use insta::assert_ron_snapshot;
+    use rust_decimal::dec;
     use test_log::test;
 
     type Sut = UnitPrice;

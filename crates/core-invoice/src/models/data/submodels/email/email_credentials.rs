@@ -1,6 +1,8 @@
 use secrecy::{ExposeSecret, SecretString};
 
-use crate::prelude::*;
+use crate::{DecryptedEmailSettings, EmailAccount, HasSample, SmtpServer};
+use bon::Builder;
+use getset::Getters;
 
 /// Credentials for an email account, typically used for sending emails via SMTP.
 #[derive(Debug, Clone, Builder, Getters)]
@@ -65,6 +67,7 @@ impl HasSample for EmailCredentials {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
 
     type Sut = EmailCredentials;
 

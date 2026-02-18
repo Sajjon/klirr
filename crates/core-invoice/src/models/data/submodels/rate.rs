@@ -1,6 +1,8 @@
 use std::ops::Deref;
 
-use crate::prelude::*;
+use crate::{Granularity, HasSample, UnitPrice};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Invoice rate, a fixed price per month, per day or per hour.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
@@ -89,6 +91,8 @@ impl HasSample for Rate {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HasSample;
+    use rust_decimal::dec;
 
     type Sut = Rate;
 

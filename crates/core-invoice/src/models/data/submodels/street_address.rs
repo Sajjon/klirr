@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use bon::Builder;
+use getset::Getters;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Street address information
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Builder, Getters)]
