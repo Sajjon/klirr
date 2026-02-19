@@ -1,6 +1,6 @@
 use crate::{
-    EmailAddressRole, EmailSettingsSelector, EncryptedAppPassword, EncryptedEmailSettings, Error,
-    Result, Salt, ask_for_email_account, ask_for_email_account_skippable,
+    EmailAddressRole, EmailFromTuiError, EmailSettingsSelector, EncryptedAppPassword,
+    EncryptedEmailSettings, Result, Salt, ask_for_email_account, ask_for_email_account_skippable,
     ask_for_email_encryption_password_with_confirmation, ask_for_many_email_addresses,
     ask_for_password, ask_for_smtp_server, ask_for_template, config_render, select_or_default,
 };
@@ -74,7 +74,7 @@ pub fn ask_for_email(
     )?;
 
     if recipients.is_empty() {
-        return Err(Error::RecipientAddressesCannotBeEmpty);
+        return Err(EmailFromTuiError::RecipientAddressesCannotBeEmpty.into());
     }
 
     let cc_recipients = select_or_default(

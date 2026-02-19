@@ -1,7 +1,7 @@
 use inquire::{Text, error::InquireResult};
 
 use crate::{
-    CompanyInformation, Error, Result, WithOptionalDefault, build_postal_address,
+    CompanyInformation, InvoiceDataFromTuiError, Result, WithOptionalDefault, build_postal_address,
     format_help_skippable,
 };
 
@@ -46,7 +46,7 @@ pub fn build_company(
 
         Ok(company_info)
     }
-    inner(owner.as_ref().to_owned(), default).map_err(|e| Error::InvalidCompanyInformation {
-        reason: format!("{:?}", e),
-    })
+    inner(owner.as_ref().to_owned(), default)
+        .map_err(InvoiceDataFromTuiError::invalid_company_information)
+        .map_err(crate::Error::from)
 }

@@ -20,9 +20,7 @@ pub fn create_folder_if_needed(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
 
     if !path.exists() {
-        fs::create_dir_all(path).map_err(|e| Error::FailedToCreateOutputDirectory {
-            underlying: format!("{:?}", e),
-        })?;
+        fs::create_dir_all(path).map_err(Error::failed_to_create_output_directory)?;
     }
     Ok(())
 }

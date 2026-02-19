@@ -93,9 +93,7 @@ impl TryFrom<EmailWithSender> for Message {
 
             builder.multipart(multipart)
         }
-        .map_err(|e| crate::Error::CreateEmailError {
-            underlying: format!("{:?}", e),
-        })
+        .map_err(crate::Error::create_email_error)
     }
 }
 

@@ -44,11 +44,7 @@ impl TypstContext {
 }
 
 fn inline_module(module: &InlineModule) -> Result<Source> {
-    Source::inline(module.source().to_owned(), module.virtual_path()).map_err(|e| {
-        Error::LoadSource {
-            underlying: e.to_string(),
-        }
-    })
+    Source::inline(module.source().to_owned(), module.virtual_path()).map_err(Error::load_source)
 }
 
 impl World for TypstContext {

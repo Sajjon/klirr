@@ -12,54 +12,69 @@ use secrecy::{ExposeSecret, SecretString};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-fn input_email_data_at(
+fn input_email_data_at<E>(
     default_data: EncryptedEmailSettings,
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
-) -> Result<()> {
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings, E>,
+) -> Result<(), E>
+where
+    E: From<Error>,
+{
     let email_settings = provide_data(default_data)?;
-    save_email_settings_with_base_path(email_settings, write_path)?;
+    save_email_settings_with_base_path(email_settings, write_path).map_err(E::from)?;
     Ok(())
 }
 
-fn input_data_at<Period: IsPeriod + Serialize>(
+fn input_data_at<Period: IsPeriod + Serialize, E>(
     default_data: Data<Period>,
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
-) -> Result<()> {
+    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>, E>,
+) -> Result<(), E>
+where
+    E: From<Error>,
+{
     let data = provide_data(default_data)?;
-    save_data_with_base_path(data, write_path)?;
+    save_data_with_base_path(data, write_path).map_err(E::from)?;
     Ok(())
 }
 
-pub fn edit_email_data_at(
+pub fn edit_email_data_at<E>(
     path: impl AsRef<Path>,
-    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
-) -> Result<()> {
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings, E>,
+) -> Result<(), E>
+where
+    E: From<Error>,
+{
     let path = path.as_ref();
     info!("Editing email data at: {}", path.display());
-    let existing = read_email_data_from_disk_with_base_path(path)?;
+    let existing = read_email_data_from_disk_with_base_path(path).map_err(E::from)?;
     input_email_data_at(existing, path, provide_data)?;
     info!("✅ Email data edit done");
     Ok(())
 }
 
-pub fn edit_data_at(
+pub fn edit_data_at<E>(
     path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>>,
-) -> Result<()> {
+    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>, E>,
+) -> Result<(), E>
+where
+    E: From<Error>,
+{
     let path = path.as_ref();
     info!("Editing data at: {}", path.display());
-    let existing = read_data_from_disk_with_base_path(path)?;
+    let existing = read_data_from_disk_with_base_path(path).map_err(E::from)?;
     input_data_at(existing, path, provide_data)?;
     info!("✅ Data edit done");
     Ok(())
 }
 
-pub fn init_data_at<Period: IsPeriod + Serialize + DeserializeOwned + HasSample>(
+pub fn init_data_at<Period: IsPeriod + Serialize + DeserializeOwned + HasSample, E>(
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>>,
-) -> Result<()> {
+    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>, E>,
+) -> Result<(), E>
+where
+    E: From<Error>,
+{
     let write_path = write_path.as_ref();
     info!("Initializing data directory at: {}", write_path.display());
     input_data_at(Data::<Period>::sample(), write_path, provide_data)?;
@@ -67,10 +82,13 @@ pub fn init_data_at<Period: IsPeriod + Serialize + DeserializeOwned + HasSample>
     Ok(())
 }
 
-pub fn init_email_data_at(
+pub fn init_email_data_at<E>(
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings>,
-) -> Result<()> {
+    provide_data: impl FnOnce(EncryptedEmailSettings) -> Result<EncryptedEmailSettings, E>,
+) -> Result<(), E>
+where
+    E: From<Error>,
+{
     let write_path = write_path.as_ref();
     info!(
         "Initializing email settings directory at: {}",
@@ -81,24 +99,32 @@ pub fn init_email_data_at(
     Ok(())
 }
 
-fn decrypt_email_settings_and<T>(
+fn decrypt_email_settings_and<T, E>(
     read_path: impl AsRef<Path>,
-    get_email_password: impl FnOnce() -> Result<SecretString>,
-    on_decrypt: impl FnOnce(DecryptedEmailSettings) -> Result<T>,
-) -> Result<T> {
+    get_email_password: impl FnOnce() -> Result<SecretString, E>,
+    on_decrypt: impl FnOnce(DecryptedEmailSettings) -> Result<T, E>,
+) -> Result<T, E>
+where
+    E: From<Error>,
+{
     let read_path = read_path.as_ref();
-    let email_settings = read_email_data_from_disk_with_base_path(read_path)?;
+    let email_settings = read_email_data_from_disk_with_base_path(read_path).map_err(E::from)?;
     let encryption_password = get_email_password()?;
-    let email_settings = email_settings.decrypt_smtp_app_password(encryption_password)?;
+    let email_settings = email_settings
+        .decrypt_smtp_app_password(encryption_password)
+        .map_err(E::from)?;
     on_decrypt(email_settings)
 }
 
-fn load_email_data_and_send_test_email_at_with_send(
+fn load_email_data_and_send_test_email_at_with_send<E>(
     read_path: impl AsRef<Path>,
-    get_email_password: impl FnOnce() -> Result<SecretString>,
-    render_sample: impl FnOnce() -> Result<NamedPdf>,
-    send_email: impl FnOnce(&NamedPdf, &DecryptedEmailSettings) -> Result<()>,
-) -> Result<()> {
+    get_email_password: impl FnOnce() -> Result<SecretString, E>,
+    render_sample: impl FnOnce() -> Result<NamedPdf, E>,
+    send_email: impl FnOnce(&NamedPdf, &DecryptedEmailSettings) -> Result<(), E>,
+) -> Result<(), E>
+where
+    E: From<Error> + std::fmt::Display,
+{
     let read_path = read_path.as_ref();
     info!(
         "Loading email settings for sending test email from: {}",
@@ -114,23 +140,31 @@ fn load_email_data_and_send_test_email_at_with_send(
     })
 }
 
-pub fn load_email_data_and_send_test_email_at(
+pub fn load_email_data_and_send_test_email_at<E>(
     read_path: impl AsRef<Path>,
-    get_email_password: impl FnOnce() -> Result<SecretString>,
-    render_sample: impl FnOnce() -> Result<NamedPdf>,
-) -> Result<()> {
+    get_email_password: impl FnOnce() -> Result<SecretString, E>,
+    render_sample: impl FnOnce() -> Result<NamedPdf, E>,
+) -> Result<(), E>
+where
+    E: From<Error> + std::fmt::Display,
+{
     load_email_data_and_send_test_email_at_with_send(
         read_path,
         get_email_password,
         render_sample,
-        send_email_with_settings_for_pdf,
+        |sample, email_settings| {
+            send_email_with_settings_for_pdf(sample, email_settings).map_err(E::from)
+        },
     )
 }
 
-pub fn validate_email_data_at(
+pub fn validate_email_data_at<E>(
     read_path: impl AsRef<Path>,
-    get_email_password: impl FnOnce() -> Result<SecretString>,
-) -> Result<DecryptedEmailSettings> {
+    get_email_password: impl FnOnce() -> Result<SecretString, E>,
+) -> Result<DecryptedEmailSettings, E>
+where
+    E: From<Error>,
+{
     let read_path = read_path.as_ref();
     info!("Validating email settings at: {}", read_path.display());
     decrypt_email_settings_and(read_path, get_email_password, |email_settings| {
@@ -269,7 +303,7 @@ mod tests {
     #[test]
     fn test_init_data_directory_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let result = init_data_at::<YearAndMonth>(tempdir.path(), Ok);
+        let result = init_data_at::<YearAndMonth, Error>(tempdir.path(), Ok);
         assert!(
             result.is_ok(),
             "Expected data directory initialization to succeed, got: {:?}",
@@ -392,7 +426,8 @@ mod tests {
             "Sample vendor and client should not be the same"
         );
         save_data_with_base_path(data.with_client(first.clone()), tempdir.path()).unwrap();
-        let result = edit_data_at(tempdir.path(), |data| Ok(data.with_client(second.clone())));
+        let result: Result<()> =
+            edit_data_at(tempdir.path(), |data| Ok(data.with_client(second.clone())));
         assert!(
             result.is_ok(),
             "Expected data edit to succeed, got: {:?}",
@@ -421,7 +456,7 @@ mod tests {
         .unwrap();
 
         // Edit the email settings to use second sender
-        let result = edit_email_data_at(tempdir.path(), |email_settings| {
+        let result: Result<()> = edit_email_data_at(tempdir.path(), |email_settings| {
             Ok(email_settings.with_sender(second_sender.clone()))
         });
 
@@ -441,7 +476,7 @@ mod tests {
     fn test_input_email_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         let email_settings = EncryptedEmailSettings::sample();
-        let result =
+        let result: Result<()> =
             input_email_data_at(email_settings.clone(), tempdir.path(), |email_settings| {
                 Ok(email_settings)
             });
@@ -458,8 +493,12 @@ mod tests {
     #[test]
     fn test_validate_email_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        init_email_data_at(tempdir.path(), |email_settings| Ok(email_settings.clone())).unwrap();
-        let result = validate_email_data_at(tempdir.path(), || Ok(SecretString::sample()));
+        init_email_data_at::<Error>(tempdir.path(), |email_settings| {
+            Ok::<_, Error>(email_settings.clone())
+        })
+        .unwrap();
+        let result: Result<DecryptedEmailSettings> =
+            validate_email_data_at(tempdir.path(), || Ok(SecretString::sample()));
         assert!(
             result.is_ok(),
             "Expected email data validation to succeed, got: {:?}",
@@ -470,14 +509,14 @@ mod tests {
     #[test]
     fn test_load_email_data_and_send_test_email_at_with_send() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        input_email_data_at(
+        input_email_data_at::<Error>(
             EncryptedEmailSettings::sample(),
             tempdir.path(),
-            |email_settings| Ok(email_settings.clone()),
+            |email_settings| Ok::<_, Error>(email_settings.clone()),
         )
         .unwrap();
 
-        let result = load_email_data_and_send_test_email_at_with_send(
+        let result: Result<()> = load_email_data_and_send_test_email_at_with_send(
             tempdir.path(),
             || Ok(SecretString::sample()),
             || Ok(NamedPdf::sample()),

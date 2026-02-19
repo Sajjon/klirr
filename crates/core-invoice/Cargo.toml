@@ -10,7 +10,6 @@ repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
 klirr-foundation.workspace = true
-klirr-render-pdf.workspace = true
 
 aes-gcm.workspace = true
 bon.workspace = true

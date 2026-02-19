@@ -53,15 +53,9 @@ pub fn data_dir() -> PathBuf {
 
 pub fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<()> {
     let ron_config = ron::ser::PrettyConfig::new().struct_names(true);
-    let serialized = ron::ser::to_string_pretty(model, ron_config).map_err(|e| {
-        Error::FailedToRonSerializeData {
-            type_name: type_name::<T>().to_owned(),
-            underlying: format!("{:?}", e),
-        }
-    })?;
-    std::fs::write(path.as_ref(), serialized).map_err(|e| Error::FailedToWriteDataToDisk {
-        underlying: format!("{:?}", e),
-    })?;
+    let serialized = ron::ser::to_string_pretty(model, ron_config)
+        .map_err(Error::failed_to_ron_serialize_data(type_name::<T>()))?;
+    std::fs::write(path.as_ref(), serialized).map_err(Error::failed_to_write_data_to_disk)?;
     info!("✅ Successfully saved file at: {}", path.as_ref().display());
     Ok(())
 }

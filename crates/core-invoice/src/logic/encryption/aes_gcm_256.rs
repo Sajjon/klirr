@@ -1,5 +1,4 @@
 use crate::{AesGcmSealedBox, AesNonce, EncryptionKey, Error, Result};
-use log::error;
 
 use aes_gcm::{
     Key,
@@ -50,10 +49,7 @@ impl AesGcm256 {
         let cipher_text = sealed_box.cipher_text();
         cipher
             .decrypt(sealed_box.nonce().into(), cipher_text.as_ref())
-            .map_err(|e| {
-                error!("Failed to AES decrypt data - error: {:?}", e);
-                Error::AESDecryptionFailed
-            })
+            .map_err(Error::aes_decryption_failed)
     }
 }
 

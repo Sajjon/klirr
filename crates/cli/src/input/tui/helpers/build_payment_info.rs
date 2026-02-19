@@ -1,6 +1,6 @@
 use inquire::{CustomType, Text, error::InquireResult};
 
-use crate::{Currency, Error, PaymentInformation, PaymentTerms, Result};
+use crate::{Currency, InvoiceDataFromTuiError, PaymentInformation, PaymentTerms, Result};
 
 pub fn build_payment_info(default: &PaymentInformation) -> Result<PaymentInformation> {
     fn inner(default: &PaymentInformation) -> InquireResult<PaymentInformation> {
@@ -36,7 +36,7 @@ pub fn build_payment_info(default: &PaymentInformation) -> Result<PaymentInforma
 
         Ok(payment_info)
     }
-    inner(default).map_err(|e| Error::InvalidPaymentInfo {
-        reason: format!("{:?}", e),
-    })
+    inner(default)
+        .map_err(InvoiceDataFromTuiError::invalid_payment_info)
+        .map_err(crate::Error::from)
 }
