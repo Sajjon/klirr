@@ -343,3 +343,144 @@ impl Error {
         Self::AESDecryptionFailed
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Error;
+    use std::fmt;
+
+    struct DebugPassthrough(&'static str);
+    impl fmt::Debug for DebugPassthrough {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    struct DisplayPassthrough(&'static str);
+    impl fmt::Display for DisplayPassthrough {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    #[test]
+    fn create_smtp_transport_error_keeps_message() {
+        let err = Error::create_smtp_transport_error(DebugPassthrough("smtp-fail"));
+        assert!(matches!(
+            err,
+            Error::CreateSmtpTransportError { underlying }
+                if underlying == "Failed to create SMTP transport: smtp-fail"
+        ));
+    }
+
+    #[test]
+    fn send_email_error_keeps_message() {
+        let err = Error::send_email_error(DebugPassthrough("send-fail"));
+        assert!(matches!(
+            err,
+            Error::SendEmailError { underlying } if underlying == "Failed to send email: send-fail"
+        ));
+    }
+
+    #[test]
+    fn create_email_error_keeps_message() {
+        let err = Error::create_email_error(DebugPassthrough("mailbox parse failed"));
+        assert!(matches!(
+            err,
+            Error::CreateEmailError { underlying } if underlying == "mailbox parse failed"
+        ));
+    }
+
+    #[test]
+    fn failed_to_create_output_directory_keeps_message() {
+        let err = Error::failed_to_create_output_directory(DebugPassthrough("permission denied"));
+        assert!(matches!(
+            err,
+            Error::FailedToCreateOutputDirectory { underlying } if underlying == "permission denied"
+        ));
+    }
+
+    #[test]
+    fn save_pdf_keeps_message() {
+        let err = Error::save_pdf("disk full");
+        assert!(matches!(
+            err,
+            Error::SavePdf { underlying } if underlying == "disk full"
+        ));
+    }
+
+    #[test]
+    fn failed_to_write_data_to_disk_keeps_message() {
+        let err = Error::failed_to_write_data_to_disk(DebugPassthrough("read-only file system"));
+        assert!(matches!(
+            err,
+            Error::FailedToWriteDataToDisk { underlying } if underlying == "read-only file system"
+        ));
+    }
+
+    #[test]
+    fn failed_to_ron_serialize_data_mapper_sets_type_and_message() {
+        let err = Error::failed_to_ron_serialize_data("MyType")(DebugPassthrough("serialize fail"));
+        assert!(matches!(
+            err,
+            Error::FailedToRonSerializeData { type_name, underlying }
+                if type_name == "MyType" && underlying == "serialize fail"
+        ));
+    }
+
+    #[test]
+    fn file_not_found_mapper_sets_path_and_message() {
+        let err = Error::file_not_found("/tmp/missing.ron")(DebugPassthrough("no such file"));
+        assert!(matches!(
+            err,
+            Error::FileNotFound { path, underlying }
+                if path == "/tmp/missing.ron" && underlying == "no such file"
+        ));
+    }
+
+    #[test]
+    fn deserialize_mapper_sets_type_and_message() {
+        let err = Error::deserialize("MyType")(DisplayPassthrough("expected struct"));
+        assert!(matches!(
+            err,
+            Error::Deserialize { type_name, error } if type_name == "MyType" && error == "expected struct"
+        ));
+    }
+
+    #[test]
+    fn parse_error_mapper_sets_context_and_message() {
+        let err = Error::parse_error("Parse JSON")(DisplayPassthrough("eof"));
+        assert!(matches!(
+            err,
+            Error::ParseError { underlying } if underlying == "Parse JSON: eof"
+        ));
+    }
+
+    #[test]
+    fn network_error_mapper_sets_context_and_message() {
+        let err = Error::network_error("Fetch rate")(DisplayPassthrough("timed out"));
+        assert!(matches!(
+            err,
+            Error::NetworkError { underlying } if underlying == "Fetch rate: timed out"
+        ));
+    }
+
+    #[test]
+    fn invalid_expense_item_mapper_sets_input_field_and_message() {
+        let err = Error::invalid_expense_item("Coffee,abc,EUR,1,2025-01-01", "unit_price")(
+            DisplayPassthrough("invalid decimal"),
+        );
+        assert!(matches!(
+            err,
+            Error::InvalidExpenseItem { invalid_string, reason }
+                if invalid_string == "Coffee,abc,EUR,1,2025-01-01"
+                    && reason == "Failed to parse unit_price: invalid decimal"
+        ));
+    }
+
+    #[test]
+    fn aes_decryption_failed_maps_to_expected_variant() {
+        let err = Error::aes_decryption_failed(DebugPassthrough("tag mismatch"));
+        assert!(matches!(err, Error::AESDecryptionFailed));
+    }
+}

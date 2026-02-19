@@ -42,3 +42,43 @@ impl Error {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Error;
+    use std::fmt;
+
+    struct DebugPassthrough(&'static str);
+    impl fmt::Debug for DebugPassthrough {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    #[test]
+    fn load_source_keeps_underlying_message() {
+        let err = Error::load_source("inline source parse failed");
+        assert!(matches!(
+            err,
+            Error::LoadSource { underlying } if underlying == "inline source parse failed"
+        ));
+    }
+
+    #[test]
+    fn build_pdf_keeps_underlying_message() {
+        let err = Error::build_pdf(DebugPassthrough("compile failed"));
+        assert!(matches!(
+            err,
+            Error::BuildPdf { underlying } if underlying == "compile failed"
+        ));
+    }
+
+    #[test]
+    fn export_document_to_pdf_keeps_underlying_message() {
+        let err = Error::export_document_to_pdf(DebugPassthrough("pdf backend failed"));
+        assert!(matches!(
+            err,
+            Error::ExportDocumentToPdf { underlying } if underlying == "pdf backend failed"
+        ));
+    }
+}

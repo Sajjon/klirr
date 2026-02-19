@@ -182,3 +182,112 @@ pub type InvoiceDataFromTuiError = InvalidInvoiceData;
 pub type Result<T, E = CliError> = std::result::Result<T, E>;
 /// Convenience alias for CLI operations that return [`CliError`].
 pub type CliResult<T> = Result<T, CliError>;
+
+#[cfg(test)]
+mod tests {
+    use super::{EmailFromTuiError, InvalidInvoiceData};
+    use std::fmt;
+
+    struct DebugPassthrough(&'static str);
+    impl fmt::Debug for DebugPassthrough {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    #[test]
+    fn email_atom_template_error_keeps_underlying_message() {
+        let err = EmailFromTuiError::email_atom_template_error("bad template");
+        assert!(matches!(
+            err,
+            EmailFromTuiError::EmailAtomTemplateError { underlying } if underlying == "bad template"
+        ));
+    }
+
+    #[test]
+    fn invalid_smtp_server_keeps_underlying_message() {
+        let err = EmailFromTuiError::invalid_smtp_server("bad smtp");
+        assert!(matches!(
+            err,
+            EmailFromTuiError::InvalidSmtpServer { underlying } if underlying == "bad smtp"
+        ));
+    }
+
+    #[test]
+    fn invalid_email_address_for_role_mapper_sets_role_and_message() {
+        let err = EmailFromTuiError::invalid_email_address_for_role("Sender")("not-an-email");
+        assert!(matches!(
+            err,
+            EmailFromTuiError::InvalidEmailAddress { role, underlying }
+                if role == "Sender" && underlying == "not-an-email"
+        ));
+    }
+
+    #[test]
+    fn invalid_name_for_email_for_role_mapper_sets_role_and_message() {
+        let err =
+            EmailFromTuiError::invalid_name_for_email_for_role("Reply-To")("name parse failed");
+        assert!(matches!(
+            err,
+            EmailFromTuiError::InvalidNameForEmail { role, underlying }
+                if role == "Reply-To" && underlying == "name parse failed"
+        ));
+    }
+
+    #[test]
+    fn invalid_password_for_email_purpose_mapper_sets_purpose_and_message() {
+        let err =
+            EmailFromTuiError::invalid_password_for_email_purpose("SMTP app password")("too short");
+        assert!(matches!(
+            err,
+            EmailFromTuiError::InvalidPasswordForEmail { purpose, underlying }
+                if purpose == "SMTP app password" && underlying == "too short"
+        ));
+    }
+
+    #[test]
+    fn invalid_date_keeps_underlying_message() {
+        let err = InvalidInvoiceData::invalid_date("invalid date");
+        assert!(matches!(
+            err,
+            InvalidInvoiceData::Date { underlying } if underlying == "invalid date"
+        ));
+    }
+
+    #[test]
+    fn invalid_company_information_keeps_reason_message() {
+        let err =
+            InvalidInvoiceData::invalid_company_information(DebugPassthrough("company invalid"));
+        assert!(matches!(
+            err,
+            InvalidInvoiceData::CompanyInformation { reason } if reason == "company invalid"
+        ));
+    }
+
+    #[test]
+    fn invalid_invoice_info_keeps_reason_message() {
+        let err = InvalidInvoiceData::invalid_invoice_info(DebugPassthrough("invoice invalid"));
+        assert!(matches!(
+            err,
+            InvalidInvoiceData::InvoiceInfo { reason } if reason == "invoice invalid"
+        ));
+    }
+
+    #[test]
+    fn invalid_payment_info_keeps_reason_message() {
+        let err = InvalidInvoiceData::invalid_payment_info(DebugPassthrough("payment invalid"));
+        assert!(matches!(
+            err,
+            InvalidInvoiceData::PaymentInfo { reason } if reason == "payment invalid"
+        ));
+    }
+
+    #[test]
+    fn invalid_service_fees_keeps_reason_message() {
+        let err = InvalidInvoiceData::invalid_service_fees(DebugPassthrough("fees invalid"));
+        assert!(matches!(
+            err,
+            InvalidInvoiceData::ServiceFees { reason } if reason == "fees invalid"
+        ));
+    }
+}
