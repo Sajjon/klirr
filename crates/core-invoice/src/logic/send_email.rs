@@ -24,18 +24,14 @@ fn send_email_with_credentials(email: Email, credentials: EmailCredentials) -> R
 
     // Open a remote connection to gmail
     let mailer = SmtpTransport::relay(smtp_server.as_ref())
-        .map_err(|e| crate::Error::CreateSmtpTransportError {
-            underlying: format!("Failed to create SMTP transport: {:?}", e),
-        })?
+        .map_err(crate::Error::create_smtp_transport_error)?
         .credentials(creds)
         .build();
 
     // Send the email
     let response = mailer
         .send(&email)
-        .map_err(|e| crate::Error::SendEmailError {
-            underlying: format!("Failed to send email: {:?}", e),
-        })?;
+        .map_err(crate::Error::send_email_error)?;
 
     if !response.is_positive() {
         warn!("Email sent, but response was negative: {:?}", response);

@@ -1,4 +1,4 @@
-use crate::{Date, Error, Result};
+use crate::{Date, InvoiceDataFromTuiError, Result};
 use inquire::{DateSelect, error::InquireResult};
 
 #[allow(unused)]
@@ -13,7 +13,7 @@ pub fn build_date(prompt: Option<String>) -> Result<Date> {
 
         Ok(Date::from(date))
     }
-    inner(prompt).map_err(|e| Error::InvalidDate {
-        underlying: e.to_string(),
-    })
+    inner(prompt)
+        .map_err(InvoiceDataFromTuiError::invalid_date)
+        .map_err(crate::Error::from)
 }

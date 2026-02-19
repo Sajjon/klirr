@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
 mod dispatch_command;
+mod error;
 mod init_logging;
 mod input;
 mod run;
@@ -8,16 +9,16 @@ mod run;
 pub(crate) use klirr_core_invoice::{
     BINARY_NAME, Cadence, CompanyInformation, Currency, Data, DataSelector, Date, Decimal,
     DecryptedEmailSettings, EmailAccount, EmailAddress, EmailSettingsSelector,
-    EncryptedAppPassword, EncryptedEmailSettings, Error, FooterText, Granularity, HasSample,
-    HexColor, InvoiceNumber, InvoicedItems, IsPeriod, Item, Language, Month, MonthHalf, NamedPdf,
-    Path, PathBuf, PaymentInformation, PaymentTerms, PeriodAnno, PostalAddress, ProtoInvoiceInfo,
-    PurchaseOrder, Quantity, Rate, Result, ResultExt, Salt, Select, ServiceFees, SmtpServer,
-    StreetAddress, Template, TemplatePart, TimeOff, TimestampedInvoiceNumber, UnitPrice,
-    ValidInput, Year, YearAndMonth, YearMonthAndFortnight, client_path,
-    create_invoice_pdf_with_data, create_invoice_pdf_with_data_base_path, curry1, curry2, data_dir,
-    data_dir_create_if, edit_data_at, edit_email_data_at, expensed_periods_path, init_data_at,
-    init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
-    proto_invoice_info_path, read_data_from_disk_with_base_path, record_expenses_with_base_path,
+    EncryptedAppPassword, EncryptedEmailSettings, FooterText, Granularity, HasSample, HexColor,
+    InvoiceNumber, InvoicedItems, IsPeriod, Item, Language, Month, MonthHalf, NamedPdf, Path,
+    PathBuf, PaymentInformation, PaymentTerms, PeriodAnno, PostalAddress, ProtoInvoiceInfo,
+    PurchaseOrder, Quantity, Rate, ResultExt, Salt, Select, ServiceFees, SmtpServer, StreetAddress,
+    Template, TemplatePart, TimeOff, TimestampedInvoiceNumber, UnitPrice, ValidInput, Year,
+    YearAndMonth, YearMonthAndFortnight, client_path, create_invoice_pdf_with_data,
+    create_invoice_pdf_with_data_base_path, curry1, curry2, data_dir, data_dir_create_if,
+    edit_data_at, edit_email_data_at, expensed_periods_path, init_data_at, init_email_data_at,
+    load_email_data_and_send_test_email_at, payment_info_path, proto_invoice_info_path,
+    read_data_from_disk_with_base_path, record_expenses_with_base_path,
     record_period_off_with_base_path, save_pdf_location_to_tmp_file,
     send_email_with_settings_for_pdf, service_fees_path, validate_email_data_at, vendor_path,
 };
@@ -25,6 +26,9 @@ pub(crate) use klirr_core_invoice::{
 pub(crate) use crate::dispatch_command::{
     render_invoice_sample, render_invoice_sample_with_nonce, run_data_command, run_email_command,
     run_invoice_command, validate_email_data,
+};
+pub(crate) use crate::error::{
+    CliError as Error, CliResult, EmailFromTuiError, InvoiceDataFromTuiError, Result,
 };
 pub(crate) use crate::init_logging::init_logging;
 pub(crate) use crate::input::{
@@ -48,5 +52,7 @@ fn main() {
     use clap::Parser;
     init_logging();
     let input = CliArgs::parse();
-    run(input)
+    if run(input).is_err() {
+        std::process::exit(1);
+    }
 }

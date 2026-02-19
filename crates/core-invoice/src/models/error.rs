@@ -57,45 +57,6 @@ pub enum Error {
     #[error("Cannot expense for fortnight when cadence is monthly")]
     CannotExpenseForFortnightWhenCadenceIsMonthly,
 
-    /// Password does not match, e.g. when the user tries to set a password
-    /// and the confirmation password does not match.
-    #[error("Passwords do not match")]
-    PasswordDoesNotMatch,
-
-    /// Email password is too short.
-    #[error(
-        "Email password is too short, expected at least {min_length} characters, but found {actual_length}"
-    )]
-    EmailPasswordTooShort {
-        /// The minimum length of the email password.
-        min_length: usize,
-        /// The actual length of the email password.
-        actual_length: usize,
-    },
-
-    /// Failed to parse the email atom template, e.g. when the template is not valid.
-    #[error("Failed to parse email atom template: {underlying}")]
-    EmailAtomTemplateError { underlying: String },
-
-    /// Invalid email address
-    #[error("Invalid email address for: {role}, because: {underlying}")]
-    InvalidEmailAddress { role: String, underlying: String },
-
-    /// Invalid name for email
-    #[error("Invalid name for email for: {role}, because: {underlying}")]
-    InvalidNameForEmail { role: String, underlying: String },
-
-    #[error("Invalid password for email {purpose}, because: {underlying}")]
-    InvalidPasswordForEmail { purpose: String, underlying: String },
-
-    /// Recipient addresses cannot be empty.
-    #[error("Recipient addresses cannot be empty")]
-    RecipientAddressesCannotBeEmpty,
-
-    /// Failed to parse SMTP Server
-    #[error("Failed to parse SMTP Server, because: {underlying}")]
-    InvalidSmtpServer { underlying: String },
-
     /// Failed to parse a string into a valid UTF-8 string.
     #[error("Failed to parse string into a valid UTF-8 string")]
     InvalidUtf8,
@@ -140,10 +101,6 @@ pub enum Error {
     #[error("Failed to convert f64 to Decimal, because: {value}")]
     InvalidDecimalFromF64Conversion { value: f64 },
 
-    /// Failed to load a font, e.g. when the font file is not found or cannot be read.
-    #[error("Failed to load font with family name: '{family_name}'")]
-    FailedToLoadFont { family_name: String },
-
     /// Failed to parse a string into an `Decimal`, e.g. when the string is not a valid number.
     #[error("Failed to parse f64 from string: {bad_value}, reason: {reason}")]
     InvalidF64String { bad_value: String, reason: String },
@@ -159,25 +116,9 @@ pub enum Error {
         underlying: String,
     },
 
-    /// Error while building CompanyInformation from Terminal UI input.
-    #[error("Failed to build CompanyInformation from Terminal UI input, because: {reason}")]
-    InvalidCompanyInformation { reason: String },
-
     /// Failed to parse invoice number from a string, e.g. when the format is incorrect.
     #[error("Failed to parse invoice number from string: {invalid_string}")]
     InvalidInvoiceNumberString { invalid_string: String },
-
-    /// Error while building InvoiceInfo from Terminal UI input.
-    #[error("Failed to build InvoiceInfo from Terminal UI input, because: {reason}")]
-    InvalidInvoiceInfo { reason: String },
-
-    /// Error while building PaymentInfo from Terminal UI input.
-    #[error("Failed to build PaymentInfo from Terminal UI input, because: {reason}")]
-    InvalidPaymentInfo { reason: String },
-
-    /// Error while building ServiceFees from Terminal UI input.
-    #[error("Failed to build ServiceFees from Terminal UI input, because: {reason}")]
-    InvalidServiceFees { reason: String },
 
     /// The offset period must not be in the record of periods off.
     #[error(
@@ -187,10 +128,6 @@ pub enum Error {
         offset_period: String,
         period_kind: String,
     },
-
-    /// The manually specified output path does not exist.
-    #[error("Specified output path does not exist: {path}")]
-    SpecifiedOutputPathDoesNotExist { path: String },
 
     /// Failed to create the output directory for the PDF file.
     #[error("Failed to create output directory: {underlying}")]
@@ -281,18 +218,6 @@ pub enum Error {
         base: Currency,
     },
 
-    /// Error when loading a resource for typst.
-    #[error("Failed to load Typst source, because: {underlying}")]
-    LoadSource { underlying: String },
-
-    /// Error when compiling Typst source to a PagedDocument.
-    #[error("Failed to compile Typst source, because: {underlying}")]
-    BuildPdf { underlying: String },
-
-    /// Error when exporting a PagedDocument to PDF.
-    #[error("Failed to export PagedDocument to PDF, because: {underlying}")]
-    ExportDocumentToPdf { underlying: String },
-
     /// Error when saving the PDF to a file.
     #[error("Failed to save PDF, because: {underlying}")]
     SavePdf { underlying: String },
@@ -304,4 +229,117 @@ pub enum Error {
     /// Error when parsing the response from the exchange rate API.
     #[error("Failed to parse exchange rate response, because: {underlying}")]
     ParseError { underlying: String },
+}
+
+impl Error {
+    /// Creates a [`Error::CreateSmtpTransportError`] from a debug-formatted source error.
+    pub fn create_smtp_transport_error(underlying: impl std::fmt::Debug) -> Self {
+        Self::CreateSmtpTransportError {
+            underlying: format!("Failed to create SMTP transport: {underlying:?}"),
+        }
+    }
+
+    /// Creates a [`Error::SendEmailError`] from a debug-formatted source error.
+    pub fn send_email_error(underlying: impl std::fmt::Debug) -> Self {
+        Self::SendEmailError {
+            underlying: format!("Failed to send email: {underlying:?}"),
+        }
+    }
+
+    /// Creates a [`Error::CreateEmailError`] from a debug-formatted source error.
+    pub fn create_email_error(underlying: impl std::fmt::Debug) -> Self {
+        Self::CreateEmailError {
+            underlying: format!("{underlying:?}"),
+        }
+    }
+
+    /// Creates a [`Error::FailedToCreateOutputDirectory`] from a debug-formatted source error.
+    pub fn failed_to_create_output_directory(underlying: impl std::fmt::Debug) -> Self {
+        Self::FailedToCreateOutputDirectory {
+            underlying: format!("{underlying:?}"),
+        }
+    }
+
+    /// Creates a [`Error::SavePdf`] from a string-like source error.
+    pub fn save_pdf(underlying: impl Into<String>) -> Self {
+        Self::SavePdf {
+            underlying: underlying.into(),
+        }
+    }
+
+    /// Creates a [`Error::FailedToWriteDataToDisk`] from a debug-formatted source error.
+    pub fn failed_to_write_data_to_disk(underlying: impl std::fmt::Debug) -> Self {
+        Self::FailedToWriteDataToDisk {
+            underlying: format!("{underlying:?}"),
+        }
+    }
+
+    /// Returns a `map_err` helper that constructs [`Error::FailedToRonSerializeData`].
+    pub fn failed_to_ron_serialize_data<E: std::fmt::Debug>(
+        type_name: impl Into<String>,
+    ) -> impl FnOnce(E) -> Self {
+        let type_name = type_name.into();
+        move |error| Self::FailedToRonSerializeData {
+            type_name,
+            underlying: format!("{error:?}"),
+        }
+    }
+
+    /// Returns a `map_err` helper that constructs [`Error::FileNotFound`].
+    pub fn file_not_found<E: std::fmt::Debug>(path: impl Into<String>) -> impl FnOnce(E) -> Self {
+        let path = path.into();
+        move |error| Self::FileNotFound {
+            path,
+            underlying: format!("{error:?}"),
+        }
+    }
+
+    /// Returns a `map_err` helper that constructs [`Error::Deserialize`].
+    pub fn deserialize<E: std::fmt::Display>(
+        type_name: impl Into<String>,
+    ) -> impl FnOnce(E) -> Self {
+        let type_name = type_name.into();
+        move |error| Self::Deserialize {
+            type_name,
+            error: error.to_string(),
+        }
+    }
+
+    /// Returns a `map_err` helper that constructs [`Error::ParseError`].
+    pub fn parse_error<E: std::fmt::Display>(context: impl Into<String>) -> impl FnOnce(E) -> Self {
+        let context = context.into();
+        move |error| Self::ParseError {
+            underlying: format!("{context}: {error}"),
+        }
+    }
+
+    /// Returns a `map_err` helper that constructs [`Error::NetworkError`].
+    pub fn network_error<E: std::fmt::Display>(
+        context: impl Into<String>,
+    ) -> impl FnOnce(E) -> Self {
+        let context = context.into();
+        move |error| Self::NetworkError {
+            underlying: format!("{context}: {error}"),
+        }
+    }
+
+    /// Returns a `map_err` helper that constructs [`Error::InvalidExpenseItem`]
+    /// for a specific input string and field.
+    pub fn invalid_expense_item<E: std::fmt::Display>(
+        invalid_string: impl Into<String>,
+        field: impl Into<String>,
+    ) -> impl FnOnce(E) -> Self {
+        let invalid_string = invalid_string.into();
+        let field = field.into();
+        move |error| Self::InvalidExpenseItem {
+            invalid_string,
+            reason: format!("Failed to parse {field}: {error}"),
+        }
+    }
+
+    /// Logs a decryption error and maps it to [`Error::AESDecryptionFailed`].
+    pub fn aes_decryption_failed(error: impl std::fmt::Debug) -> Self {
+        log::error!("Failed to AES decrypt data - error: {error:?}");
+        Self::AESDecryptionFailed
+    }
 }

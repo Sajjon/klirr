@@ -38,9 +38,7 @@ pub(super) trait DeserializableResponse {
 }
 impl DeserializableResponse for reqwest::blocking::Response {
     fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
-        self.json().map_err(|e| Error::ParseError {
-            underlying: format!("Parse JSON: {}", e),
-        })
+        self.json().map_err(Error::parse_error("Parse JSON"))
     }
 }
 
@@ -302,9 +300,7 @@ mod tests {
     }
     impl DeserializableResponse for Mock<'_> {
         fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
-            serde_json::from_str(self.json).map_err(|e| Error::ParseError {
-                underlying: format!("Parse mock response JSON: {}", e),
-            })
+            serde_json::from_str(self.json).map_err(Error::parse_error("Parse mock response JSON"))
         }
     }
 

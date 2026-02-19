@@ -1,8 +1,8 @@
 use inquire::Text;
 
 use crate::{
-    EmailAccount, EmailAddressRole, Error, Result, WithOptionalRefDefault, ask_for_email_address,
-    ask_for_email_address_skippable, format_help_skippable,
+    EmailAccount, EmailAddressRole, EmailFromTuiError, Result, WithOptionalRefDefault,
+    ask_for_email_address, ask_for_email_address_skippable, format_help_skippable,
 };
 
 pub fn ask_for_email_account(
@@ -13,10 +13,8 @@ pub fn ask_for_email_account(
         .with_help_message(&format!("Will show up as the {} name", role))
         .with_default(default.name())
         .prompt()
-        .map_err(|e| Error::InvalidNameForEmail {
-            role: role.to_string(),
-            underlying: e.to_string(),
-        })?;
+        .map_err(EmailFromTuiError::invalid_name_for_email_for_role(role))
+        .map_err(crate::Error::from)?;
     let email = ask_for_email_address(role, default.email())?;
     Ok(EmailAccount::builder().name(name).email(email).build())
 }
@@ -32,10 +30,8 @@ pub fn ask_for_email_account_skippable(
         )))
         .with_optional_ref_default(default.as_ref().map(|d| d.name()))
         .prompt_skippable()
-        .map_err(|e| Error::InvalidNameForEmail {
-            role: role.to_string(),
-            underlying: e.to_string(),
-        })?;
+        .map_err(EmailFromTuiError::invalid_name_for_email_for_role(role))
+        .map_err(crate::Error::from)?;
     let Some(name) = name else { return Ok(None) };
     let Some(email) = ask_for_email_address_skippable(role, default.as_ref().map(|d| d.email()))?
     else {

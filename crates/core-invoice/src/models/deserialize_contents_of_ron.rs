@@ -23,10 +23,8 @@ pub fn type_name<T>() -> String {
 pub fn deserialize_contents_of_ron<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T> {
     use std::fs;
     let path = path.as_ref();
-    let ron_str = fs::read_to_string(path).map_err(|e| Error::FileNotFound {
-        path: path.display().to_string(),
-        underlying: format!("{:?}", e),
-    })?;
+    let ron_str =
+        fs::read_to_string(path).map_err(Error::file_not_found(path.display().to_string()))?;
     deserialize_ron_str(&ron_str)
 }
 
@@ -36,10 +34,7 @@ pub fn deserialize_ron_str<T: DeserializeOwned>(ron_str: &str) -> Result<T> {
     trace!("☑️ Deserializing {} from RON str", type_name);
     let result = from_str(ron_str)
         .inspect(|_| trace!("✅ Deserialized {} from RON str", type_name))
-        .map_err(|e| Error::Deserialize {
-            type_name,
-            error: e.to_string(),
-        })?;
+        .map_err(Error::deserialize(type_name))?;
 
     Ok(result)
 }

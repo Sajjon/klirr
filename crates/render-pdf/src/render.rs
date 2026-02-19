@@ -14,13 +14,9 @@ pub fn render_document(plan: &DocumentPlan) -> Result<Pdf> {
     let context = TypstContext::from_plan(plan)?;
     debug!("☑️ Compiling typst...");
     let compile_result = typst::compile::<PagedDocument>(&context);
-    let doc = compile_result.output.map_err(|e| Error::BuildPdf {
-        underlying: format!("{:?}", e),
-    })?;
+    let doc = compile_result.output.map_err(Error::build_pdf)?;
     debug!("✅ Compiled typst source: #{} pages", doc.pages.len());
-    let pdf_bytes = pdf(&doc, &PdfOptions::default()).map_err(|e| Error::ExportDocumentToPdf {
-        underlying: format!("{:?}", e),
-    })?;
+    let pdf_bytes = pdf(&doc, &PdfOptions::default()).map_err(Error::export_document_to_pdf)?;
     Ok(Pdf::from(pdf_bytes))
 }
 

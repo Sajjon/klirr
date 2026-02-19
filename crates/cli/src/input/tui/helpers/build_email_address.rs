@@ -1,6 +1,8 @@
 use inquire::{Confirm, CustomType};
 
-use crate::{EmailAddress, Error, Result, WithOptionalRefDefault, format_help_skippable};
+use crate::{
+    EmailAddress, EmailFromTuiError, Result, WithOptionalRefDefault, format_help_skippable,
+};
 use derive_more::Display;
 use indexmap::IndexSet;
 use log::warn;
@@ -30,10 +32,8 @@ pub fn ask_for_email_address_skippable(
         )))
         .with_optional_ref_default(default)
         .prompt_skippable()
-        .map_err(|e| Error::InvalidEmailAddress {
-            role: role.to_string(),
-            underlying: e.to_string(),
-        })
+        .map_err(EmailFromTuiError::invalid_email_address_for_role(role))
+        .map_err(crate::Error::from)
 }
 
 pub fn ask_for_email_address(
@@ -44,10 +44,8 @@ pub fn ask_for_email_address(
         .with_help_message(&format!("Email address for {}", role))
         .with_default(default.clone())
         .prompt()
-        .map_err(|e| Error::InvalidEmailAddress {
-            role: role.to_string(),
-            underlying: e.to_string(),
-        })
+        .map_err(EmailFromTuiError::invalid_email_address_for_role(role))
+        .map_err(crate::Error::from)
 }
 
 pub fn ask_for_many_email_addresses(

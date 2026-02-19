@@ -2432,7 +2432,6 @@ dependencies = [
  "indexmap 2.9.0",
  "insta",
  "klirr-foundation",
- "klirr-render-pdf",
  "lazy_static",
  "lettre",
  "log",

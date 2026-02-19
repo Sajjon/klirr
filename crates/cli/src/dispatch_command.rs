@@ -13,7 +13,6 @@ use crate::{
 use klirr_core_invoice::L10n as InvoiceL10n;
 use klirr_core_invoice::PreparedData as InvoiceDataPrepared;
 use klirr_foundation::Pdf;
-use klirr_render_pdf::Error as RenderPdfError;
 use klirr_render_typst::render as render_base;
 use log::error;
 use log::info;
@@ -23,15 +22,8 @@ fn render_invoice(
     i18n: InvoiceL10n,
     data: InvoiceDataPrepared,
     layout: klirr_core_invoice::Layout,
-) -> Result<Pdf, klirr_core_invoice::Error> {
-    render_base(i18n, data, layout, |error| match error {
-        RenderPdfError::LoadSource { underlying } => Error::LoadSource { underlying },
-        RenderPdfError::BuildPdf { underlying } => Error::BuildPdf { underlying },
-        RenderPdfError::ExportDocumentToPdf { underlying } => {
-            Error::ExportDocumentToPdf { underlying }
-        }
-        RenderPdfError::FailedToLoadFont { family_name } => Error::FailedToLoadFont { family_name },
-    })
+) -> Result<Pdf> {
+    render_base(i18n, data, layout, Error::from)
 }
 
 fn init_email_data(
@@ -85,6 +77,7 @@ fn dump_data() -> Result<()> {
             error!("❌ Data directory is invalid: {}, is:\n\n{}", e, str);
         })
         .map_to_void()
+        .map_err(Error::from)
 }
 
 fn validate_data() -> Result<()> {
@@ -99,14 +92,15 @@ fn validate_data() -> Result<()> {
         .inspect_err(|e| {
             error!("❌ Data directory is invalid: {}", e);
         })
+        .map_err(Error::from)
 }
 
 fn record_expenses(period: &PeriodAnno, expenses: &[Item]) -> Result<()> {
-    record_expenses_with_base_path(period, expenses, data_dir())
+    record_expenses_with_base_path(period, expenses, data_dir()).map_err(Error::from)
 }
 
 fn record_period_off(period: &PeriodAnno) -> Result<()> {
-    record_period_off_with_base_path(period, data_dir())
+    record_period_off_with_base_path(period, data_dir()).map_err(Error::from)
 }
 
 pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {

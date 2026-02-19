@@ -188,23 +188,15 @@ impl FromStr for Item {
         let name = parts[0].to_string();
         let unit_price: UnitPrice = parts[1]
             .parse::<Decimal>()
-            .map_err(|e| Error::InvalidExpenseItem {
-                invalid_string: s.to_string(),
-                reason: format!("Failed to parse unit_price: {e}"),
-            })?
+            .map_err(Error::invalid_expense_item(s, "unit_price"))?
             .into();
 
-        let currency = Currency::from_str(parts[2]).map_err(|e| Error::InvalidExpenseItem {
-            invalid_string: s.to_string(),
-            reason: format!("Failed to parse currency: {e}"),
-        })?;
+        let currency =
+            Currency::from_str(parts[2]).map_err(Error::invalid_expense_item(s, "currency"))?;
 
         let quantity: Quantity = parts[3]
             .parse::<Decimal>()
-            .map_err(|e| Error::InvalidExpenseItem {
-                invalid_string: s.to_string(),
-                reason: format!("Failed to parse quantity: {e}"),
-            })?
+            .map_err(Error::invalid_expense_item(s, "quantity"))?
             .into();
         if quantity < Quantity::ZERO {
             return Err(Error::InvalidExpenseItem {
@@ -213,10 +205,8 @@ impl FromStr for Item {
             });
         }
 
-        let transaction_date = Date::from_str(parts[4]).map_err(|e| Error::InvalidExpenseItem {
-            invalid_string: s.to_string(),
-            reason: format!("Failed to parse transaction_date: {e}"),
-        })?;
+        let transaction_date =
+            Date::from_str(parts[4]).map_err(Error::invalid_expense_item(s, "transaction_date"))?;
 
         Ok(Item::builder()
             .name(name)

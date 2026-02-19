@@ -1,9 +1,9 @@
 use inquire::{CustomType, error::InquireResult};
 
 use crate::{
-    Cadence, Error, FooterText, HexColor, InvoiceNumber, PeriodAnno, ProtoInvoiceInfo,
-    PurchaseOrder, Result, TimestampedInvoiceNumber, WithOptionalDefault, YearAndMonth,
-    build_period, format_help_skippable,
+    Cadence, FooterText, HexColor, InvoiceDataFromTuiError, InvoiceNumber, PeriodAnno,
+    ProtoInvoiceInfo, PurchaseOrder, Result, TimestampedInvoiceNumber, WithOptionalDefault,
+    YearAndMonth, build_period, format_help_skippable,
 };
 
 pub fn build_invoice_info(
@@ -69,7 +69,7 @@ pub fn build_invoice_info(
 
         Ok(info)
     }
-    inner(default, cadence).map_err(|e| Error::InvalidInvoiceInfo {
-        reason: format!("{:?}", e),
-    })
+    inner(default, cadence)
+        .map_err(InvoiceDataFromTuiError::invalid_invoice_info)
+        .map_err(crate::Error::from)
 }

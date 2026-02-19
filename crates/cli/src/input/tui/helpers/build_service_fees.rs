@@ -1,7 +1,8 @@
 use inquire::{CustomType, Text, error::InquireResult};
 
 use crate::{
-    Cadence, Error, Granularity, Rate, Result, ServiceFees, UnitPrice, WithPossibleValues,
+    Cadence, Granularity, InvoiceDataFromTuiError, Rate, Result, ServiceFees, UnitPrice,
+    WithPossibleValues,
 };
 
 pub fn build_service_fees(default: &ServiceFees) -> Result<ServiceFees> {
@@ -39,7 +40,7 @@ pub fn build_service_fees(default: &ServiceFees) -> Result<ServiceFees> {
             .build()
             .unwrap())
     }
-    inner(default).map_err(|e| Error::InvalidServiceFees {
-        reason: format!("{:?}", e),
-    })
+    inner(default)
+        .map_err(InvoiceDataFromTuiError::invalid_service_fees)
+        .map_err(crate::Error::from)
 }

@@ -1,15 +1,16 @@
 use rpassword::prompt_password;
 use secrecy::{ExposeSecret as _, SecretString};
 
-use crate::{Error, Result, curry2};
+use crate::{EmailFromTuiError, Result, curry2};
 
 fn validate(input: SecretString, min_length: usize) -> Result<SecretString> {
     let length = input.expose_secret().len();
     if length < min_length {
-        Err(Error::EmailPasswordTooShort {
+        Err(EmailFromTuiError::EmailPasswordTooShort {
             min_length,
             actual_length: length,
-        })
+        }
+        .into())
     } else {
         Ok(input)
     }
@@ -30,10 +31,10 @@ pub fn ask_for_password_once_with_length(
     };
     prompt_password(format!("{} ({}{})", prompt, help, maybe_min_length_str))
         .map(SecretString::from)
-        .map_err(|e| Error::InvalidPasswordForEmail {
-            purpose: prompt.to_string(),
-            underlying: e.to_string(),
-        })
+        .map_err(EmailFromTuiError::invalid_password_for_email_purpose(
+            prompt,
+        ))
+        .map_err(crate::Error::from)
         .and_then(curry2(validate, min_length))
 }
 
@@ -50,7 +51,7 @@ pub fn ask_for_password(with_confirmation: bool, prompt: &str, help: &str) -> Re
     }
     let second = ask_for_password_once("Confirm password", help, with_confirmation)?;
     if first.expose_secret() != second.expose_secret() {
-        return Err(Error::PasswordDoesNotMatch);
+        return Err(EmailFromTuiError::PasswordDoesNotMatch.into());
     }
     // second will be zeroized on drop
     Ok(first)
