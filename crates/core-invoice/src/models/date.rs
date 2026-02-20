@@ -167,6 +167,22 @@ impl Date {
             .build()
     }
 
+    /// Converts this date to a midnight (`00:00:00`) [`NaiveDateTime`].
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use chrono::{NaiveDate, Timelike};
+    /// use klirr_core_invoice::*;
+    ///
+    /// let date = "2025-05-23".parse::<Date>().unwrap();
+    /// let dt = date.to_datetime();
+    ///
+    /// assert_eq!(dt.date(), NaiveDate::from_ymd_opt(2025, 5, 23).unwrap());
+    /// assert_eq!(dt.time().hour(), 0);
+    /// assert_eq!(dt.time().minute(), 0);
+    /// assert_eq!(dt.time().second(), 0);
+    /// ```
     pub fn to_datetime(&self) -> NaiveDateTime {
         let naive_date = chrono::NaiveDate::from_ymd_opt(
             **self.year() as i32,
@@ -179,6 +195,18 @@ impl Date {
             .expect("Invalid time components")
     }
 
+    /// Returns a new date advanced by the given number of days.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use klirr_core_invoice::*;
+    ///
+    /// let date = "2025-05-23".parse::<Date>().unwrap();
+    /// let advanced = date.advance_days(&Day::try_from(7).unwrap());
+    ///
+    /// assert_eq!(advanced.to_string(), "2025-05-30");
+    /// ```
     pub fn advance_days(&self, days: &Day) -> Self {
         let datetime = self.to_datetime();
         let days: u8 = **days;
@@ -186,6 +214,18 @@ impl Date {
         Self::from(advanced_date)
     }
 
+    /// Advances this date according to payment terms.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use klirr_core_invoice::*;
+    ///
+    /// let invoice_date = "2025-05-23".parse::<Date>().unwrap();
+    /// let due_date = invoice_date.advance(&PaymentTerms::net30());
+    ///
+    /// assert_eq!(due_date.to_string(), "2025-06-22");
+    /// ```
     pub fn advance(&self, terms: &PaymentTerms) -> Self {
         match terms {
             PaymentTerms::Net(days) => self.advance_days(days.due_in()),

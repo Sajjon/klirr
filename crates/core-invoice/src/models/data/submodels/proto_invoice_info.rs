@@ -11,21 +11,27 @@ use serde::{Deserialize, Serialize};
     Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, Setters, WithSetters,
 )]
 pub struct ProtoInvoiceInfo {
-    /// Offset used to calculate invoice numbers.
+    /// An offset used to calculate the invoice number, e.g. `(237, 2025-05-31)`.
+    /// This enables computing later invoice numbers from the stored reference point.
     #[getset(get = "pub", set_with = "pub")]
     offset: TimestampedInvoiceNumber,
 
-    /// Period-end dates when no invoice was issued.
+    /// Period-end dates when no invoice was issued, i.e. full periods off.
     #[builder(default)]
     #[getset(get = "pub", set = "pub")]
     record_of_periods_off: RecordOfPeriodsOff,
 
+    /// A purchase order number associated with the invoice, e.g. `"PO-12345"`.
+    /// This is typically agreed between vendor and client before invoicing.
     #[getset(get = "pub", set_with = "pub")]
     purchase_order: Option<PurchaseOrder>,
 
+    /// Optional legal or contractual footer text printed on the invoice.
+    /// Example: reverse VAT notice text.
     #[getset(get = "pub", set_with = "pub")]
     footer_text: Option<FooterText>,
 
+    /// Hex color used for invoice emphasis styling, e.g. `"#e6007a"`.
     #[getset(get = "pub", set_with = "pub")]
     emphasize_color_hex: Option<HexColor>,
 }

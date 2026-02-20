@@ -7,8 +7,13 @@ use serde::Serialize;
 /// The items being invoiced this month, either services or expenses.
 #[derive(Clone, Debug, Display, Serialize, Deserialize, IsVariant, PartialEq)]
 pub enum InvoicedItems {
+    /// Service invoice mode.
     #[display("Service {{ time_off: {} }} ", time_off.map(|d| *d).unwrap_or(Quantity::ZERO))]
-    Service { time_off: Option<TimeOff> },
+    Service {
+        /// Optional time off deducted from the invoiced service period.
+        time_off: Option<TimeOff>,
+    },
+    /// Expenses invoice mode.
     #[display("Expenses")]
     Expenses,
 }

@@ -2,19 +2,30 @@ use crate::Select;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EmailSettingsSelector {
+    /// All editable email settings.
     All,
+    /// The SMTP app password value.
     AppPassword,
+    /// The encryption password for encrypted secrets.
     EncryptionPassword,
+    /// The email subject/body template.
     Template,
+    /// The SMTP server host configuration.
     SmtpServer,
+    /// Reply-to email address.
     ReplyTo,
+    /// Sender account/address.
     Sender,
+    /// Primary recipients.
     Recipients,
+    /// CC recipients.
     CcRecipients,
+    /// BCC recipients.
     BccRecipients,
 }
 
 impl EmailSettingsSelector {
+    /// Returns whether selecting this field requires the encryption password.
     pub fn requires_encryption_password(&self) -> bool {
         use EmailSettingsSelector::*;
         match self {

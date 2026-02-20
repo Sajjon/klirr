@@ -26,10 +26,14 @@ use strum::EnumIter;
     EnumIter,
 )]
 pub enum Granularity {
+    /// Quantity is measured in billable hours.
     Hour,
     #[default]
+    /// Quantity is measured in billable work days.
     Day,
+    /// Quantity is measured in half-month periods.
     Fortnight,
+    /// Quantity is measured in full months.
     Month,
 }
 

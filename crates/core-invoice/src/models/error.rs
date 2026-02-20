@@ -9,21 +9,35 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub enum Error {
     /// The offset period must not be in the record of periods off.
     #[error("Records off must not contain offset period: {offset_period}")]
-    RecordsOffMustNotContainOffsetPeriod { offset_period: String },
+    RecordsOffMustNotContainOffsetPeriod {
+        /// The offset period represented as a date string.
+        offset_period: String,
+    },
 
     /// The start period is after the end period.
     #[error("Start period ('{start}') is after end period ('{end}')")]
-    StartPeriodAfterEndPeriod { start: String, end: String },
+    StartPeriodAfterEndPeriod {
+        /// Start period label.
+        start: String,
+        /// End period label.
+        end: String,
+    },
 
     /// Invalid period input string/value.
     #[error("Invalid Period, bad value: {bad_value}")]
-    InvalidPeriod { bad_value: String },
+    InvalidPeriod {
+        /// User-provided period text that failed validation/parsing.
+        bad_value: String,
+    },
 
+    /// Time-off granularity does not match service fee granularity.
     #[error(
         "Invalid granularity for time off: '{free_granularity}', expected: '{service_fees_granularity}', use the same time unit for time off as you specified in service fees. View it with `klirr data dump` command."
     )]
     InvalidGranularityForTimeOff {
+        /// The granularity supplied for time off.
         free_granularity: Granularity,
+        /// The expected granularity derived from service fee configuration.
         service_fees_granularity: Granularity,
     },
 
@@ -32,8 +46,11 @@ pub enum Error {
         "Granularity too coarse '{granularity}', max is: '{max_granularity}', for period: '{target_period}'"
     )]
     GranularityTooCoarse {
+        /// Requested granularity that is too coarse for the cadence.
         granularity: Granularity,
+        /// Maximum allowed granularity for the active cadence.
         max_granularity: Granularity,
+        /// Target period label for context.
         target_period: String,
     },
 
@@ -66,17 +83,25 @@ pub enum Error {
         "Invalid AES bytes, expected at least {expected_at_least} bytes, but found {found} bytes"
     )]
     InvalidAESBytesTooShort {
+        /// Minimum expected byte length.
         expected_at_least: usize,
+        /// Actual byte length found.
         found: usize,
     },
 
     /// Failed to create SMTP transport, e.g. when the SMTP server is not reachable.
     #[error("Failed to create SMTP transport, because: {underlying}")]
-    CreateSmtpTransportError { underlying: String },
+    CreateSmtpTransportError {
+        /// Underlying SMTP transport error message.
+        underlying: String,
+    },
 
     /// Failed to create Lettre Email from Email struct.
     #[error("Failed to create email, because: {underlying}")]
-    CreateEmailError { underlying: String },
+    CreateEmailError {
+        /// Underlying email construction error message.
+        underlying: String,
+    },
 
     /// Failed to add attachments to the email, e.g. when the file is not found or cannot be read.
     #[error("Failed to add attachments to the email, because: {underlying}")]
@@ -87,104 +112,173 @@ pub enum Error {
 
     /// Failed to send email
     #[error("Failed to send email, because: {underlying}")]
-    SendEmailError { underlying: String },
+    SendEmailError {
+        /// Underlying email send error message.
+        underlying: String,
+    },
 
     /// Failed to convert to `f64` from a `Decimal`
     #[error("Failed to convert to f64 from Decimal, because: {value}")]
-    InvalidDecimalToF64Conversion { value: String },
+    InvalidDecimalToF64Conversion {
+        /// Decimal value that failed conversion.
+        value: String,
+    },
 
     /// Failed to convert `f64` value to a `Decimal`
     #[error("Failed to convert f64 to Decimal, because: {value}")]
-    InvalidDecimalFromF64Conversion { value: f64 },
+    InvalidDecimalFromF64Conversion {
+        /// Source float value that failed conversion.
+        value: f64,
+    },
 
     /// Failed to parse a string into an `Decimal`, e.g. when the string is not a valid number.
     #[error("Failed to parse f64 from string: {bad_value}, reason: {reason}")]
-    InvalidF64String { bad_value: String, reason: String },
+    InvalidF64String {
+        /// String that failed to parse as f64.
+        bad_value: String,
+        /// Parsing failure reason.
+        reason: String,
+    },
 
     /// Failed to write data to disk, e.g. when the file system is not accessible.
     #[error("Failed to write data to disk, because: {underlying}")]
-    FailedToWriteDataToDisk { underlying: String },
+    FailedToWriteDataToDisk {
+        /// Underlying IO/serialization error message.
+        underlying: String,
+    },
 
     /// Failed to serialize data to RON format.
     #[error("Failed to RON serialize data, because: {underlying}")]
     FailedToRonSerializeData {
+        /// Type name that failed serialization.
         type_name: String,
+        /// Underlying serialization error message.
         underlying: String,
     },
 
     /// Failed to parse invoice number from a string, e.g. when the format is incorrect.
     #[error("Failed to parse invoice number from string: {invalid_string}")]
-    InvalidInvoiceNumberString { invalid_string: String },
+    InvalidInvoiceNumberString {
+        /// String that failed invoice-number parsing.
+        invalid_string: String,
+    },
 
     /// The offset period must not be in the record of periods off.
     #[error(
         "Offset period must not be in the record of periods off: {offset_period}, period kind: {period_kind}"
     )]
     OffsetPeriodMustNotBeInRecordOfPeriodsOff {
+        /// Offset period label.
         offset_period: String,
+        /// Period kind/type name for error context.
         period_kind: String,
     },
 
     /// Failed to create the output directory for the PDF file.
     #[error("Failed to create output directory: {underlying}")]
-    FailedToCreateOutputDirectory { underlying: String },
+    FailedToCreateOutputDirectory {
+        /// Underlying filesystem error message.
+        underlying: String,
+    },
 
     /// Target period must have expenses, but it does not.
     #[error(
         "Target period {target_period} must have expenses, but it does not. Fill 
     in the `input/data/expenses.json` file with expenses for this period."
     )]
-    TargetPeriodMustHaveExpenses { target_period: String },
+    TargetPeriodMustHaveExpenses {
+        /// Target period label with missing expenses.
+        target_period: String,
+    },
 
     /// Failed to parse year
     #[error("Failed to parse year: {invalid_string}")]
-    FailedToParseYear { invalid_string: String },
+    FailedToParseYear {
+        /// String that failed year parsing.
+        invalid_string: String,
+    },
 
     /// Failed to load file
     #[error("Failed to load file: {path}, underlying: {underlying}")]
-    FileNotFound { path: String, underlying: String },
+    FileNotFound {
+        /// File path that could not be loaded.
+        path: String,
+        /// Underlying IO error message.
+        underlying: String,
+    },
 
     /// Failed to deserialize a type
     #[error("Failed to deserialize {type_name}, because: {error}")]
-    Deserialize { type_name: String, error: String },
+    Deserialize {
+        /// Type name that failed deserialization.
+        type_name: String,
+        /// Underlying deserialization error message.
+        error: String,
+    },
 
     /// Failed to parse Day from String
     #[error("Invalid day from String: {invalid_string}, reason: {reason}")]
     InvalidDayFromString {
+        /// String that failed day parsing.
         invalid_string: String,
+        /// Parsing failure reason.
         reason: String,
     },
 
     /// Invalid date
     #[error("Invalid date, underlying: {underlying}")]
-    InvalidDate { underlying: String },
+    InvalidDate {
+        /// Underlying invalid-date reason.
+        underlying: String,
+    },
 
     /// Invalid day of the month, e.g. when the day is not between 1 and 31.
     #[error("Invalid day: {day}, reason: {reason}")]
-    InvalidDay { day: i32, reason: String },
+    InvalidDay {
+        /// Invalid day value.
+        day: i32,
+        /// Validation failure reason.
+        reason: String,
+    },
 
     /// Invalid month, e.g. when the month is not between 1 and 12.
     #[error("Invalid month: {month}, reason: {reason}")]
-    InvalidMonth { month: i32, reason: String },
+    InvalidMonth {
+        /// Invalid month value.
+        month: i32,
+        /// Validation failure reason.
+        reason: String,
+    },
 
     /// Failed to parse Month from String
     #[error("Failed to parse Month: {invalid_string}")]
-    FailedToParseMonth { invalid_string: String },
+    FailedToParseMonth {
+        /// String that failed month parsing.
+        invalid_string: String,
+    },
 
     /// Failed to parse expense item from a string, e.g. when the format is incorrect.
     #[error("Failed to parse expense item from: '{invalid_string}': {reason}")]
     InvalidExpenseItem {
+        /// Raw item text that failed parsing.
         invalid_string: String,
+        /// Parsing failure reason.
         reason: String,
     },
 
     /// The target period is in the record of periods off, but it must not be.
     #[error("Target period {target_period} is in the record of periods off, but it must not be.")]
-    TargetPeriodMustNotBeInRecordOfPeriodsOff { target_period: String },
+    TargetPeriodMustNotBeInRecordOfPeriodsOff {
+        /// Target period that was unexpectedly marked as off.
+        target_period: String,
+    },
 
     /// Failed to parse PaymentTerms NetDays from a string, e.g. when the format is incorrect.
     #[error("Failed to PaymentTerms NetDays from string: {invalid_string}")]
-    FailedToParsePaymentTermsNetDays { invalid_string: String },
+    FailedToParsePaymentTermsNetDays {
+        /// String that failed net-days parsing.
+        invalid_string: String,
+    },
 
     /// Failed to find the localization file for a specific language.
     #[error("Failed to find the localization file for language: {language}")]
@@ -195,11 +289,17 @@ pub enum Error {
 
     /// Failed to parse a string into a Hexcolor
     #[error("Invalid hex color format: {invalid_string}")]
-    InvalidHexColor { invalid_string: String },
+    InvalidHexColor {
+        /// String that failed hex-color parsing.
+        invalid_string: String,
+    },
 
     /// Failed to parse a date, e.g. when the format is incorrect or the date is invalid.
     #[error("Failed to parse date, because: {underlying}")]
-    FailedToParseDate { underlying: String },
+    FailedToParseDate {
+        /// Underlying date-parse error message.
+        underlying: String,
+    },
 
     /// Error converting between currencies, e.g. when the exchange rate is not found.
     #[error("Found no exchange rate for {target} based on {base}")]
@@ -212,15 +312,24 @@ pub enum Error {
 
     /// Error when saving the PDF to a file.
     #[error("Failed to save PDF, because: {underlying}")]
-    SavePdf { underlying: String },
+    SavePdf {
+        /// Underlying PDF save failure reason.
+        underlying: String,
+    },
 
     /// Error when fetching exchange rates from an API.
     #[error("Failed fetch exchange rate from API, because: {underlying}")]
-    NetworkError { underlying: String },
+    NetworkError {
+        /// Underlying network error message.
+        underlying: String,
+    },
 
     /// Error when parsing the response from the exchange rate API.
     #[error("Failed to parse exchange rate response, because: {underlying}")]
-    ParseError { underlying: String },
+    ParseError {
+        /// Underlying response parse error message.
+        underlying: String,
+    },
 }
 
 impl Error {

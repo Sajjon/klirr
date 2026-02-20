@@ -4,10 +4,15 @@ use crate::Select;
 pub enum DataSelector {
     /// All but expensed months
     All,
+    /// Vendor information.
     Vendor,
+    /// Client information.
     Client,
+    /// Proto invoice information and metadata.
     Information,
+    /// Payment details used on invoices.
     PaymentInfo,
+    /// Service fee setup (rate/cadence).
     ServiceFees,
 }
 
