@@ -25,6 +25,7 @@ impl Cadence {
             Self::Monthly => Granularity::Month,
         }
     }
+
     pub fn validate(&self, granularity: impl Into<Granularity>) -> Result<()> {
         use Cadence::*;
         use Granularity::*;

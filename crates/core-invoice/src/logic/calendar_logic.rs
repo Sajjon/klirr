@@ -55,12 +55,34 @@ fn period_end_for_cadence(date: Date, cadence: Cadence) -> Result<Date> {
 /// use klirr_core_invoice::*;
 ///
 /// let normalized = normalize_period_end_date_for_cadence(
+///     "2025-05-30".parse::<Date>().unwrap(),
+///     Cadence::Monthly,
+/// )
+/// .unwrap();
+/// assert_eq!(normalized.to_string(), "2025-05-31");
+///
+/// let normalized = normalize_period_end_date_for_cadence(
 ///     "2025-05-12".parse::<Date>().unwrap(),
 ///     Cadence::Monthly,
 /// )
 /// .unwrap();
-///
 /// assert_eq!(normalized.to_string(), "2025-05-31");
+///
+/// // BiWeekly => mid month
+/// let normalized = normalize_period_end_date_for_cadence(
+///     "2025-05-12".parse::<Date>().unwrap(),
+///     Cadence::BiWeekly,
+/// )
+/// .unwrap();
+/// assert_eq!(normalized.to_string(), "2025-05-15");
+///
+/// // BiWeekly => mid month
+/// let normalized = normalize_period_end_date_for_cadence(
+///     "2025-05-15".parse::<Date>().unwrap(),
+///     Cadence::BiWeekly,
+/// )
+/// .unwrap();
+/// assert_eq!(normalized.to_string(), "2025-05-15"); // unchanged
 /// ```
 pub fn normalize_period_end_date_for_cadence(date: Date, cadence: Cadence) -> Result<Date> {
     period_end_for_cadence(date, cadence)
