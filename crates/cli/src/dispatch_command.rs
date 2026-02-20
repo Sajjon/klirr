@@ -1,11 +1,10 @@
 use crate::{
     Data, DataAdminInputCommand, DataSelector, DecryptedEmailSettings, EmailInputCommand,
     EmailSettingsSelector, EncryptedEmailSettings, Error, HasSample, InvoiceInput, Item, NamedPdf,
-    Path, PathBuf, PeriodAnno, Result, ResultExt, ValidInput, YearAndMonth, YearMonthAndFortnight,
-    ask_for_data, ask_for_email, client_path, create_invoice_pdf_with_data,
-    create_invoice_pdf_with_data_base_path, curry2, data_dir, data_dir_create_if, edit_data_at,
-    edit_email_data_at, expensed_periods_path, get_email_encryption_password, init_data_at,
-    init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
+    Path, PathBuf, PeriodAnno, Result, ResultExt, ValidInput, YearAndMonth, ask_for_data,
+    ask_for_email, client_path, create_invoice_pdf_with_data, curry2, data_dir, data_dir_create_if,
+    edit_data_at, edit_email_data_at, expensed_periods_path, get_email_encryption_password,
+    init_data_at, init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
     proto_invoice_info_path, read_data_from_disk_with_base_path, record_expenses_with_base_path,
     record_period_off_with_base_path, save_pdf_location_to_tmp_file,
     send_email_with_settings_for_pdf, service_fees_path, validate_email_data_at, vendor_path,
@@ -144,7 +143,7 @@ pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
         data,
         ValidInput::builder()
             .maybe_output_path(path)
-            .period(YearMonthAndFortnight::last())
+            .period(YearAndMonth::last().into())
             .build(),
         render_invoice,
     )
@@ -154,10 +153,12 @@ fn run_invoice_command_with_base_path(
     input: InvoiceInput,
     data_path: impl AsRef<Path>,
 ) -> Result<NamedPdf> {
-    let input = input.parsed()?;
+    let data_path = data_path.as_ref();
+    let data = read_data_from_disk_with_base_path(data_path)?;
+    let input = input.parsed(*data.service_fees().cadence())?;
     info!("🔮 Starting invoice PDF creation, input: {:?}...", input);
     let email_settings = input.email().clone();
-    let named_pdf = create_invoice_pdf_with_data_base_path(data_path, input, render_invoice)?;
+    let named_pdf = create_invoice_pdf_with_data(data, input, render_invoice)?;
     save_pdf_location_to_tmp_file(named_pdf.saved_at().clone())?;
     if let Some(email_settings) = email_settings {
         send_email_with_settings_for_pdf(&named_pdf, &email_settings)?

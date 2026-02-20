@@ -1,6 +1,6 @@
 use crate::{
-    BINARY_NAME, DataAdminInput, EmailInput, Error, InvoicedItems, Language, PathBuf, Result,
-    TargetItems, TargetPeriod, TimeOff, ValidInput, validate_email_data,
+    BINARY_NAME, Cadence, DataAdminInput, EmailInput, Error, InvoicedItems, Language, PathBuf,
+    Result, TargetItems, TargetPeriod, TimeOff, ValidInput, validate_email_data,
 };
 use bon::Builder;
 use clap::Subcommand;
@@ -95,12 +95,13 @@ impl InvoiceInput {
 
     /// Returns a `ValidInput` from the parsed command line arguments.
     /// This function validates the input, e.g. checks if the output path exists,
-    /// and returns a `ValidInput` that can be used to generate the invoice.
+    /// resolves `current`/`last` using invoice cadence, and returns a
+    /// `ValidInput` that can be used to generate the invoice.
     ///
     /// # Errors
     /// Returns an error if the input is invalid, e.g. if the output path does not
     /// exist or if the items are not specified correctly.
-    pub fn parsed(self) -> Result<ValidInput> {
+    pub fn parsed(self, cadence: Cadence) -> Result<ValidInput> {
         if let Some(path) = &self.out {
             let parent = path
                 .parent()
@@ -117,7 +118,7 @@ impl InvoiceInput {
             Ok(None)
         }?;
         let items = self._invoiced_items()?;
-        let period = self.period.period();
+        let period = self.period.period_for_cadence(cadence);
         let valid = ValidInput::builder()
             .period(period)
             .layout(*self.layout())
@@ -287,7 +288,7 @@ mod tests {
                             .build(),
                     ))
                     .build();
-                let input = input.parsed().unwrap();
+                let input = input.parsed(Cadence::Monthly).unwrap();
                 let expected_decimal = Decimal::try_from(25.0).unwrap();
                 let expected_quantity = Quantity::from(expected_decimal);
                 assert_eq!(
@@ -301,7 +302,7 @@ mod tests {
             #[test]
             fn test_input_parsing_items_expenses() {
                 let input = InvoiceInput::builder().items(TargetItems::Expenses).build();
-                let input = input.parsed().unwrap();
+                let input = input.parsed(Cadence::Monthly).unwrap();
                 assert_eq!(*input.items(), InvoicedItems::Expenses);
             }
 
@@ -310,7 +311,7 @@ mod tests {
                 let input = InvoiceInput::builder()
                     .out(PathBuf::from("/tmp/invoice.pdf"))
                     .build();
-                let input = input.parsed().unwrap();
+                let input = input.parsed(Cadence::Monthly).unwrap();
                 assert_eq!(
                     *input.maybe_output_path(),
                     Some(PathBuf::from("/tmp/invoice.pdf"))
@@ -321,7 +322,7 @@ mod tests {
             #[should_panic]
             fn test_input_parsing_out_at_root_crashes() {
                 let input = InvoiceInput::builder().out(PathBuf::from("/")).build();
-                let _ = input.parsed();
+                let _ = input.parsed(Cadence::Monthly);
             }
         }
     }

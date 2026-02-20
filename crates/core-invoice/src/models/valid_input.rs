@@ -1,6 +1,5 @@
 use crate::{
-    DecryptedEmailSettings, HasSample, InvoicedItems, Language, Layout, PathBuf,
-    YearMonthAndFortnight,
+    DecryptedEmailSettings, HasSample, InvoicedItems, Language, Layout, PathBuf, PeriodAnno,
 };
 use bon::Builder;
 use derive_more::Display;
@@ -22,13 +21,11 @@ pub struct ValidInput {
     /// The period for which to generate the invoice, this affects the invoice
     /// number as well as the invoice date and due date.
     ///
-    /// Note: We use the period type with the highest granularity, so that we
-    /// always can convert it to a kind of period of more coarse granularity.
-    /// For example, if the period is `YearMonthAndFortnight`, we can always
-    /// convert it to `YearAndMonth` later in the flow if that matches the invoice
-    /// cadence.
+    /// This period must match the configured cadence:
+    /// - `Cadence::Monthly` => `PeriodAnno::YearAndMonth`
+    /// - `Cadence::BiWeekly` => `PeriodAnno::YearMonthAndFortnight`
     #[getset(get = "pub", set_with = "pub")]
-    period: YearMonthAndFortnight,
+    period: PeriodAnno,
 
     /// The items to be invoiced, either services or expenses.
     #[builder(default)]
@@ -54,7 +51,7 @@ pub struct ValidInput {
 impl HasSample for ValidInput {
     fn sample() -> Self {
         Self::builder()
-            .period(YearMonthAndFortnight::sample())
+            .period(PeriodAnno::sample())
             .items(InvoicedItems::sample())
             .maybe_output_path(PathBuf::from("invoice.pdf"))
             .build()
@@ -62,7 +59,7 @@ impl HasSample for ValidInput {
 
     fn sample_other() -> Self {
         Self::builder()
-            .period(YearMonthAndFortnight::sample_other())
+            .period(PeriodAnno::sample_other())
             .items(InvoicedItems::sample_other())
             .build()
     }

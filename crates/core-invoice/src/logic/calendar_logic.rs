@@ -268,6 +268,10 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
         });
     }
     let periods_elapsed_since_offset = target_period.elapsed_periods_since(offset.period())?;
+    log::debug!(
+        "periods_elapsed_since_offset: {periods_elapsed_since_offset}, calculated by calling target_period.elapsed_periods_since(offset.period()) where target_period is {target_period:?} and offset.period() is {:?}",
+        offset.period()
+    );
 
     let mut periods_off_to_subtract = 0;
     for period_off in record_of_periods_off.iter() {
@@ -279,6 +283,13 @@ pub fn calculate_invoice_number<Period: IsPeriod>(
     }
     let mut invoice_number =
         **offset.offset() + periods_elapsed_since_offset - periods_off_to_subtract;
+    log::debug!(
+        "Calculated invoice_number: {invoice_number} by starting with offset {:?} which is {}, adding periods_elapsed_since_offset which is {}, and subtracting periods_off_to_subtract which is {}",
+        offset.offset(),
+        **offset.offset(),
+        periods_elapsed_since_offset,
+        periods_off_to_subtract
+    );
     if is_expenses {
         // For expenses we add 1, ensuring that if we invoice for services and
         // expenses the same month, the expense invoice number is always higher.
@@ -584,7 +595,7 @@ mod tests {
         expected: impl Into<InvoiceNumber>,
     ) {
         let input = ValidInput::builder()
-            .period(target_period)
+            .period(target_period.into())
             .items(if is_expenses {
                 InvoicedItems::Expenses
             } else {

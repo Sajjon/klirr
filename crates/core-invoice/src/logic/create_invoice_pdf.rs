@@ -16,6 +16,12 @@ where
     E: From<Error>,
 {
     let data = read_data_from_disk_with_base_path(data_base_path).map_err(E::from)?;
+    log::debug!(
+        "input.period: {:?}, data.offset.period: {:?}, cadence: {:?}",
+        input.period(),
+        data.information().offset().period(),
+        data.service_fees().cadence()
+    );
     create_invoice_pdf_with_data(data, input, render)
 }
 
@@ -54,7 +60,7 @@ where
 mod tests {
     use super::*;
     use crate::HasSample;
-    use crate::{PathBuf, YearAndMonth, YearMonthAndFortnight};
+    use crate::{PathBuf, YearAndMonth};
 
     use tempfile::NamedTempFile;
     use test_log::test;
@@ -64,7 +70,7 @@ mod tests {
         let out = NamedTempFile::new().unwrap().path().to_path_buf();
         let input = ValidInput::builder()
             .maybe_output_path(out.clone())
-            .period(YearMonthAndFortnight::sample())
+            .period(YearAndMonth::sample().into())
             .build();
         let dummy_pdf_data = Vec::from(b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n");
         let named_pdf = create_invoice_pdf_with_data::<YearAndMonth, Error>(

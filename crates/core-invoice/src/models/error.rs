@@ -49,6 +49,10 @@ pub enum Error {
     #[error("Cannot invoice for month when cadence is bi-weekly")]
     CannotInvoiceForMonthWhenCadenceIsBiWeekly,
 
+    /// Cannot invoice for fortnight when cadence is monthly.
+    #[error("Cannot invoice for fortnight when cadence is monthly")]
+    CannotInvoiceForFortnightWhenCadenceIsMonthly,
+
     /// Cannot expense for month when cadence is bi-weekly
     #[error("Cannot expense for month when cadence is bi-weekly")]
     CannotExpenseForMonthWhenCadenceIsBiWeekly,

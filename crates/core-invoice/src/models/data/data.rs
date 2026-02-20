@@ -2,7 +2,7 @@ use crate::{
     Cadence, CompanyInformation, DataFromDiskWithItemsOfKind, DataWithItemsPricedInSourceCurrency,
     Error, ExpensedPeriods, HasSample, InvoiceInfoFull, InvoicedItems, IsPeriod, Item,
     LineItemsPricedInSourceCurrency, OutputPath, PaymentInformation, PeriodAnno, ProtoInvoiceInfo,
-    Quantity, Result, ServiceFees, TimeOff, ValidInput, YearAndMonth, calculate_invoice_number,
+    Quantity, Result, ServiceFees, TimeOff, ValidInput, calculate_invoice_number,
     quantity_in_period,
 };
 use bon::Builder;
@@ -97,15 +97,17 @@ impl<Period: IsPeriod> Data<Period> {
     /// assert!(result.is_ok(), "Expected conversion to succeed, got: {:?}", result);
     /// ```
     pub fn to_partial(self, input: ValidInput) -> Result<DataWithItemsPricedInSourceCurrency> {
-        let target_period =
-            match Into::<PeriodAnno>::into(self.information().offset().period().clone()) {
-                PeriodAnno::YearMonthAndFortnight(_) => {
-                    Period::try_from_period_anno(PeriodAnno::from(*input.period()))?
-                }
-                PeriodAnno::YearAndMonth(_) => Period::try_from_period_anno(PeriodAnno::from(
-                    YearAndMonth::from(*input.period()),
-                ))?,
-            };
+        let input_period = input.period().clone();
+        match (*self.service_fees().cadence(), &input_period) {
+            (Cadence::Monthly, PeriodAnno::YearMonthAndFortnight(_)) => {
+                return Err(Error::CannotInvoiceForFortnightWhenCadenceIsMonthly);
+            }
+            (Cadence::BiWeekly, PeriodAnno::YearAndMonth(_)) => {
+                return Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly);
+            }
+            _ => {}
+        }
+        let target_period = Period::try_from_period_anno(input_period)?;
         let items = input.items();
         let invoice_date = target_period.to_date_end_of_period();
         let due_date = invoice_date.advance(self.payment_info().terms());
@@ -223,7 +225,8 @@ mod tests {
     use super::*;
     use crate::HasSample;
     use crate::{
-        Granularity, Month, MonthHalf, Rate, TimestampedInvoiceNumber, YearMonthAndFortnight,
+        Granularity, Month, MonthHalf, Rate, TimestampedInvoiceNumber, YearAndMonth,
+        YearMonthAndFortnight,
     };
     use rust_decimal::dec;
     use test_log::test;
@@ -251,16 +254,24 @@ mod tests {
         let sut = Sut::sample();
         let input = ValidInput::builder()
             .items(InvoicedItems::Expenses)
-            .period(
-                YearMonthAndFortnight::builder()
-                    .year(2025)
-                    .month(Month::May)
-                    .half(MonthHalf::First)
-                    .build(),
-            )
+            .period(YearAndMonth::may(2025).into())
             .build();
         let partial = sut.to_partial(input).unwrap();
         assert!(partial.line_items().is_expenses());
+    }
+
+    #[test]
+    fn to_partial_rejects_fortnight_when_cadence_monthly() {
+        let sut = Sut::sample();
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .period(YearMonthAndFortnight::sample().into())
+            .build();
+        let result = sut.to_partial(input);
+        assert_eq!(
+            result.unwrap_err(),
+            Error::CannotInvoiceForFortnightWhenCadenceIsMonthly
+        );
     }
 
     #[test]
@@ -272,7 +283,7 @@ mod tests {
                     .items(InvoicedItems::Service {
                         time_off: Some(TimeOff::Days(Quantity::from(dec!(2.0)))),
                     })
-                    .period(YearMonthAndFortnight::sample())
+                    .period(YearAndMonth::sample().into())
                     .build(),
             )
             .unwrap();
@@ -283,7 +294,7 @@ mod tests {
                 .try_unwrap_service()
                 .unwrap()
                 .quantity(),
-            &Quantity::from(dec!(22.0))
+            &Quantity::from(dec!(21.0))
         );
     }
     #[test]
@@ -312,7 +323,7 @@ mod tests {
                 // Day > Hour in the granularity ordering, so this should fail
                 time_off: Some(TimeOff::Days(Quantity::from(dec!(2.0)))),
             })
-            .period(YearMonthAndFortnight::sample())
+            .period(YearAndMonth::sample().into())
             .build();
 
         let result = sut.to_partial(input);
@@ -364,7 +375,7 @@ mod tests {
                 // because free time can be more granular than service granularity
                 time_off: Some(TimeOff::Hours(Quantity::from(dec!(8.0)))),
             })
-            .period(YearMonthAndFortnight::sample())
+            .period(YearAndMonth::sample().into())
             .build();
 
         let result = sut.to_partial(input);
@@ -411,7 +422,7 @@ mod tests {
             .vendor(CompanyInformation::sample_vendor())
             .client(CompanyInformation::sample_client())
             .payment_info(PaymentInformation::sample())
-            .service_fees(ServiceFees::sample())
+            .service_fees(ServiceFees::sample_other())
             .expensed_periods(ExpensedPeriods::sample())
             .build();
         let target_period = YearMonthAndFortnight::builder()
@@ -421,7 +432,7 @@ mod tests {
             .build();
         let input = ValidInput::builder()
             .items(InvoicedItems::Service { time_off: None })
-            .period(target_period)
+            .period(target_period.into())
             .build();
         let partial = sut.to_partial(input).unwrap();
         let invoice_date = partial.information().invoice_date();

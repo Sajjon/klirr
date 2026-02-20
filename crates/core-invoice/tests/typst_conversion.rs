@@ -1,7 +1,7 @@
 use insta::assert_snapshot;
 use klirr_core_invoice::{
     Currency, Data, ExchangeRates, ExchangeRatesMap, HasSample, InvoicedItems, L10n, Language,
-    Month, MonthHalf, PreparedData, UnitPrice, ValidInput, YearAndMonth, YearMonthAndFortnight,
+    PreparedData, UnitPrice, ValidInput, YearAndMonth,
 };
 use klirr_foundation::ToTypstFn;
 use rust_decimal::dec;
@@ -28,13 +28,7 @@ fn prepared_data_from(input: ValidInput) -> PreparedData {
 fn data_expenses_to_typst() {
     let input = ValidInput::builder()
         .items(InvoicedItems::Expenses)
-        .period(
-            YearMonthAndFortnight::builder()
-                .year(2025)
-                .month(Month::May)
-                .half(MonthHalf::First)
-                .build(),
-        )
+        .period(YearAndMonth::may(2025).into())
         .language(Language::EN)
         .build();
     let typst = prepared_data_from(input).to_typst_fn();
@@ -45,13 +39,7 @@ fn data_expenses_to_typst() {
 fn data_services_to_typst() {
     let input = ValidInput::builder()
         .items(InvoicedItems::Service { time_off: None })
-        .period(
-            YearMonthAndFortnight::builder()
-                .year(2025)
-                .month(Month::May)
-                .half(MonthHalf::First)
-                .build(),
-        )
+        .period(YearAndMonth::may(2025).into())
         .language(Language::EN)
         .build();
     let typst = prepared_data_from(input).to_typst_fn();

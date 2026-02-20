@@ -45,8 +45,8 @@ pub fn render<I: ToTypstFn, D: ToTypstFn, L: ToTypstFn + FontRequiring, E>(
 mod tests {
     use crate::render_test_helpers::*;
     use klirr_core_invoice::{
-        Currency, Data, ExchangeRatesMap, HasSample, InvoicedItems, Language, Month, MonthHalf,
-        UnitPrice, ValidInput, YearAndMonth, YearMonthAndFortnight,
+        Currency, Data, ExchangeRatesMap, HasSample, InvoicedItems, Language, UnitPrice,
+        ValidInput, YearAndMonth,
     };
     use test_log::test;
 
@@ -60,13 +60,7 @@ mod tests {
             Data::<YearAndMonth>::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
-                .period(
-                    YearMonthAndFortnight::builder()
-                        .year(2025)
-                        .month(Month::May)
-                        .half(MonthHalf::First)
-                        .build(),
-                )
+                .period(YearAndMonth::may(2025).into())
                 .language(Language::EN)
                 .build(),
             fixture("expected_expenses.png"),
@@ -87,7 +81,7 @@ mod tests {
             Data::<YearAndMonth>::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Service { time_off: None })
-                .period(YearMonthAndFortnight::sample())
+                .period(YearAndMonth::sample().into())
                 .language(Language::EN)
                 .build(),
             fixture("expected_services.png"),
