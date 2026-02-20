@@ -70,11 +70,7 @@ impl std::str::FromStr for Date {
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.splitn(3, '-');
-        let Some(year_part) = parts.next() else {
-            return Err(Error::FailedToParseDate {
-                underlying: "Invalid Format".to_owned(),
-            });
-        };
+        let year_part = parts.next().expect("splitn always returns a first segment");
         let Some(month_part) = parts.next() else {
             return Err(Error::FailedToParseDate {
                 underlying: "Invalid Format".to_owned(),
@@ -218,6 +214,7 @@ impl HasSample for Date {
 mod tests {
     use super::*;
     use crate::HasSample;
+    use chrono::Timelike;
     use std::str::FromStr;
     use test_log::test;
 
@@ -243,16 +240,35 @@ mod tests {
     }
 
     #[test]
+    fn test_date_from_str_year_month_and_half_labels() {
+        let month_end = Sut::from_str("2025-05").unwrap();
+        assert_eq!(month_end, Sut::from_str("2025-05-31").unwrap());
+
+        let first_half_feb = Sut::from_str("2025-02-first-half").unwrap();
+        assert_eq!(first_half_feb, Sut::from_str("2025-02-14").unwrap());
+
+        let first_half_non_feb = Sut::from_str("2025-03-first-half").unwrap();
+        assert_eq!(first_half_non_feb, Sut::from_str("2025-03-15").unwrap());
+
+        let second_half_alias = Sut::from_str("2025-03-second").unwrap();
+        assert_eq!(second_half_alias, Sut::from_str("2025-03-31").unwrap());
+
+        let numeric_day = Sut::from_str("2025-04-1").unwrap();
+        assert_eq!(numeric_day, Sut::from_str("2025-04-01").unwrap());
+    }
+
+    #[test]
     fn test_from_str_all_reasons_invalid() {
         let invalid_dates = [
-            "2025-05-32",        // Invalid day
-            "99999999999-05-32", // Invalid year
-            "2025-13-01",        // Invalid month
-            "2025-00-01",        // Invalid month zero
-            "2025-13-01",        // Invalid month too large
-            "2025",              // Missing month and day
-            "05-23",             // Missing year
-            "2025-05-23-01",     // Too many parts
+            "2025-05-32",         // Invalid day
+            "99999999999-05-32",  // Invalid year
+            "2025-13-01",         // Invalid month
+            "2025-00-01",         // Invalid month zero
+            "2025-13-01",         // Invalid month too large
+            "2025-05-third-half", // Invalid half label
+            "2025",               // Missing month and day
+            "05-23",              // Missing year
+            "2025-05-23-01",      // Too many parts
         ];
 
         for date in invalid_dates {
@@ -267,5 +283,57 @@ mod tests {
         assert_eq!(date.year(), &Year::from(2025));
         assert_eq!(date.month(), &Month::May);
         assert_eq!(date.day(), &Day::try_from(23).unwrap());
+    }
+
+    #[test]
+    fn test_from_naive_datetime() {
+        let naive_dt = NaiveDate::from_ymd_opt(2025, 5, 23)
+            .unwrap()
+            .and_hms_opt(14, 15, 16)
+            .unwrap();
+        let date: Date = naive_dt.into();
+        assert_eq!(date, Sut::from_str("2025-05-23").unwrap());
+    }
+
+    #[test]
+    fn test_from_ymd_valid_and_invalid() {
+        let ok = Sut::from_ymd(2025, 5_u32, 23_u32).unwrap();
+        assert_eq!(ok, Sut::from_str("2025-05-23").unwrap());
+
+        let err = Sut::from_ymd(2025, 2_u32, 30_u32).unwrap_err();
+        assert!(matches!(err, Error::InvalidDate { .. }));
+    }
+
+    #[test]
+    fn test_last_day_of_month_and_end_of_month() {
+        let may_mid = Sut::from_str("2025-05-12").unwrap();
+        assert_eq!(may_mid.last_day_of_month(), Day::try_from(31).unwrap());
+        assert_eq!(may_mid.end_of_month(), Sut::from_str("2025-05-31").unwrap());
+
+        let feb_leap = Sut::from_str("2024-02-12").unwrap();
+        assert_eq!(feb_leap.last_day_of_month(), Day::try_from(29).unwrap());
+        assert_eq!(
+            feb_leap.end_of_month(),
+            Sut::from_str("2024-02-29").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_to_datetime_and_advance() {
+        let date = Sut::from_str("2025-05-23").unwrap();
+        let datetime = date.to_datetime();
+        assert_eq!(
+            datetime.date(),
+            NaiveDate::from_ymd_opt(2025, 5, 23).unwrap()
+        );
+        assert_eq!(datetime.time().hour(), 0);
+        assert_eq!(datetime.time().minute(), 0);
+        assert_eq!(datetime.time().second(), 0);
+
+        let plus_seven = date.advance_days(&Day::try_from(7).unwrap());
+        assert_eq!(plus_seven, Sut::from_str("2025-05-30").unwrap());
+
+        let due = date.advance(&PaymentTerms::net30());
+        assert_eq!(due, Sut::from_str("2025-06-22").unwrap());
     }
 }
