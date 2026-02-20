@@ -1,12 +1,9 @@
 use crate::{
-    Data, DataSelector, PeriodAnno, Result, build_company, build_invoice_info, build_payment_info,
+    Data, DataSelector, Result, build_company, build_invoice_info, build_payment_info,
     build_service_fees, config_render, curry2, select_or_default,
 };
 
-pub fn ask_for_data(
-    default: Data<PeriodAnno>,
-    data_selector: Option<DataSelector>,
-) -> Result<Data<PeriodAnno>> {
+pub fn ask_for_data(default: Data, data_selector: Option<DataSelector>) -> Result<Data> {
     config_render();
 
     let vendor = select_or_default(data_selector, DataSelector::Vendor, default.vendor(), |d| {

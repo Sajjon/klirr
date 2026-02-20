@@ -61,3 +61,11 @@ impl From<i32> for Year {
         Self(year as u16)
     }
 }
+
+impl Year {
+    /// Returns `true` if the year is a leap year.
+    pub fn is_leap(&self) -> bool {
+        let year = **self;
+        (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+    }
+}

@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::{Item, PeriodAnno};
+use crate::Item;
 use bon::Builder;
 use getset::Getters;
 
@@ -16,7 +16,7 @@ pub struct ExpensesInput {
         help = "The period for which you wanna record expenses, e.g. `2025-05`. or `2025-06-first-half`. Note that we might expense for period of May even thought we had an expense in beginning of June, so this is not a strict period, but rather a period in which we want to record the expenses."
     )]
     #[getset(get = "pub")]
-    period: PeriodAnno,
+    period: String,
 
     /// The expenses to record for the period, which are specified as a list of items.
     /// Please note that the transaction date might be different from the month specified,

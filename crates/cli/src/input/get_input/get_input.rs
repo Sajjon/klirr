@@ -1,6 +1,7 @@
 use crate::{
     BINARY_NAME, Cadence, DataAdminInput, EmailInput, Error, InvoicedItems, Language, PathBuf,
-    Result, TargetItems, TargetPeriod, TimeOff, ValidInput, validate_email_data,
+    Result, TargetItems, TargetPeriod, TimeOff, ValidInput, period_end_from_relative_time,
+    validate_email_data,
 };
 use bon::Builder;
 use clap::Subcommand;
@@ -118,9 +119,10 @@ impl InvoiceInput {
             Ok(None)
         }?;
         let items = self._invoiced_items()?;
-        let period = self.period.period_for_cadence(cadence);
+        let relative_time = self.period.relative_time_for_cadence(cadence);
+        let date = period_end_from_relative_time(relative_time)?;
         let valid = ValidInput::builder()
-            .period(period)
+            .date(date)
             .layout(*self.layout())
             .items(items)
             .language(*self.language())
@@ -139,7 +141,7 @@ mod tests {
         TimeOffInput, TimeUnitInput,
     };
     use klirr_core_invoice::{
-        DataSelector, Decimal, EmailSettingsSelector, FromStr, Item, Quantity, YearAndMonth,
+        DataSelector, Decimal, EmailSettingsSelector, FromStr, Item, Quantity,
     };
 
     mod data_admin_input {
@@ -178,7 +180,7 @@ mod tests {
                 *input.command.unwrap_data().command(),
                 DataAdminInputCommand::Expenses(
                     ExpensesInput::builder()
-                        .period(YearAndMonth::from_str("2025-05").unwrap().into())
+                        .period("2025-05".to_owned())
                         .expenses(vec![item_1, item_2])
                         .build()
                 )

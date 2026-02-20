@@ -1,9 +1,9 @@
 use serde::de::DeserializeOwned;
 
 use crate::{
-    CompanyInformation, Data, EncryptedEmailSettings, Error, ExpensedPeriods, IsPeriod, Path,
-    PathBuf, PaymentInformation, PeriodAnno, ProtoInvoiceInfo, Result, ServiceFees,
-    create_folder_if_needed, deserialize_contents_of_ron, type_name,
+    CompanyInformation, Data, EncryptedEmailSettings, Error, ExpensedPeriods, Path, PathBuf,
+    PaymentInformation, ProtoInvoiceInfo, Result, ServiceFees, create_folder_if_needed,
+    deserialize_contents_of_ron, type_name,
 };
 use log::debug;
 use log::info;
@@ -68,10 +68,7 @@ pub fn save_email_settings_with_base_path(
     save_to_disk(&email_settings, path)
 }
 
-pub fn save_data_with_base_path<Period: IsPeriod + Serialize>(
-    data: Data<Period>,
-    base_path: impl AsRef<Path>,
-) -> Result<()> {
+pub fn save_data_with_base_path(data: Data, base_path: impl AsRef<Path>) -> Result<()> {
     let base_path = base_path.as_ref();
     save_to_disk(data.vendor(), vendor_path(base_path))?;
     save_to_disk(data.client(), client_path(base_path))?;
@@ -147,15 +144,11 @@ pub fn service_fees(base_path: impl AsRef<Path>) -> Result<ServiceFees> {
     deserialize_contents_of_ron(service_fees_path(base_path))
 }
 
-pub fn proto_invoice_info<Period: IsPeriod + DeserializeOwned>(
-    base_path: impl AsRef<Path>,
-) -> Result<ProtoInvoiceInfo<Period>> {
+pub fn proto_invoice_info(base_path: impl AsRef<Path>) -> Result<ProtoInvoiceInfo> {
     deserialize_contents_of_ron(proto_invoice_info_path(base_path))
 }
 
-pub fn expensed_periods<Period: IsPeriod + DeserializeOwned>(
-    base_path: impl AsRef<Path>,
-) -> Result<ExpensedPeriods<Period>> {
+pub fn expensed_periods(base_path: impl AsRef<Path>) -> Result<ExpensedPeriods> {
     deserialize_contents_of_ron(expensed_periods_path(base_path))
 }
 
@@ -165,7 +158,7 @@ pub fn read_email_data_from_disk_with_base_path(
     deserialize_contents_of_ron(email_settings_path(base_path))
 }
 
-pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result<Data<PeriodAnno>> {
+pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result<Data> {
     let base_path = base_path.as_ref();
     // Read the input data from a file or other source.
     // This is a placeholder function, you can add your own logic here.
@@ -198,7 +191,7 @@ mod tests {
     #[test]
     fn write_read_validate_data() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let data = Data::<PeriodAnno>::sample();
+        let data = Data::sample();
         save_data_with_base_path(data.clone(), tempdir.path()).unwrap();
         let loaded_data = read_data_from_disk_with_base_path(tempdir.path()).unwrap();
         assert_eq!(loaded_data, data, "Loaded data should match saved data");

@@ -1,6 +1,6 @@
 use crate::{
-    Data, Error, ExchangeRatesFetcher, IsPeriod, L10n, Layout, NamedPdf, Path, PreparedData,
-    Result, ValidInput, create_folder_to_parent_of_path_if_needed, get_localization,
+    Data, Error, ExchangeRatesFetcher, L10n, Layout, NamedPdf, Path, PreparedData, Result,
+    ValidInput, create_folder_to_parent_of_path_if_needed, get_localization,
     prepare_invoice_input_data, read_data_from_disk_with_base_path,
 };
 use klirr_foundation::{Pdf, save_pdf};
@@ -17,9 +17,9 @@ where
 {
     let data = read_data_from_disk_with_base_path(data_base_path).map_err(E::from)?;
     log::debug!(
-        "input.period: {:?}, data.offset.period: {:?}, cadence: {:?}",
-        input.period(),
-        data.information().offset().period(),
+        "input.date: {:?}, data.offset.date: {:?}, cadence: {:?}",
+        input.date(),
+        data.information().offset().date(),
         data.service_fees().cadence()
     );
     create_invoice_pdf_with_data(data, input, render)
@@ -27,8 +27,8 @@ where
 
 /// Compile the Typst source into a PDF and save it at the specified path, using
 /// the provided `Data` and `ValidInput`.
-pub fn create_invoice_pdf_with_data<Period: IsPeriod, E>(
-    data: Data<Period>,
+pub fn create_invoice_pdf_with_data<E>(
+    data: Data,
     input: ValidInput,
     render: impl Fn(L10n, PreparedData, Layout) -> Result<Pdf, E>,
 ) -> Result<NamedPdf, E>
@@ -60,7 +60,7 @@ where
 mod tests {
     use super::*;
     use crate::HasSample;
-    use crate::{PathBuf, YearAndMonth};
+    use crate::PathBuf;
 
     use tempfile::NamedTempFile;
     use test_log::test;
@@ -70,17 +70,13 @@ mod tests {
         let out = NamedTempFile::new().unwrap().path().to_path_buf();
         let input = ValidInput::builder()
             .maybe_output_path(out.clone())
-            .period(YearAndMonth::sample().into())
+            .date(crate::Date::sample())
             .build();
         let dummy_pdf_data = Vec::from(b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n");
-        let named_pdf = create_invoice_pdf_with_data::<YearAndMonth, Error>(
-            Data::sample(),
-            input,
-            |_, _, _| {
-                // Simulate PDF rendering
-                Ok::<Pdf, Error>(Pdf::from(dummy_pdf_data.clone()))
-            },
-        )
+        let named_pdf = create_invoice_pdf_with_data::<Error>(Data::sample(), input, |_, _, _| {
+            // Simulate PDF rendering
+            Ok::<Pdf, Error>(Pdf::from(dummy_pdf_data.clone()))
+        })
         .unwrap();
         assert_eq!(named_pdf.saved_at(), &out);
         let result = std::fs::read(named_pdf.saved_at()).unwrap();

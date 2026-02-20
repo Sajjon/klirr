@@ -1,4 +1,4 @@
-use crate::{Error, FromStr, Result};
+use crate::{Day, Error, FromStr, Result, Year};
 use derive_more::Display;
 use derive_more::IsVariant;
 use serde::Deserialize;
@@ -54,6 +54,29 @@ impl Month {
             Month::October => &10,
             Month::November => &11,
             Month::December => &12,
+        }
+    }
+
+    /// Returns the last day in this month for the given year.
+    pub fn last_day(&self, year: Year) -> Day {
+        match self {
+            Self::January
+            | Self::March
+            | Self::May
+            | Self::July
+            | Self::August
+            | Self::October
+            | Self::December => Day::try_from(31).expect("31 is a valid day"),
+            Self::April | Self::June | Self::September | Self::November => {
+                Day::try_from(30).expect("30 is a valid day")
+            }
+            Self::February => {
+                if year.is_leap() {
+                    Day::try_from(29).expect("29 is a valid day")
+                } else {
+                    Day::try_from(28).expect("28 is a valid day")
+                }
+            }
         }
     }
 }

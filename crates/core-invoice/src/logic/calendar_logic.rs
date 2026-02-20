@@ -1,342 +1,327 @@
-use std::{borrow::Borrow, ops::Mul};
+use std::str::FromStr;
+use std::{cmp::Ordering, ops::Mul};
 
 use crate::{
-    Cadence, Date, Day, Error, Granularity, InvoiceNumber, IsPeriod, Month, MonthHalf, PeriodAnno,
-    Quantity, RecordOfPeriodsOff, Result, TimestampedInvoiceNumber, TryFromPeriodAnno, Year,
-    YearAndMonth, YearMonthAndFortnight,
+    Cadence, Date, Day, Error, Granularity, InvoiceNumber, Month, Quantity, RecordOfPeriodsOff,
+    RelativeTime, Result, TimestampedInvoiceNumber, Year,
 };
-use chrono::Datelike;
-use chrono::NaiveDate;
-use chrono::Weekday;
+use chrono::{Datelike, NaiveDate, Weekday};
 
-impl Year {
-    /// Checks if this year is a leap year, if it is, `true` is returned, else
-    /// `false`
-    pub fn is_leap(&self) -> bool {
-        let year = **self;
-        (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
-    }
+fn month_end_date(year: Year, month: Month) -> Date {
+    Date::builder()
+        .year(year)
+        .month(month)
+        .day(month.last_day(year))
+        .build()
 }
 
-impl Month {
-    pub fn last_day(&self, is_leap_year: bool) -> Day {
-        use Month::*;
-        match self {
-            January | March | May | July | August | October | December => {
-                Day::try_from(31).expect("LEQ 31 days")
+fn first_half_end_date(year: Year, month: Month) -> Date {
+    let day = if month == Month::February { 14 } else { 15 };
+    Date::builder()
+        .year(year)
+        .month(month)
+        .day(Day::try_from(day).expect("valid day"))
+        .build()
+}
+
+fn period_end_for_unit(date: Date, unit: Granularity) -> Result<Date> {
+    match unit {
+        Granularity::Month => Ok(date.end_of_month()),
+        Granularity::Fortnight => {
+            let first_half_end = first_half_end_date(*date.year(), *date.month());
+            if date.day() <= first_half_end.day() {
+                Ok(first_half_end)
+            } else {
+                Ok(date.end_of_month())
             }
-            April | June | September | November => Day::try_from(30).expect("LEQ 31 days"),
-            February => {
-                if is_leap_year {
-                    Day::try_from(29).expect("LEQ 31 days")
-                } else {
-                    Day::try_from(28).expect("LEQ 31 days")
-                }
+        }
+        unsupported => Err(Error::InvalidPeriod {
+            bad_value: format!(
+                "Unsupported relative period unit '{unsupported:?}', expected Month or Fortnight"
+            ),
+        }),
+    }
+}
+
+fn period_end_for_cadence(date: Date, cadence: Cadence) -> Result<Date> {
+    period_end_for_unit(date, cadence.max_granularity())
+}
+
+/// Normalizes any date/label-parsed date to the cadence-aligned period-end date.
+pub fn normalize_period_end_date_for_cadence(date: Date, cadence: Cadence) -> Result<Date> {
+    period_end_for_cadence(date, cadence)
+}
+
+fn month_serial(period_end: Date) -> i32 {
+    let year = **period_end.year() as i32;
+    let month_zero_based = *period_end.month() as i32 - 1;
+    year * 12 + month_zero_based
+}
+
+fn fortnight_serial(period_end: Date) -> Result<i32> {
+    let period_end = period_end_for_unit(period_end, Granularity::Fortnight)?;
+    let first_half_end = first_half_end_date(*period_end.year(), *period_end.month());
+    let half = if period_end.day() == first_half_end.day() {
+        0
+    } else {
+        1
+    };
+    let year = **period_end.year() as i32;
+    let month_zero_based = *period_end.month() as i32 - 1;
+    Ok(year * 24 + month_zero_based * 2 + half)
+}
+
+fn shift_period_end(period_end: Date, unit: Granularity, amount: i16) -> Result<Date> {
+    let offset = amount as i32;
+    match unit {
+        Granularity::Month => {
+            let start = period_end_for_unit(period_end, Granularity::Month)?;
+            let serial = month_serial(start) + offset;
+            if serial < 0 {
+                return Err(Error::InvalidDate {
+                    underlying: "negative period serial".to_owned(),
+                });
+            }
+            let year = Year::from(serial / 12);
+            let month = Month::try_from((serial % 12 + 1) as i32)?;
+            Ok(month_end_date(year, month))
+        }
+        Granularity::Fortnight => {
+            let start = period_end_for_unit(period_end, Granularity::Fortnight)?;
+            let serial = fortnight_serial(start)? + offset;
+            if serial < 0 {
+                return Err(Error::InvalidDate {
+                    underlying: "negative period serial".to_owned(),
+                });
+            }
+            let year = Year::from(serial / 24);
+            let remainder = serial % 24;
+            let month = Month::try_from((remainder / 2 + 1) as i32)?;
+            let half = remainder % 2;
+            if half == 0 {
+                Ok(first_half_end_date(year, month))
+            } else {
+                Ok(month_end_date(year, month))
             }
         }
+        unsupported => Err(Error::InvalidPeriod {
+            bad_value: format!(
+                "Unsupported relative period unit '{unsupported:?}', expected Month or Fortnight"
+            ),
+        }),
     }
 }
 
-impl YearMonthAndFortnight {
-    pub fn current() -> Self {
-        let today = chrono::Local::now().date_naive();
-        Self::builder()
-            .year(Year::from(today.year()))
-            .month(Month::try_from(today.month() as i32).expect("Chrono should return valid month"))
-            .half(MonthHalf::from(today))
-            .build()
-    }
-
-    pub fn last() -> Self {
-        Self::current().one_half_earlier()
-    }
-
-    pub fn one_half_earlier(&self) -> Self {
-        match self.half() {
-            MonthHalf::First => {
-                let ym = YearAndMonth::from(*self);
-                let ym = ym.one_month_earlier();
-                Self::year_and_month_with_half(ym, MonthHalf::Second)
-            }
-            MonthHalf::Second => Self::builder()
-                .year(*self.year())
-                .month(*self.month())
-                .half(MonthHalf::First)
-                .build(),
-        }
-    }
-}
-
-impl YearAndMonth {
-    /// Returns the last day of the month for this `YearAndMonth`, e.g. if the
-    /// year is not a leap year, February will return 28, and for leap year
-    /// 29 is returned.
-    /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
-    ///
-    /// let year_and_month = YearAndMonth::january(2025);
-    /// assert_eq!(year_and_month.last_day_of_month(), Day::try_from(31).unwrap());
-    /// ```
-    pub fn last_day_of_month(&self) -> Day {
-        self.month().last_day(self.year().is_leap())
-    }
-
-    /// Converts this `YearAndMonth` to a `Date` representing the last day of the month.
-    ///
-    /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
-    /// let month = YearAndMonth::january(2025);
-    /// let date = month.to_date_end_of_month();
-    /// assert_eq!(date.year(), &Year::from(2025));
-    /// assert_eq!(date.month(), &Month::January);
-    /// assert_eq!(date.day(), &Day::try_from(31).unwrap());
-    /// ```
-    pub fn to_date_end_of_month(&self) -> Date {
-        Date::builder()
-            .year(*self.year())
-            .month(*self.month())
-            .day(self.last_day_of_month())
-            .build()
-    }
-
-    pub fn current() -> Self {
-        Self::from(YearMonthAndFortnight::current())
-    }
-
-    /// Returns a new `YearAndMonth` that is one month earlier than this one.
-    /// If the month is January, it will return December of the previous year.
-    /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
-    /// let month = YearAndMonth::january(2025);
-    /// let one_month_earlier = month.one_month_earlier();
-    /// assert_eq!(one_month_earlier, YearAndMonth::december(2024));
-    /// ```
-    pub fn one_month_earlier(&self) -> Self {
-        let mut year = **self.year();
-        let mut month = **self.month();
-
-        if month == 1 {
-            year -= 1;
-            month = 12
-        } else {
-            month -= 1
-        }
-
-        Self::builder()
-            .year(Year::from(year))
-            .month(Month::try_from(month).expect("Should return valid month"))
-            .build()
-    }
-
-    /// Returns a new `YearAndMonth` that is one month later than this one - by
-    /// reading the calendar - if the current month is December, it will return
-    /// January of the next year.
-    pub fn last() -> Self {
-        Self::current().one_month_earlier()
-    }
-
-    /// Returns the number of months elapsed between this `YearAndMonth` and
-    /// another `YearAndMonth`.
-    ///
-    /// # Examples
-    /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
-    /// let start = YearAndMonth::january(2025);
-    /// let end = YearAndMonth::april(2025);
-    /// assert_eq!(end.elapsed_months_since(start).unwrap(), 3);
-    /// ```
-    ///
-    /// # Throws
-    /// Throws an error if the `start` month is after the `end` month.
-    pub fn elapsed_months_since(&self, start: impl Borrow<Self>) -> Result<u16> {
-        let end = self;
-        let start = start.borrow();
-        if start > end {
-            return Err(Error::StartPeriodAfterEndPeriod {
-                start: start.to_string(),
-                end: end.to_string(),
-            });
-        }
-        let start_year = **start.year();
-        let start_month = **start.month() as u16;
-        let end_year = **end.year();
-        let end_month = **end.month() as u16;
-        // When we perform arithmetic below we need to consider
-        // e.g. Start: 2024-12, End: 2025-03, where start month can come later
-        // in the year than the end month.
-        let months_per_year = 12;
-        let start_months = start_year * months_per_year + start_month;
-        let end_months = end_year * months_per_year + end_month;
-        let months_elapsed = end_months - start_months;
-        Ok(months_elapsed)
-    }
-}
-
-impl TryInto<YearAndMonth> for PeriodAnno {
-    type Error = crate::Error;
-
-    fn try_into(self) -> std::result::Result<YearAndMonth, Self::Error> {
-        todo!()
-    }
-}
-
-impl TryFromPeriodAnno for YearMonthAndFortnight {
-    fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
-        period
-            .try_unwrap_year_month_and_fortnight()
-            .map_err(|_| Error::PeriodIsNotYearMonthAndFortnight)
-    }
-}
-
-impl TryFromPeriodAnno for YearAndMonth {
-    fn try_from_period_anno(period: PeriodAnno) -> Result<Self> {
-        period
-            .try_unwrap_year_and_month()
-            .map_err(|_| Error::PeriodIsNotYearAndMonth)
-    }
-}
-
-impl IsPeriod for YearAndMonth {
-    fn max_granularity(&self) -> Granularity {
-        Granularity::Month
-    }
-
-    fn elapsed_periods_since(&self, start: impl Borrow<Self>) -> Result<u16> {
-        self.elapsed_months_since(start)
-    }
-
-    fn to_date_end_of_period(&self) -> Date {
-        self.to_date_end_of_month()
-    }
-
-    fn year(&self) -> &Year {
-        self.year()
-    }
-
-    fn month(&self) -> &Month {
-        self.month()
-    }
-}
-
-/// Calculates the invoice number based on the offset, target month, whether
-/// the items are expenses, and the months off record.
-/// This function assumes that the `ProtoInvoiceInfo` has already been validated
-/// to ensure that the target month is not in the record of months off.
-/// It computes the invoice number by considering the elapsed months since
-/// the offset month, adjusting for any months that are off record, and
-/// adding an additional increment if the items are expenses.
-///
-/// ```
-/// extern crate klirr_core_invoice;
-/// use klirr_core_invoice::*;
-/// let offset = TimestampedInvoiceNumber::<YearAndMonth>::builder().offset(100).period(YearAndMonth::january(2024)).build();
-/// let target_month = YearAndMonth::august(2024);
-/// let is_expenses = true;
-/// let months_off_record = RecordOfPeriodsOff::new([
-///   YearAndMonth::march(2024),
-///   YearAndMonth::april(2024),
-/// ]);
-/// let invoice_number = calculate_invoice_number(
-///     &offset,
-///     &target_month,
-///     is_expenses,
-///     &months_off_record,
-/// ).unwrap();
-///
-/// // The expected invoice number is calculated as follows:
-/// // - Offset is 100
-/// // - Target month is August 2024, which is 7 months after January
-/// // - Months off record are March and April, which are 2 months off
-/// // - Since this is for expenses, we add 1 to the final invoice number.
-/// // - Therefore, the invoice number should be 100 + 7 - 2 + 1 = 106
-/// let expected = InvoiceNumber::from(106);
-/// assert_eq!(invoice_number, expected);
-/// ```
-pub fn calculate_invoice_number<Period: IsPeriod>(
-    offset: &TimestampedInvoiceNumber<Period>,
-    target_period: &Period,
-    is_expenses: bool,
-    record_of_periods_off: &RecordOfPeriodsOff<Period>,
-) -> Result<InvoiceNumber> {
-    if record_of_periods_off.contains(offset.period()) {
-        return Err(Error::RecordsOffMustNotContainOffsetPeriod {
-            offset_period: format!("{:?}", offset.period()),
+fn elapsed_periods_since(start: Date, end: Date, cadence: Cadence) -> Result<u16> {
+    let start = period_end_for_cadence(start, cadence)?;
+    let end = period_end_for_cadence(end, cadence)?;
+    if start > end {
+        return Err(Error::StartPeriodAfterEndPeriod {
+            start: start.to_string(),
+            end: end.to_string(),
         });
     }
-    let periods_elapsed_since_offset = target_period.elapsed_periods_since(offset.period())?;
-    log::debug!(
-        "periods_elapsed_since_offset: {periods_elapsed_since_offset}, calculated by calling target_period.elapsed_periods_since(offset.period()) where target_period is {target_period:?} and offset.period() is {:?}",
-        offset.period()
-    );
 
-    let mut periods_off_to_subtract = 0;
+    let elapsed = match cadence {
+        Cadence::Monthly => month_serial(end) - month_serial(start),
+        Cadence::BiWeekly => fortnight_serial(end)? - fortnight_serial(start)?,
+    };
+
+    Ok(elapsed as u16)
+}
+
+/// Converts a relative time (e.g. current/last month or fortnight) into a period-end date.
+pub fn period_end_from_relative_time(relative: RelativeTime) -> Result<Date> {
+    let current_period_end = period_end_for_unit(Date::today(), *relative.unit())?;
+    shift_period_end(current_period_end, *relative.unit(), *relative.amount())
+}
+
+fn parse_legacy_period_label(value: &str) -> Result<(Date, Granularity)> {
+    let mut parts = value.splitn(3, '-');
+    let Some(year_part) = parts.next() else {
+        return Err(Error::InvalidPeriod {
+            bad_value: value.to_owned(),
+        });
+    };
+    let Some(month_part) = parts.next() else {
+        return Err(Error::InvalidPeriod {
+            bad_value: value.to_owned(),
+        });
+    };
+
+    let year = Year::from_str(year_part)?;
+    let month = Month::from_str(month_part)?;
+
+    if let Some(rest) = parts.next() {
+        let date = match rest {
+            "first" | "first-half" | "1" => first_half_end_date(year, month),
+            "second" | "second-half" | "2" => month_end_date(year, month),
+            _ => {
+                return Err(Error::InvalidPeriod {
+                    bad_value: value.to_owned(),
+                });
+            }
+        };
+        return Ok((date, Granularity::Fortnight));
+    }
+
+    Ok((month_end_date(year, month), Granularity::Month))
+}
+
+/// Parses a user-facing period label into a period-end date using cadence rules.
+///
+/// Supports legacy labels (`YYYY-MM`, `YYYY-MM-first-half`) and full dates (`YYYY-MM-DD`).
+pub fn parse_period_label_for_cadence(value: &str, cadence: Cadence) -> Result<Date> {
+    if let Ok((date, unit)) = parse_legacy_period_label(value) {
+        return match (cadence, unit) {
+            (Cadence::Monthly, Granularity::Fortnight) => {
+                Err(Error::CannotExpenseForFortnightWhenCadenceIsMonthly)
+            }
+            (Cadence::BiWeekly, Granularity::Month) => {
+                Err(Error::CannotExpenseForMonthWhenCadenceIsBiWeekly)
+            }
+            _ => period_end_for_cadence(date, cadence),
+        };
+    }
+
+    let date = Date::from_str(value)?;
+    period_end_for_cadence(date, cadence)
+}
+
+/// Calculates the invoice number from an offset and target period-end date.
+pub fn calculate_invoice_number(
+    offset: &TimestampedInvoiceNumber,
+    target_date: &Date,
+    cadence: Cadence,
+    is_expenses: bool,
+    record_of_periods_off: &RecordOfPeriodsOff,
+) -> Result<InvoiceNumber> {
+    let offset_date = period_end_for_cadence(*offset.date(), cadence)?;
+    if record_of_periods_off.contains(&offset_date) {
+        return Err(Error::RecordsOffMustNotContainOffsetPeriod {
+            offset_period: offset_date.to_string(),
+        });
+    }
+
+    let target_date = period_end_for_cadence(*target_date, cadence)?;
+    let periods_elapsed_since_offset = elapsed_periods_since(offset_date, target_date, cadence)?;
+
+    let mut periods_off_to_subtract = 0u16;
     for period_off in record_of_periods_off.iter() {
-        if period_off > offset.period() && period_off <= target_period {
-            // If the period is recorded as off, we need to adjust the invoice number
-            // by subtracting the number of periods off
+        let period_off = period_end_for_cadence(*period_off, cadence)?;
+        if period_off > offset_date && period_off <= target_date {
             periods_off_to_subtract += 1;
         }
     }
+
     let mut invoice_number =
         **offset.offset() + periods_elapsed_since_offset - periods_off_to_subtract;
-    log::debug!(
-        "Calculated invoice_number: {invoice_number} by starting with offset {:?} which is {}, adding periods_elapsed_since_offset which is {}, and subtracting periods_off_to_subtract which is {}",
-        offset.offset(),
-        **offset.offset(),
-        periods_elapsed_since_offset,
-        periods_off_to_subtract
-    );
+
     if is_expenses {
-        // For expenses we add 1, ensuring that if we invoice for services and
-        // expenses the same month, the expense invoice number is always higher.
         invoice_number += 1;
     }
+
     Ok(InvoiceNumber::from(invoice_number))
 }
 
-/// Calculates the number of working days in a given month, excluding weekends.
-///
-/// # Errors
-/// Returns an error if the target month is in the record of months off.
-///
-/// ```
-/// extern crate klirr_core_invoice;
-/// use klirr_core_invoice::*;
-/// use rust_decimal::dec;
-///
-/// let target_month = YearAndMonth::january(2024);
-/// let working_days = quantity_in_period(&target_month, Granularity::Day, Cadence::Monthly, &RecordOfPeriodsOff::default());
-/// assert_eq!(*working_days.unwrap(), dec!(23)); // January 2024 has 23
-/// ```
-pub fn quantity_in_period<Period: IsPeriod>(
-    target_period: &Period,
+fn period_bounds(period_end: Date, cadence: Cadence) -> Result<(Date, Date)> {
+    let period_end = period_end_for_cadence(period_end, cadence)?;
+    let start = match cadence {
+        Cadence::Monthly => Date::builder()
+            .year(*period_end.year())
+            .month(*period_end.month())
+            .day(Day::try_from(1).expect("1 is a valid day"))
+            .build(),
+        Cadence::BiWeekly => {
+            let first_half_end = first_half_end_date(*period_end.year(), *period_end.month());
+            match period_end.day().cmp(first_half_end.day()) {
+                Ordering::Less | Ordering::Equal => Date::builder()
+                    .year(*period_end.year())
+                    .month(*period_end.month())
+                    .day(Day::try_from(1).expect("1 is a valid day"))
+                    .build(),
+                Ordering::Greater => Date::builder()
+                    .year(*period_end.year())
+                    .month(*period_end.month())
+                    .day(Day::try_from(i32::from(**first_half_end.day()) + 1).expect("valid day"))
+                    .build(),
+            }
+        }
+    };
+
+    Ok((start, period_end))
+}
+
+fn working_days_between(start: Date, end: Date) -> Result<Quantity> {
+    let start = NaiveDate::from_ymd_opt(
+        **start.year() as i32,
+        **start.month() as u32,
+        **start.day() as u32,
+    )
+    .ok_or(Error::InvalidDate {
+        underlying: "Invalid start date".to_owned(),
+    })?;
+
+    let end = NaiveDate::from_ymd_opt(
+        **end.year() as i32,
+        **end.month() as u32,
+        **end.day() as u32,
+    )
+    .ok_or(Error::InvalidDate {
+        underlying: "Invalid end date".to_owned(),
+    })?;
+
+    let mut current = start;
+    let mut working_days = 0;
+    while current <= end {
+        match current.weekday() {
+            Weekday::Mon | Weekday::Tue | Weekday::Wed | Weekday::Thu | Weekday::Fri => {
+                working_days += 1;
+            }
+            Weekday::Sat | Weekday::Sun => {}
+        }
+        current = current.succ_opt().ok_or(Error::InvalidDate {
+            underlying: "Failed to advance day".to_owned(),
+        })?;
+    }
+
+    Ok(Quantity::from(working_days))
+}
+
+fn working_days_in_period(period_end: Date, cadence: Cadence) -> Result<Quantity> {
+    let (start, end) = period_bounds(period_end, cadence)?;
+    working_days_between(start, end)
+}
+
+/// Calculates billable quantity for a period-end date and cadence.
+pub fn quantity_in_period(
+    target_date: &Date,
     granularity: Granularity,
     cadence: Cadence,
-    record_of_periods_off: &RecordOfPeriodsOff<Period>,
+    record_of_periods_off: &RecordOfPeriodsOff,
 ) -> Result<Quantity> {
-    if record_of_periods_off.contains(target_period) {
+    let target_date = period_end_for_cadence(*target_date, cadence)?;
+
+    if record_of_periods_off.contains(&target_date) {
         return Err(Error::TargetPeriodMustNotBeInRecordOfPeriodsOff {
-            target_period: format!("{:?}", target_period),
+            target_period: target_date.to_string(),
         });
     }
 
-    if granularity > target_period.max_granularity() {
+    if matches!(
+        (granularity, cadence),
+        (Granularity::Month, Cadence::BiWeekly)
+    ) {
+        return Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly);
+    }
+
+    if granularity > cadence.max_granularity() {
         return Err(Error::GranularityTooCoarse {
             granularity,
-            max_granularity: target_period.max_granularity(),
-            target_period: format!("{:?}", target_period),
+            max_granularity: cadence.max_granularity(),
+            target_period: target_date.to_string(),
         });
     }
-
-    let daily = || working_days_in_period(target_period);
-    let hourly = || {
-        // TODO maybe 8h per day should be configurable
-        Result::Ok(Quantity::EIGHT.mul(*working_days_in_period(target_period)?))
-    };
 
     match granularity {
         Granularity::Month => match cadence {
@@ -344,720 +329,91 @@ pub fn quantity_in_period<Period: IsPeriod>(
             Cadence::BiWeekly => Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly),
         },
         Granularity::Fortnight => match cadence {
-            Cadence::Monthly => Ok(Quantity::TWO), // Two fortnights in a month
+            Cadence::Monthly => Ok(Quantity::TWO),
             Cadence::BiWeekly => Ok(Quantity::ONE),
         },
-        Granularity::Day => daily(),
-        Granularity::Hour => hourly(),
-    }
-}
-
-trait FromYmd: Sized {
-    fn ymd(year: impl Into<i32>, month: impl Into<u32>, day: impl Into<u32>) -> Result<Self>;
-}
-impl FromYmd for NaiveDate {
-    fn ymd(year: impl Into<i32>, month: impl Into<u32>, day: impl Into<u32>) -> Result<Self> {
-        let year = year.into();
-        let month = month.into();
-        let day = day.into();
-        Self::from_ymd_opt(year, month, day)
-            .ok_or(Error::InvalidDate {
-                underlying: "Failed to create date from year and month".to_owned(),
-            })?
-            .pred_opt()
-            .ok_or(Error::InvalidDate {
-                underlying: "Failed to create date from year and month".to_owned(),
-            })
-    }
-}
-
-/// Calculates the number of working days in a given month, excluding weekends.
-///
-/// # Errors
-/// Returns an error if the target month is in the record of months off.
-fn working_days_in_period<Period: IsPeriod>(target_period: &Period) -> Result<Quantity> {
-    let year = **target_period.year() as i32;
-    let month = **target_period.month() as u32;
-
-    // Start from the 1st of the month
-    let mut day = NaiveDate::ymd(year, month, 1u32)?;
-
-    // Get the last day of the month
-    let last_day = if month == 12 {
-        NaiveDate::ymd(year + 1, 1u32, 1u32)
-    } else {
-        NaiveDate::ymd(year, month + 1, 1u32)
-    }?;
-
-    let mut working_days = 0;
-    while day <= last_day {
-        match day.weekday() {
-            Weekday::Mon | Weekday::Tue | Weekday::Wed | Weekday::Thu | Weekday::Fri => {
-                working_days += 1;
-            }
-            _ => {}
+        Granularity::Day => working_days_in_period(target_date, cadence),
+        Granularity::Hour => {
+            Ok(Quantity::EIGHT.mul(*working_days_in_period(target_date, cadence)?))
         }
-        day = day.succ_opt().ok_or(Error::InvalidDate {
-            underlying: "Failed to get next day".to_owned(),
-        })?
     }
-
-    Ok(Quantity::from(working_days))
 }
 
 #[cfg(test)]
 mod tests {
-    #![allow(non_snake_case)]
-    #![allow(unused)]
     use super::*;
     use crate::HasSample;
-    use crate::{InvoicedItems, ProtoInvoiceInfo, PurchaseOrder, ValidInput};
-    use rust_decimal::dec;
     use std::str::FromStr;
-    use test_log::test;
-
-    /// 2025 is not a leap year
-    const JAN_2025: YearAndMonth = YearAndMonth::january(2025);
-    /// 2025 is not a leap year
-    const FEB_2025: YearAndMonth = YearAndMonth::february(2025);
-    /// 2025 is not a leap year
-    const APR_2025: YearAndMonth = YearAndMonth::april(2025);
-    /// 2025 is not a leap year
-    const MAY_2025: YearAndMonth = YearAndMonth::may(2025);
-    /// 2025 is not a leap year
-    const JUNE_2025: YearAndMonth = YearAndMonth::june(2025);
-    const JUNE_2025_FIRST: YearMonthAndFortnight =
-        YearMonthAndFortnight::year_and_month_with_half(JUNE_2025, MonthHalf::First);
-    /// 2025 is not a leap year
-    const JULY_2025: YearAndMonth = YearAndMonth::july(2025);
-    const JULY_2025_FIRST: YearMonthAndFortnight =
-        YearMonthAndFortnight::year_and_month_with_half(JULY_2025, MonthHalf::First);
-    /// 2025 is not a leap year
-    const AUG_2025: YearAndMonth = YearAndMonth::august(2025);
-    const AUG_2025_FIRST: YearMonthAndFortnight =
-        YearMonthAndFortnight::year_and_month_with_half(AUG_2025, MonthHalf::First);
-    /// 2025 is not a leap year
-    const SEPT_2025: YearAndMonth = YearAndMonth::september(2025);
-    const SEPT_2025_FIRST: YearMonthAndFortnight =
-        YearMonthAndFortnight::year_and_month_with_half(SEPT_2025, MonthHalf::First);
-    /// 2025 is not a leap year
-    const OCT_2025: YearAndMonth = YearAndMonth::october(2025);
-    /// 2025 is not a leap year
-    const NOV_2025: YearAndMonth = YearAndMonth::november(2025);
-    /// 2025 is not a leap year
-    const DEC_2025: YearAndMonth = YearAndMonth::december(2025);
-    const DEC_2025_FIRST: YearMonthAndFortnight =
-        YearMonthAndFortnight::year_and_month_with_half(DEC_2025, MonthHalf::First);
-
-    /// 2026 is not a leap year
-    const JAN_2026: YearAndMonth = YearAndMonth::january(2026);
-    /// 2026 is not a leap year
-    const JUNE_2026: YearAndMonth = YearAndMonth::june(2026);
-    /// 2026 is not a leap year
-    const JULY_2026: YearAndMonth = YearAndMonth::july(2026);
-    /// 2026 is not a leap year
-    const AUG_2026: YearAndMonth = YearAndMonth::august(2026);
-
-    /// 2028 is a leap year
-    const JAN_2028: YearAndMonth = YearAndMonth::january(2028);
-    /// 2028 is a leap year
-    const FEB_2028: YearAndMonth = YearAndMonth::february(2028);
-    /// 2028 is a leap year
-    const MAR_2028: YearAndMonth = YearAndMonth::march(2028);
 
     #[test]
-    fn test_quantity_in_period_year_and_month_with_month_granularity() {
-        // YearAndMonth has max_granularity of Month, so Month granularity should work
-        let target_period = JAN_2025;
-        let record_of_periods_off = RecordOfPeriodsOff::new([]);
-
-        let result = quantity_in_period(
-            &target_period,
-            Granularity::Month,
-            Cadence::Monthly,
-            &record_of_periods_off,
-        );
-
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Quantity::ONE);
+    fn parse_month_label() {
+        let date = parse_period_label_for_cadence("2025-05", Cadence::Monthly).unwrap();
+        assert_eq!(date, Date::from_str("2025-05-31").unwrap());
     }
 
     #[test]
-    fn test_quantity_in_period_year_and_month_with_day_granularity() {
-        // Day granularity should work with YearAndMonth (less coarse than Month)
-        let target_period = JAN_2025;
-        let record_of_periods_off = RecordOfPeriodsOff::new([]);
-
-        let result = quantity_in_period(
-            &target_period,
-            Granularity::Day,
-            Cadence::Monthly,
-            &record_of_periods_off,
-        );
-
-        assert!(result.is_ok());
+    fn parse_fortnight_label() {
+        let date = parse_period_label_for_cadence("2025-02-first-half", Cadence::BiWeekly).unwrap();
+        assert_eq!(date, Date::from_str("2025-02-14").unwrap());
     }
 
     #[test]
-    fn test_quantity_in_period_year_and_month_with_hour_granularity() {
-        // Hour granularity should work with YearAndMonth (less coarse than Month)
-        let target_period = JAN_2025;
-        let record_of_periods_off = RecordOfPeriodsOff::new([]);
-
-        let result = quantity_in_period(
-            &target_period,
-            Granularity::Hour,
-            Cadence::Monthly,
-            &record_of_periods_off,
-        );
-
-        assert!(result.is_ok());
+    fn period_end_from_relative_time_monthly_last_changes_month() {
+        let now = period_end_from_relative_time(RelativeTime::current(Granularity::Month)).unwrap();
+        let last = period_end_from_relative_time(RelativeTime::last(Granularity::Month)).unwrap();
+        assert!(last < now);
     }
 
     #[test]
-    fn test_quantity_in_period_fortnight_with_month_granularity_should_fail() {
-        // YearMonthAndFortnight has max_granularity of Fortnight
-        // Month granularity should fail because it's coarser than Fortnight
-        let fortnight_period = YearMonthAndFortnight::builder()
-            .year(Year::from(2025))
-            .month(Month::January)
-            .half(MonthHalf::First)
+    fn calculate_invoice_number_monthly() {
+        let offset = TimestampedInvoiceNumber::builder()
+            .offset(100)
+            .date(Date::from_str("2025-12-31").unwrap())
             .build();
-        let fortnight_record = RecordOfPeriodsOff::new([]);
-
-        let result = quantity_in_period(
-            &fortnight_period,
-            Granularity::Month,
+        let target = Date::from_str("2026-02-28").unwrap();
+        let number = calculate_invoice_number(
+            &offset,
+            &target,
             Cadence::Monthly,
-            &fortnight_record,
-        );
-
-        assert!(result.is_err());
-        if let Err(Error::GranularityTooCoarse {
-            granularity,
-            max_granularity,
-            ..
-        }) = result
-        {
-            assert_eq!(granularity, Granularity::Month);
-            assert_eq!(max_granularity, Granularity::Fortnight);
-        } else {
-            panic!("Expected GranularityTooCoarse error");
-        }
-    }
-
-    #[test]
-    fn test_quantity_in_period_fortnight_with_fortnight_granularity() {
-        // Fortnight granularity should work for fortnight period (exactly the max granularity)
-        let fortnight_period = YearMonthAndFortnight::builder()
-            .year(Year::from(2025))
-            .month(Month::January)
-            .half(MonthHalf::First)
-            .build();
-        let fortnight_record = RecordOfPeriodsOff::new([]);
-
-        let result = quantity_in_period(
-            &fortnight_period,
-            Granularity::Fortnight,
-            Cadence::Monthly,
-            &fortnight_record,
-        );
-
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_quantity_in_period_fortnight_with_hour_granularity() {
-        // Hour granularity should work for fortnight period (less coarse than Day)
-        let fortnight_period = YearMonthAndFortnight::builder()
-            .year(Year::from(2025))
-            .month(Month::January)
-            .half(MonthHalf::First)
-            .build();
-        let fortnight_record = RecordOfPeriodsOff::new([]);
-
-        let result = quantity_in_period(
-            &fortnight_period,
-            Granularity::Hour,
-            Cadence::Monthly,
-            &fortnight_record,
-        );
-
-        assert!(result.is_ok());
-    }
-
-    fn test_invoice_number(
-        offset_no: impl Into<InvoiceNumber>,
-        offset_month: YearAndMonth,
-        target_period: YearMonthAndFortnight,
-        months_off: impl IntoIterator<Item = YearAndMonth>,
-        is_expenses: bool,
-        expected: impl Into<InvoiceNumber>,
-    ) {
-        let input = ValidInput::builder()
-            .period(target_period.into())
-            .items(if is_expenses {
-                InvoicedItems::Expenses
-            } else {
-                InvoicedItems::Service { time_off: None }
-            })
-            .build();
-        let information = ProtoInvoiceInfo::builder()
-            .purchase_order(PurchaseOrder::from("PO"))
-            .record_of_periods_off(RecordOfPeriodsOff::new(months_off))
-            .offset(
-                TimestampedInvoiceNumber::builder()
-                    .offset(offset_no.into())
-                    .period(offset_month)
-                    .build(),
-            )
-            .build();
-
-        let invoice_number = calculate_invoice_number(
-            information.offset(),
-            &YearAndMonth::from(target_period),
-            is_expenses,
-            information.record_of_periods_off(),
+            false,
+            &RecordOfPeriodsOff::default(),
         )
         .unwrap();
-        assert_eq!(invoice_number, expected.into());
-    }
-
-    mod services {
-        use super::*;
-        use crate::HasSample;
-        use rust_decimal::dec;
-        use std::str::FromStr;
-        use test_log::test;
-
-        mod no_months_off {
-
-            use super::*;
-            use crate::HasSample;
-            use rust_decimal::dec;
-            use std::str::FromStr;
-            use test_log::test;
-
-            #[test]
-            fn when__target_month_eq_offset_month__then__invoice_num_eq_offset_num() {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        JUNE_2025_FIRST,
-                        [],
-                        false,
-                        invoice_no_offset,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_3_months_after_offset_month__then__invoice_num_eq_offset_num_plus_3()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        SEPT_2025_FIRST,
-                        [],
-                        false,
-                        invoice_no_offset + 3,
-                    );
-                }
-            }
-        }
-
-        mod months_off {
-
-            use super::*;
-            use crate::HasSample;
-            use rust_decimal::dec;
-            use std::str::FromStr;
-            use test_log::test;
-
-            #[test]
-            fn when__target_month_eq_offset_month_and_months_off_is_in_past__then__invoice_num_eq_offset_num()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        JUNE_2025_FIRST,
-                        [APR_2025, MAY_2025],
-                        false,
-                        invoice_no_offset,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_eq_offset_month_and_months_off_is_in_future__then__invoice_num_eq_offset_num()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        JUNE_2025_FIRST,
-                        [JULY_2026, AUG_2026],
-                        false,
-                        invoice_no_offset,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_3_months_after_offset_month_with_all_months_off__then__invoice_num_eq_offset_num()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        APR_2025,
-                        JULY_2025_FIRST,
-                        [MAY_2025, JUNE_2025, JULY_2025],
-                        false,
-                        invoice_no_offset,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_4_months_after_offset_month_with_3_months_off__then__invoice_num_eq_offset_num_plus_1()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        APR_2025,
-                        AUG_2025_FIRST,
-                        [MAY_2025, JUNE_2025, JULY_2025],
-                        false,
-                        invoice_no_offset + 1,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_8_months_after_offset_month_with_3_months_off__then__invoice_num_eq_offset_num_plus_5()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        APR_2025,
-                        DEC_2025_FIRST,
-                        // Add some months off before offset_month and after target_month
-                        [JAN_2025, MAY_2025, JULY_2025, SEPT_2025, JAN_2028],
-                        false,
-                        invoice_no_offset + 5,
-                    );
-                }
-            }
-        }
-    }
-
-    mod expenses {
-        use super::*;
-        use crate::HasSample;
-        use rust_decimal::dec;
-        use std::str::FromStr;
-        use test_log::test;
-
-        mod no_months_off {
-
-            use super::*;
-            use crate::HasSample;
-            use rust_decimal::dec;
-            use std::str::FromStr;
-            use test_log::test;
-
-            #[test]
-            fn when__target_month_eq_offset_month__then__invoice_num_eq_offset_num_plus_1() {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        JUNE_2025_FIRST,
-                        [],
-                        true,
-                        invoice_no_offset + 1,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_3_months_after_offset_month__then__invoice_num_eq_offset_num_plus_4()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        SEPT_2025_FIRST,
-                        [],
-                        true,
-                        invoice_no_offset + 4,
-                    );
-                }
-            }
-        }
-
-        mod months_off {
-
-            use super::*;
-            use crate::HasSample;
-            use rust_decimal::dec;
-            use std::str::FromStr;
-            use test_log::test;
-
-            #[test]
-            fn when__target_month_eq_offset_month_and_months_off_is_in_past__then__invoice_num_eq_offset_num_plus_1()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        JUNE_2025_FIRST,
-                        [APR_2025, MAY_2025],
-                        true,
-                        invoice_no_offset + 1,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_eq_offset_month_and_months_off_is_in_future__then__invoice_num_eq_offset_num_plus_1()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        JUNE_2025,
-                        JUNE_2025_FIRST,
-                        [JULY_2026, AUG_2026],
-                        true,
-                        invoice_no_offset + 1,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_3_months_after_offset_month_with_all_months_off__then__invoice_num_eq_offset_num_plus_1()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        APR_2025,
-                        JULY_2025_FIRST,
-                        [MAY_2025, JUNE_2025, JULY_2025],
-                        true,
-                        invoice_no_offset + 1,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_4_months_after_offset_month_with_3_months_off__then__invoice_num_eq_offset_num_plus_2()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        APR_2025,
-                        AUG_2025_FIRST,
-                        [MAY_2025, JUNE_2025, JULY_2025],
-                        true,
-                        invoice_no_offset + 2,
-                    );
-                }
-            }
-
-            #[test]
-            fn when__target_month_is_8_months_after_offset_month_with_3_months_off__then__invoice_num_eq_offset_num_plus_6()
-             {
-                for invoice_no_offset in 0..10 {
-                    test_invoice_number(
-                        invoice_no_offset,
-                        APR_2025,
-                        DEC_2025_FIRST,
-                        // Add some months off before offset_month and after target_month
-                        [JAN_2025, MAY_2025, JULY_2025, SEPT_2025, JAN_2028],
-                        true,
-                        invoice_no_offset + 6,
-                    );
-                }
-            }
-        }
+        assert_eq!(number, InvoiceNumber::from(102));
     }
 
     #[test]
-    fn test_last_day_of_month() {
-        assert_eq!(JAN_2025.last_day_of_month(), Day::try_from(31).unwrap());
-        assert_eq!(FEB_2028.last_day_of_month(), Day::try_from(29).unwrap());
-        assert_eq!(MAR_2028.last_day_of_month(), Day::try_from(31).unwrap());
-        assert_eq!(APR_2025.last_day_of_month(), Day::try_from(30).unwrap());
-        assert_eq!(MAY_2025.last_day_of_month(), Day::try_from(31).unwrap());
-        assert_eq!(JUNE_2025.last_day_of_month(), Day::try_from(30).unwrap());
-        assert_eq!(JULY_2025.last_day_of_month(), Day::try_from(31).unwrap());
-        assert_eq!(AUG_2025.last_day_of_month(), Day::try_from(31).unwrap());
-        assert_eq!(SEPT_2025.last_day_of_month(), Day::try_from(30).unwrap());
-        assert_eq!(OCT_2025.last_day_of_month(), Day::try_from(31).unwrap());
-        assert_eq!(NOV_2025.last_day_of_month(), Day::try_from(30).unwrap());
-        assert_eq!(DEC_2025.last_day_of_month(), Day::try_from(31).unwrap());
-
-        assert_eq!(FEB_2025.last_day_of_month(), Day::try_from(28).unwrap());
-    }
-
-    #[test]
-    fn test_elapsed_months_since_when_start_month_is_later_in_the_year_than_end_month() {
-        let start = YearAndMonth::december(2024);
-        let end = YearAndMonth::april(2025);
-        assert_eq!(end.elapsed_months_since(start).unwrap(), 4);
-        assert!(start < end);
-    }
-
-    #[test]
-    fn test_one_month_earlier_of_january() {
-        let january_2025 = YearAndMonth::january(2025);
-        let december_2024 = YearAndMonth::december(2024);
-        assert_eq!(january_2025.one_month_earlier(), december_2024);
-    }
-
-    #[test]
-    fn elapsed_months_since_throws_when_start_month_is_later_than_end_month() {
-        let start = YearAndMonth::april(2025);
-        let end = YearAndMonth::march(2025);
-        assert!(end.elapsed_months_since(start).is_err());
-    }
-
-    #[test]
-    fn test_calculate_invoice_number_throws_for_invalid_input() {
-        let month = YearAndMonth::may(2025);
-        let invoice_info = ProtoInvoiceInfo::builder()
-            .offset(
-                TimestampedInvoiceNumber::builder()
-                    .period(month)
-                    .offset(237)
-                    .build(),
-            )
-            .record_of_periods_off(RecordOfPeriodsOff::new([month]))
-            .purchase_order(PurchaseOrder::sample())
-            .build();
-
-        let result = calculate_invoice_number(
-            invoice_info.offset(),
-            &YearAndMonth::december(2025),
-            true,
-            invoice_info.record_of_periods_off(),
-        );
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn quantity_in_period_target_month_is_in_record_of_months_off() {
-        let target_month = YearAndMonth::january(2024);
-        let months_off_record = RecordOfPeriodsOff::new([target_month]);
-        let result = quantity_in_period(
-            &target_month,
+    fn quantity_in_period_biweekly_days_is_less_than_monthly_days() {
+        let target = Date::from_str("2025-05-31").unwrap();
+        let monthly = quantity_in_period(
+            &target,
             Granularity::Day,
             Cadence::Monthly,
-            &months_off_record,
-        );
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn quantity_in_period_target_month_december() {
-        let target_month = YearAndMonth::december(2025);
-        let months_off_record = RecordOfPeriodsOff::new([]);
-        let result = quantity_in_period(
-            &target_month,
+            &RecordOfPeriodsOff::default(),
+        )
+        .unwrap();
+        let fortnight = quantity_in_period(
+            &target,
             Granularity::Day,
-            Cadence::Monthly,
-            &months_off_record,
-        );
-        assert!(result.is_ok());
+            Cadence::BiWeekly,
+            &RecordOfPeriodsOff::default(),
+        )
+        .unwrap();
+        assert!(fortnight < monthly);
     }
 
     #[test]
-    fn try_from_period_anno_for_year_and_month() {
-        let sut = YearAndMonth::sample();
-        let period_anno = PeriodAnno::YearAndMonth(sut);
-        let outcome = YearAndMonth::try_from_period_anno(period_anno).unwrap();
-        assert_eq!(outcome, sut);
-    }
-
-    #[test]
-    fn try_from_period_anno_for_year_month_and_fortnight() {
-        let sut = YearMonthAndFortnight::sample();
-        let period_anno = PeriodAnno::YearMonthAndFortnight(sut);
-        let outcome = YearMonthAndFortnight::try_from_period_anno(period_anno).unwrap();
-        assert_eq!(outcome, sut);
-    }
-
-    #[test]
-    fn test_quantity_in_period_throws_when_cadence_is_biweekly_and_granularity_is_month() {
-        let target_period = YearAndMonth::january(2025);
-        let record_of_periods_off = RecordOfPeriodsOff::new([]);
+    fn quantity_in_period_fails_for_biweekly_month_granularity() {
+        let target = Date::sample();
         let result = quantity_in_period(
-            &target_period,
+            &target,
             Granularity::Month,
             Cadence::BiWeekly,
-            &record_of_periods_off,
+            &RecordOfPeriodsOff::default(),
         );
-        assert!(result.is_err());
-        if let Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly) = result {
-            // Expected error
-        } else {
-            panic!("Expected CannotInvoiceForMonthWhenCadenceIsBiWeekly error");
-        }
-    }
-
-    #[test]
-    fn test_quantity_in_period_granularity_fortnight_cadence_monthly_is_two() {
-        let target_period = YearAndMonth::january(2025);
-        let record_of_periods_off = RecordOfPeriodsOff::new([]);
-        let result = quantity_in_period(
-            &target_period,
-            Granularity::Fortnight,
-            Cadence::Monthly,
-            &record_of_periods_off,
-        );
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Quantity::TWO);
-    }
-
-    #[test]
-    fn test_quantity_in_period_granularity_fortnight_cadence_biweekly_is_one() {
-        let target_period = YearAndMonth::january(2025);
-        let record_of_periods_off = RecordOfPeriodsOff::new([]);
-        let result = quantity_in_period(
-            &target_period,
-            Granularity::Fortnight,
-            Cadence::BiWeekly,
-            &record_of_periods_off,
-        );
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Quantity::ONE);
-    }
-
-    #[test]
-    fn ymf_one_half_earlier_month_half_first_half() {
-        let ym = YearAndMonth::january(2025);
-        let ymf = YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::First);
-        let one_half_earlier = ymf.one_half_earlier();
         assert_eq!(
-            one_half_earlier,
-            YearMonthAndFortnight::year_and_month_with_half(
-                YearAndMonth::december(2024),
-                MonthHalf::Second
-            )
-        );
-    }
-
-    #[test]
-    fn ymf_one_half_earlier_month_half_second_half() {
-        let ym = YearAndMonth::january(2025);
-        let ymf = YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::Second);
-        let one_half_earlier = ymf.one_half_earlier();
-        assert_eq!(
-            one_half_earlier,
-            YearMonthAndFortnight::year_and_month_with_half(ym, MonthHalf::First)
+            result.unwrap_err(),
+            Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly
         );
     }
 }

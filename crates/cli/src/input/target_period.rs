@@ -1,4 +1,4 @@
-use crate::{Cadence, HasSample, PeriodAnno, YearAndMonth, YearMonthAndFortnight};
+use crate::{Cadence, Granularity, HasSample, RelativeTime};
 use clap::Parser;
 use derive_more::Display;
 use derive_more::FromStr;
@@ -10,21 +10,17 @@ pub enum TargetPeriod {
     /// Current period, e.g. current month or current fortnight
     Current,
     #[default]
-    /// Last period, e.g. last month of last fortnight
+    /// Last period, e.g. last month or last fortnight
     Last,
 }
 
 impl TargetPeriod {
-    pub fn period_for_cadence(&self, cadence: Cadence) -> PeriodAnno {
-        match cadence {
-            Cadence::Monthly => match self {
-                Self::Current => YearAndMonth::current().into(),
-                Self::Last => YearAndMonth::last().into(),
-            },
-            Cadence::BiWeekly => match self {
-                Self::Current => YearMonthAndFortnight::current().into(),
-                Self::Last => YearMonthAndFortnight::last().into(),
-            },
+    pub fn relative_time_for_cadence(&self, cadence: Cadence) -> RelativeTime {
+        let unit = cadence.max_granularity();
+        debug_assert!(matches!(unit, Granularity::Month | Granularity::Fortnight));
+        match self {
+            Self::Current => RelativeTime::current(unit),
+            Self::Last => RelativeTime::last(unit),
         }
     }
 }
@@ -42,7 +38,6 @@ impl HasSample for TargetPeriod {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test_log::test;
 
     type Sut = TargetPeriod;
 
@@ -58,33 +53,18 @@ mod tests {
     }
 
     #[test]
-    fn period_for_cadence_monthly_current() {
-        let target = Sut::Current;
-        let period = target.period_for_cadence(Cadence::Monthly);
-        assert_eq!(period, YearAndMonth::current().into());
-    }
-
-    #[test]
-    fn period_for_cadence_monthly_last() {
+    fn relative_time_for_cadence_monthly_last() {
         let target = Sut::Last;
-        let period = target.period_for_cadence(Cadence::Monthly);
-        assert_eq!(period, YearAndMonth::last().into());
+        let relative = target.relative_time_for_cadence(Cadence::Monthly);
+        assert_eq!(*relative.unit(), Granularity::Month);
+        assert_eq!(*relative.amount(), -1);
     }
 
     #[test]
-    fn period_for_cadence_biweekly_current() {
+    fn relative_time_for_cadence_biweekly_current() {
         let target = Sut::Current;
-        let period = target.period_for_cadence(Cadence::BiWeekly);
-        assert_eq!(period, YearMonthAndFortnight::current().into());
-    }
-
-    #[test]
-    fn period_for_cadence_biweekly_last() {
-        let target = Sut::Last;
-        let period = target.period_for_cadence(Cadence::BiWeekly);
-        assert_eq!(
-            period,
-            YearMonthAndFortnight::current().one_half_earlier().into()
-        );
+        let relative = target.relative_time_for_cadence(Cadence::BiWeekly);
+        assert_eq!(*relative.unit(), Granularity::Fortnight);
+        assert_eq!(*relative.amount(), 0);
     }
 }

@@ -1,7 +1,7 @@
 use crate::{
-    BINARY_NAME, Cadence, Data, DecryptedEmailSettings, EncryptedEmailSettings, Error,
-    ExpensedPeriods, HasSample, IsPeriod, Item, NamedPdf, Path, PeriodAnno, ProtoInvoiceInfo,
-    Result, deserialize_contents_of_ron, expensed_periods_path, proto_invoice_info_path,
+    BINARY_NAME, Data, DecryptedEmailSettings, EncryptedEmailSettings, Error, ExpensedPeriods,
+    HasSample, Item, NamedPdf, Path, ProtoInvoiceInfo, Result, deserialize_contents_of_ron,
+    expensed_periods_path, parse_period_label_for_cadence, proto_invoice_info_path,
     read_data_from_disk_with_base_path, read_email_data_from_disk_with_base_path,
     save_data_with_base_path, save_email_settings_with_base_path, save_to_disk,
     send_email_with_settings_for_pdf, service_fees,
@@ -25,17 +25,28 @@ where
     Ok(())
 }
 
-fn input_data_at<Period: IsPeriod + Serialize, E>(
-    default_data: Data<Period>,
+fn input_data_at<E>(
+    default_data: Data,
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>, E>,
+    provide_data: impl FnOnce(Data) -> Result<Data, E>,
 ) -> Result<(), E>
 where
     E: From<Error>,
 {
     let data = provide_data(default_data)?;
-    save_data_with_base_path(data, write_path).map_err(E::from)?;
-    Ok(())
+    match data.validate() {
+        Ok(data) => {
+            save_data_with_base_path(data, write_path).map_err(E::from)?;
+            Ok(())
+        }
+        Err(e) => {
+            error!(
+                "Failed to edit data, it would become invalid if saved, no changes were made, error during edit: {}. If you want to change how often you invoice you can still do it by manually editing the data.",
+                e
+            );
+            Err(E::from(e))
+        }
+    }
 }
 
 pub fn edit_email_data_at<E>(
@@ -55,7 +66,7 @@ where
 
 pub fn edit_data_at<E>(
     path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>, E>,
+    provide_data: impl FnOnce(Data) -> Result<Data, E>,
 ) -> Result<(), E>
 where
     E: From<Error>,
@@ -68,16 +79,16 @@ where
     Ok(())
 }
 
-pub fn init_data_at<Period: IsPeriod + Serialize + DeserializeOwned + HasSample, E>(
+pub fn init_data_at<E>(
     write_path: impl AsRef<Path>,
-    provide_data: impl FnOnce(Data<Period>) -> Result<Data<Period>, E>,
+    provide_data: impl FnOnce(Data) -> Result<Data, E>,
 ) -> Result<(), E>
 where
     E: From<Error>,
 {
     let write_path = write_path.as_ref();
     info!("Initializing data directory at: {}", write_path.display());
-    input_data_at(Data::<Period>::sample(), write_path, provide_data)?;
+    input_data_at(Data::sample(), write_path, provide_data)?;
     info!("✅ Data init done, you're ready: `{} invoice`", BINARY_NAME);
     Ok(())
 }
@@ -191,38 +202,22 @@ fn mutate<D: Serialize + DeserializeOwned + Clone>(
 ///
 /// # Throws
 /// Throws an error if the period type is incompatible with the service fees cadence.
-pub fn record_expenses_with_base_path<Period: IsPeriod + Serialize + DeserializeOwned>(
-    period: &Period,
+pub fn record_expenses_with_base_path(
+    period: impl AsRef<str>,
     expenses: &[Item],
     data_path: impl AsRef<Path>,
 ) -> Result<()> {
     let data_path = data_path.as_ref();
+    let period = period.as_ref();
     info!("Recording #{} expenses for: {:?}", expenses.len(), period);
 
-    // First we assert that we are not mixing months and fortnights
     let service_fees = service_fees(data_path)?;
-    match (
-        service_fees.cadence(),
-        Into::<PeriodAnno>::into(period.clone()),
-    ) {
-        (Cadence::Monthly, PeriodAnno::YearMonthAndFortnight(_)) => {
-            return Err(Error::CannotExpenseForFortnightWhenCadenceIsMonthly);
-        }
-        (Cadence::BiWeekly, PeriodAnno::YearAndMonth(_)) => {
-            return Err(Error::CannotExpenseForMonthWhenCadenceIsBiWeekly);
-        }
-        (Cadence::Monthly, PeriodAnno::YearAndMonth(_)) => {
-            // Monthly cadence is compatible with YearAndMonth
-        }
-        (Cadence::BiWeekly, PeriodAnno::YearMonthAndFortnight(_)) => {
-            // BiWeekly cadence is compatible with YearMonthAndFortnight
-        }
-    }
+    let period_end_date = parse_period_label_for_cadence(period, *service_fees.cadence())?;
 
     mutate(
         expensed_periods_path(data_path),
-        |data: &mut ExpensedPeriods<Period>| {
-            data.insert_expenses(period, expenses.to_vec());
+        |data: &mut ExpensedPeriods| {
+            data.insert_expenses(&period_end_date, expenses.to_vec());
         },
     )
     .inspect(|_| {
@@ -230,14 +225,18 @@ pub fn record_expenses_with_base_path<Period: IsPeriod + Serialize + Deserialize
     })
 }
 
-pub fn record_period_off_with_base_path<Period: IsPeriod + Serialize + DeserializeOwned>(
-    period: &Period,
+pub fn record_period_off_with_base_path(
+    period: impl AsRef<str>,
     base_path: impl AsRef<Path>,
 ) -> Result<()> {
+    let base_path = base_path.as_ref();
+    let period = period.as_ref();
+    let service_fees = service_fees(base_path)?;
+    let period_end_date = parse_period_label_for_cadence(period, *service_fees.cadence())?;
     info!("Recording period off for: {:?}", period);
     mutate(
         proto_invoice_info_path(base_path),
-        |data: &mut ProtoInvoiceInfo<Period>| data.insert_period_off(period.clone()),
+        |data: &mut ProtoInvoiceInfo| data.insert_period_off(period_end_date),
     )
     .inspect(|_| {
         info!("✅ Period off recorded successfully");
@@ -247,15 +246,13 @@ pub fn record_period_off_with_base_path<Period: IsPeriod + Serialize + Deseriali
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::HasSample;
     use crate::{
-        Attachment, Email, EmailAccount, EmailCredentials, NamedPdf, Rate, Select, UnitPrice, Year,
+        Attachment, Cadence, CompanyInformation, DataSelector, Date, Email, EmailAccount,
+        EmailCredentials, EmailSettingsSelector, ExpensedPeriods, HasSample, NamedPdf, PathBuf,
+        ProtoInvoiceInfo, Rate, Select, ServiceFees, UnitPrice, email_settings_path,
+        expensed_periods, proto_invoice_info, service_fees_path,
     };
-    use crate::{
-        CompanyInformation, DataSelector, EmailSettingsSelector, ExpensedPeriods, Month, MonthHalf,
-        PathBuf, ProtoInvoiceInfo, ServiceFees, YearAndMonth, YearMonthAndFortnight,
-        email_settings_path, expensed_periods, proto_invoice_info, service_fees_path,
-    };
+    use std::str::FromStr;
     use test_log::test;
 
     #[test]
@@ -291,7 +288,7 @@ mod tests {
     #[test]
     fn test_read_data_from_disk() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        save_data_with_base_path(Data::<YearAndMonth>::sample(), tempdir.path()).unwrap();
+        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
         let result = read_data_from_disk_with_base_path(tempdir.path());
         assert!(
             result.is_ok(),
@@ -303,7 +300,7 @@ mod tests {
     #[test]
     fn test_init_data_directory_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let result = init_data_at::<YearAndMonth, Error>(tempdir.path(), Ok);
+        let result = init_data_at::<Error>(tempdir.path(), |data| Ok::<Data, Error>(data));
         assert!(
             result.is_ok(),
             "Expected data directory initialization to succeed, got: {:?}",
@@ -314,17 +311,18 @@ mod tests {
     #[test]
     fn test_record_month_off_with_base_path() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let month = YearAndMonth::may(2025);
         save_to_disk(
-            &ProtoInvoiceInfo::<YearAndMonth>::sample(),
+            &ProtoInvoiceInfo::sample(),
             proto_invoice_info_path(tempdir.path()),
         )
         .unwrap();
-        record_period_off_with_base_path(&month, tempdir.path()).unwrap();
+        save_to_disk(&ServiceFees::sample(), service_fees_path(tempdir.path())).unwrap();
+        record_period_off_with_base_path("2025-05", tempdir.path()).unwrap();
 
         // Verify that the month was recorded correctly
         let data = proto_invoice_info(tempdir.path()).unwrap();
-        assert!(data.record_of_periods_off().contains(&month));
+        let period_end_date = Date::from_str("2025-05-31").unwrap();
+        assert!(data.record_of_periods_off().contains(&period_end_date));
     }
 
     #[test]
@@ -332,51 +330,60 @@ mod tests {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         save_to_disk(&ServiceFees::sample(), service_fees_path(tempdir.path())).unwrap();
         save_to_disk(
-            &ExpensedPeriods::<YearAndMonth>::sample(),
+            &ExpensedPeriods::default(),
             expensed_periods_path(tempdir.path()),
         )
         .unwrap();
-        let month = YearAndMonth::may(2025);
         let expenses = vec![Item::sample_expense_breakfast()];
 
-        record_expenses_with_base_path(&month, &expenses, tempdir.path()).unwrap();
+        record_expenses_with_base_path("2025-05", &expenses, tempdir.path()).unwrap();
 
         // Verify that the month was recorded correctly
-        let data = expensed_periods::<YearAndMonth>(tempdir.path()).unwrap();
-        assert!(data.contains(&month));
+        let data = expensed_periods(tempdir.path()).unwrap();
+        let period_end_date = Date::from_str("2025-05-31").unwrap();
+        assert!(data.contains(&period_end_date));
     }
 
     #[test]
     fn test_record_expenses_with_base_path_fail_because_wrong_period_kind() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let services_fees: ServiceFees = ServiceFees::builder()
+            .cadence(Cadence::Monthly)
+            .rate(Rate::daily(UnitPrice::ONE))
+            .name("Sample Service Fees".to_owned())
+            .build()
+            .unwrap();
+        save_to_disk(&services_fees, service_fees_path(tempdir.path())).unwrap();
         save_to_disk(
-            &ExpensedPeriods::<YearAndMonth>::sample(),
+            &ExpensedPeriods::default(),
             expensed_periods_path(tempdir.path()),
         )
         .unwrap();
-        let period = YearMonthAndFortnight::builder()
-            .year(2025)
-            .month(Month::May)
-            .half(MonthHalf::Second)
-            .build();
         let expenses = vec![Item::sample_expense_breakfast()];
 
-        let result = record_expenses_with_base_path(&period, &expenses, tempdir.path());
+        let result =
+            record_expenses_with_base_path("2025-05-first-half", &expenses, tempdir.path());
         assert!(result.is_err());
     }
 
     #[test]
     fn test_record_expenses_with_base_path_fail_because_wrong_period_kind_ymf() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        let services_fees: ServiceFees = ServiceFees::builder()
+            .cadence(Cadence::BiWeekly)
+            .rate(Rate::daily(UnitPrice::ONE))
+            .name("Sample Service Fees".to_owned())
+            .build()
+            .unwrap();
+        save_to_disk(&services_fees, service_fees_path(tempdir.path())).unwrap();
         save_to_disk(
-            &ExpensedPeriods::<YearMonthAndFortnight>::sample(),
+            &ExpensedPeriods::default(),
             expensed_periods_path(tempdir.path()),
         )
         .unwrap();
-        let period = YearAndMonth::may(2025);
         let expenses = vec![Item::sample_expense_breakfast()];
 
-        let result = record_expenses_with_base_path(&period, &expenses, tempdir.path());
+        let result = record_expenses_with_base_path("2025-05", &expenses, tempdir.path());
         assert!(result.is_err());
     }
 
@@ -418,7 +425,7 @@ mod tests {
     #[test]
     fn test_edit_data_at() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let data = Data::<YearAndMonth>::sample();
+        let data = Data::sample();
         let first = CompanyInformation::sample_vendor();
         let second = CompanyInformation::sample_client();
         assert_ne!(
@@ -689,11 +696,6 @@ mod tests {
     fn test_record_expenses_with_base_path_throws_when_cadence_is_monthly_and_period_is_fortnight()
     {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let period = YearMonthAndFortnight::builder()
-            .year(Year::from(2025))
-            .month(Month::January)
-            .half(MonthHalf::First)
-            .build();
         let services_fees: ServiceFees = ServiceFees::builder()
             .cadence(Cadence::Monthly)
             .rate(Rate::daily(UnitPrice::ONE))
@@ -701,8 +703,13 @@ mod tests {
             .build()
             .unwrap();
         save_to_disk(&services_fees, service_fees_path(tempdir.path())).unwrap();
+        save_to_disk(
+            &ExpensedPeriods::default(),
+            expensed_periods_path(tempdir.path()),
+        )
+        .unwrap();
         let result = record_expenses_with_base_path(
-            &period,
+            "2025-01-first-half",
             &[Item::sample_expense_breakfast()],
             tempdir.path(),
         );
@@ -717,7 +724,6 @@ mod tests {
     fn test_record_expenses_with_base_path_throws_when_cadence_is_bi_weekly_and_period_is_year_and_month()
      {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        let period = YearAndMonth::may(2025);
         let services_fees: ServiceFees = ServiceFees::builder()
             .cadence(Cadence::BiWeekly)
             .rate(Rate::daily(UnitPrice::ONE))
@@ -725,8 +731,13 @@ mod tests {
             .build()
             .unwrap();
         save_to_disk(&services_fees, service_fees_path(tempdir.path())).unwrap();
+        save_to_disk(
+            &ExpensedPeriods::default(),
+            expensed_periods_path(tempdir.path()),
+        )
+        .unwrap();
         let result = record_expenses_with_base_path(
-            &period,
+            "2025-05",
             &[Item::sample_expense_breakfast()],
             tempdir.path(),
         );

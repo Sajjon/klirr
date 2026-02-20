@@ -19,6 +19,12 @@ pub enum Cadence {
 }
 
 impl Cadence {
+    pub fn max_granularity(&self) -> Granularity {
+        match self {
+            Self::BiWeekly => Granularity::Fortnight,
+            Self::Monthly => Granularity::Month,
+        }
+    }
     pub fn validate(&self, granularity: impl Into<Granularity>) -> Result<()> {
         use Cadence::*;
         use Granularity::*;

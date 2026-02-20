@@ -15,17 +15,9 @@ pub enum Error {
     #[error("Start period ('{start}') is after end period ('{end}')")]
     StartPeriodAfterEndPeriod { start: String, end: String },
 
-    /// Not a valid YearAndMonth nor YearMonthAndFortnight
+    /// Invalid period input string/value.
     #[error("Invalid Period, bad value: {bad_value}")]
     InvalidPeriod { bad_value: String },
-
-    /// Period is not YearAndMonth
-    #[error("Period is not YearAndMonth")]
-    PeriodIsNotYearAndMonth,
-
-    /// Period is not YearMonthAndFortnight
-    #[error("Period is not YearMonthAndFortnight")]
-    PeriodIsNotYearMonthAndFortnight,
 
     #[error(
         "Invalid granularity for time off: '{free_granularity}', expected: '{service_fees_granularity}', use the same time unit for time off as you specified in service fees. View it with `klirr data dump` command."
@@ -162,10 +154,6 @@ pub enum Error {
         invalid_string: String,
         reason: String,
     },
-
-    /// Invalid YearAndMonth
-    #[error("Invalid YearAndMonth, underlying: {underlying}")]
-    InvalidYearAndMonth { underlying: String },
 
     /// Invalid date
     #[error("Invalid date, underlying: {underlying}")]

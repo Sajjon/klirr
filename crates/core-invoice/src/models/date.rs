@@ -1,6 +1,7 @@
 use crate::{Day, Error, HasSample, Month, PaymentTerms, Result, Year};
 use bon::Builder;
 use chrono::Datelike;
+use chrono::Local;
 use chrono::NaiveDate;
 use chrono::NaiveDateTime;
 use derive_more::Display;
@@ -17,6 +18,8 @@ use serde_with::SerializeDisplay;
     Display,
     PartialEq,
     Eq,
+    PartialOrd,
+    Ord,
     Hash,
     SerializeDisplay,
     DeserializeFromStr,
@@ -58,17 +61,43 @@ impl std::str::FromStr for Date {
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('-').collect();
-        if parts.len() != 3 {
-            return Err(Error::FailedToParseDate {
+        match parts.len() {
+            2 => {
+                let year = Year::from_str(parts[0])?;
+                let month = Month::from_str(parts[1])?;
+                let day = month.last_day(year);
+                Ok(Self::builder().year(year).month(month).day(day).build())
+            }
+            3 => {
+                let year = Year::from_str(parts[0])?;
+                let month = Month::from_str(parts[1])?;
+
+                if let Ok(day) = Day::from_str(parts[2]) {
+                    return Ok(Self::builder().year(year).month(month).day(day).build());
+                }
+
+                let day = match parts[2] {
+                    "first" | "first-half" | "1" => {
+                        if month == Month::February {
+                            Day::try_from(14).expect("valid day")
+                        } else {
+                            Day::try_from(15).expect("valid day")
+                        }
+                    }
+                    "second" | "second-half" | "2" => month.last_day(year),
+                    _ => {
+                        return Err(Error::FailedToParseDate {
+                            underlying: "Invalid Format".to_owned(),
+                        });
+                    }
+                };
+
+                Ok(Self::builder().year(year).month(month).day(day).build())
+            }
+            _ => Err(Error::FailedToParseDate {
                 underlying: "Invalid Format".to_owned(),
-            });
+            }),
         }
-
-        let year = Year::from_str(parts[0])?;
-        let month = Month::from_str(parts[1])?;
-        let day = Day::from_str(parts[2])?;
-
-        Ok(Self::builder().year(year).month(month).day(day).build())
     }
 }
 
@@ -93,6 +122,40 @@ impl From<NaiveDateTime> for Date {
 }
 
 impl Date {
+    /// Creates a date from year-month-day components.
+    pub fn from_ymd(
+        year: impl Into<i32>,
+        month: impl Into<u32>,
+        day: impl Into<u32>,
+    ) -> Result<Self> {
+        let year = year.into();
+        let month = month.into();
+        let day = day.into();
+        let naive = NaiveDate::from_ymd_opt(year, month, day).ok_or(Error::InvalidDate {
+            underlying: format!("invalid Y-M-D: {year}-{month}-{day}"),
+        })?;
+        Ok(Self::from(naive))
+    }
+
+    /// Returns today's local date.
+    pub fn today() -> Self {
+        Self::from(Local::now().date_naive())
+    }
+
+    /// Returns the last day in this date's month.
+    pub fn last_day_of_month(&self) -> Day {
+        self.month().last_day(*self.year())
+    }
+
+    /// Returns a date set to this date's month-end.
+    pub fn end_of_month(&self) -> Self {
+        Self::builder()
+            .year(*self.year())
+            .month(*self.month())
+            .day(self.last_day_of_month())
+            .build()
+    }
+
     pub fn to_datetime(&self) -> NaiveDateTime {
         let naive_date = chrono::NaiveDate::from_ymd_opt(
             **self.year() as i32,
@@ -139,7 +202,7 @@ impl HasSample for Date {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{HasSample, YearAndMonth};
+    use crate::HasSample;
     use std::str::FromStr;
     use test_log::test;
 
@@ -165,13 +228,6 @@ mod tests {
     }
 
     #[test]
-    fn test_year_month_from_str() {
-        let sut = YearAndMonth::from_str("2025-05").unwrap();
-        assert_eq!(sut.year(), &Year::from(2025));
-        assert_eq!(sut.month(), &Month::May);
-    }
-
-    #[test]
     fn test_from_str_all_reasons_invalid() {
         let invalid_dates = [
             "2025-05-32",        // Invalid day
@@ -179,7 +235,6 @@ mod tests {
             "2025-13-01",        // Invalid month
             "2025-00-01",        // Invalid month zero
             "2025-13-01",        // Invalid month too large
-            "2025-05",           // Missing day
             "2025",              // Missing month and day
             "05-23",             // Missing year
             "2025-05-23-01",     // Too many parts

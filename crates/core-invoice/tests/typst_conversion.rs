@@ -1,7 +1,7 @@
 use insta::assert_snapshot;
 use klirr_core_invoice::{
-    Currency, Data, ExchangeRates, ExchangeRatesMap, HasSample, InvoicedItems, L10n, Language,
-    PreparedData, UnitPrice, ValidInput, YearAndMonth,
+    Currency, Data, Date, ExchangeRates, ExchangeRatesMap, HasSample, InvoicedItems, L10n,
+    Language, PreparedData, UnitPrice, ValidInput,
 };
 use klirr_foundation::ToTypstFn;
 use rust_decimal::dec;
@@ -17,7 +17,7 @@ fn sample_exchange_rates() -> ExchangeRates {
 }
 
 fn prepared_data_from(input: ValidInput) -> PreparedData {
-    Data::<YearAndMonth>::sample()
+    Data::sample()
         .to_partial(input)
         .unwrap()
         .to_typst(sample_exchange_rates())
@@ -28,7 +28,7 @@ fn prepared_data_from(input: ValidInput) -> PreparedData {
 fn data_expenses_to_typst() {
     let input = ValidInput::builder()
         .items(InvoicedItems::Expenses)
-        .period(YearAndMonth::may(2025).into())
+        .date("2025-05-31".parse::<Date>().unwrap())
         .language(Language::EN)
         .build();
     let typst = prepared_data_from(input).to_typst_fn();
@@ -39,7 +39,7 @@ fn data_expenses_to_typst() {
 fn data_services_to_typst() {
     let input = ValidInput::builder()
         .items(InvoicedItems::Service { time_off: None })
-        .period(YearAndMonth::may(2025).into())
+        .date("2025-05-31".parse::<Date>().unwrap())
         .language(Language::EN)
         .build();
     let typst = prepared_data_from(input).to_typst_fn();
