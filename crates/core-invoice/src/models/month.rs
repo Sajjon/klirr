@@ -58,6 +58,16 @@ impl Month {
     }
 
     /// Returns the last day in this month for the given year.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use klirr_core_invoice::*;
+    ///
+    /// assert_eq!(Month::January.last_day(Year::from(2025)), Day::try_from(31).unwrap());
+    /// assert_eq!(Month::February.last_day(Year::from(2024)), Day::try_from(29).unwrap());
+    /// assert_eq!(Month::February.last_day(Year::from(2025)), Day::try_from(28).unwrap());
+    /// ```
     pub fn last_day(&self, year: Year) -> Day {
         match self {
             Self::January

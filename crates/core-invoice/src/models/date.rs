@@ -45,7 +45,10 @@ pub struct Date {
 impl std::str::FromStr for Date {
     type Err = crate::Error;
 
-    /// Parses a date in the format "YYYY-MM-DD", e.g. "2025-05-23".
+    /// Parses a date from one of the supported formats:
+    /// - `YYYY-MM-DD`
+    /// - `YYYY-MM` (interpreted as month-end)
+    /// - `YYYY-MM-first-half` / `YYYY-MM-second-half`
     /// # Errors
     /// Returns an error if the string is not in the correct format or if the
     /// year, month, or day is invalid.
@@ -57,26 +60,41 @@ impl std::str::FromStr for Date {
     /// let date: Date = "2025-05-23".parse().unwrap();
     /// assert_eq!(date.year(), &Year::from(2025));
     /// assert_eq!(date.month(), &Month::May);
-    /// assert_eq!(date.day(), &Day::try_from(23).unwrap());    
+    /// assert_eq!(date.day(), &Day::try_from(23).unwrap());
+    ///
+    /// let month_end: Date = "2025-05".parse().unwrap();
+    /// assert_eq!(month_end.to_string(), "2025-05-31");
+    ///
+    /// let first_half: Date = "2025-02-first-half".parse().unwrap();
+    /// assert_eq!(first_half.to_string(), "2025-02-14");
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split('-').collect();
-        match parts.len() {
-            2 => {
-                let year = Year::from_str(parts[0])?;
-                let month = Month::from_str(parts[1])?;
+        let mut parts = s.splitn(3, '-');
+        let Some(year_part) = parts.next() else {
+            return Err(Error::FailedToParseDate {
+                underlying: "Invalid Format".to_owned(),
+            });
+        };
+        let Some(month_part) = parts.next() else {
+            return Err(Error::FailedToParseDate {
+                underlying: "Invalid Format".to_owned(),
+            });
+        };
+
+        let year = Year::from_str(year_part)?;
+        let month = Month::from_str(month_part)?;
+
+        match parts.next() {
+            None => {
                 let day = month.last_day(year);
                 Ok(Self::builder().year(year).month(month).day(day).build())
             }
-            3 => {
-                let year = Year::from_str(parts[0])?;
-                let month = Month::from_str(parts[1])?;
-
-                if let Ok(day) = Day::from_str(parts[2]) {
+            Some(day_or_half) => {
+                if let Ok(day) = Day::from_str(day_or_half) {
                     return Ok(Self::builder().year(year).month(month).day(day).build());
                 }
 
-                let day = match parts[2] {
+                let day = match day_or_half {
                     "first" | "first-half" | "1" => {
                         if month == Month::February {
                             Day::try_from(14).expect("valid day")
@@ -94,9 +112,6 @@ impl std::str::FromStr for Date {
 
                 Ok(Self::builder().year(year).month(month).day(day).build())
             }
-            _ => Err(Error::FailedToParseDate {
-                underlying: "Invalid Format".to_owned(),
-            }),
         }
     }
 }

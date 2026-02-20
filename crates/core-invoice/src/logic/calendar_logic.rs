@@ -47,7 +47,21 @@ fn period_end_for_cadence(date: Date, cadence: Cadence) -> Result<Date> {
     period_end_for_unit(date, cadence.max_granularity())
 }
 
-/// Normalizes any date/label-parsed date to the cadence-aligned period-end date.
+/// Normalizes a date to the cadence-aligned period-end date.
+///
+/// # Examples
+/// ```
+/// extern crate klirr_core_invoice;
+/// use klirr_core_invoice::*;
+///
+/// let normalized = normalize_period_end_date_for_cadence(
+///     "2025-05-12".parse::<Date>().unwrap(),
+///     Cadence::Monthly,
+/// )
+/// .unwrap();
+///
+/// assert_eq!(normalized.to_string(), "2025-05-31");
+/// ```
 pub fn normalize_period_end_date_for_cadence(date: Date, cadence: Cadence) -> Result<Date> {
     period_end_for_cadence(date, cadence)
 }
@@ -131,6 +145,17 @@ fn elapsed_periods_since(start: Date, end: Date, cadence: Cadence) -> Result<u16
 }
 
 /// Converts a relative time (e.g. current/last month or fortnight) into a period-end date.
+///
+/// # Examples
+/// ```
+/// extern crate klirr_core_invoice;
+/// use klirr_core_invoice::*;
+///
+/// let current_month = period_end_from_relative_time(RelativeTime::current(Granularity::Month)).unwrap();
+/// let last_month = period_end_from_relative_time(RelativeTime::last(Granularity::Month)).unwrap();
+///
+/// assert!(last_month < current_month);
+/// ```
 pub fn period_end_from_relative_time(relative: RelativeTime) -> Result<Date> {
     let current_period_end = period_end_for_unit(Date::today(), *relative.unit())?;
     shift_period_end(current_period_end, *relative.unit(), *relative.amount())
@@ -171,6 +196,18 @@ fn parse_legacy_period_label(value: &str) -> Result<(Date, Granularity)> {
 /// Parses a user-facing period label into a period-end date using cadence rules.
 ///
 /// Supports legacy labels (`YYYY-MM`, `YYYY-MM-first-half`) and full dates (`YYYY-MM-DD`).
+///
+/// # Examples
+/// ```
+/// extern crate klirr_core_invoice;
+/// use klirr_core_invoice::*;
+///
+/// let monthly = parse_period_label_for_cadence("2025-05", Cadence::Monthly).unwrap();
+/// assert_eq!(monthly.to_string(), "2025-05-31");
+///
+/// let fortnight = parse_period_label_for_cadence("2025-02-first-half", Cadence::BiWeekly).unwrap();
+/// assert_eq!(fortnight.to_string(), "2025-02-14");
+/// ```
 pub fn parse_period_label_for_cadence(value: &str, cadence: Cadence) -> Result<Date> {
     if let Ok((date, unit)) = parse_legacy_period_label(value) {
         return match (cadence, unit) {
@@ -189,6 +226,33 @@ pub fn parse_period_label_for_cadence(value: &str, cadence: Cadence) -> Result<D
 }
 
 /// Calculates the invoice number from an offset and target period-end date.
+///
+/// # Examples
+/// ```
+/// extern crate klirr_core_invoice;
+/// use klirr_core_invoice::*;
+///
+/// let offset = TimestampedInvoiceNumber::builder()
+///     .offset(100)
+///     .date("2024-01-31".parse::<Date>().unwrap())
+///     .build();
+/// let target_period_end_date = "2024-08-31".parse::<Date>().unwrap();
+/// let periods_off = RecordOfPeriodsOff::new([
+///     "2024-03-31".parse::<Date>().unwrap(),
+///     "2024-04-30".parse::<Date>().unwrap(),
+/// ]);
+///
+/// let invoice_number = calculate_invoice_number(
+///     &offset,
+///     &target_period_end_date,
+///     Cadence::Monthly,
+///     true,
+///     &periods_off,
+/// )
+/// .unwrap();
+///
+/// assert_eq!(invoice_number, InvoiceNumber::from(106));
+/// ```
 pub fn calculate_invoice_number(
     offset: &TimestampedInvoiceNumber,
     target_date: &Date,
@@ -294,6 +358,24 @@ fn working_days_in_period(period_end: Date, cadence: Cadence) -> Result<Quantity
 }
 
 /// Calculates billable quantity for a period-end date and cadence.
+///
+/// # Examples
+/// ```
+/// extern crate klirr_core_invoice;
+/// use klirr_core_invoice::*;
+/// use rust_decimal::dec;
+///
+/// let target_period_end_date = "2024-01-31".parse::<Date>().unwrap();
+/// let quantity = quantity_in_period(
+///     &target_period_end_date,
+///     Granularity::Day,
+///     Cadence::Monthly,
+///     &RecordOfPeriodsOff::default(),
+/// )
+/// .unwrap();
+///
+/// assert_eq!(*quantity, dec!(23));
+/// ```
 pub fn quantity_in_period(
     target_date: &Date,
     granularity: Granularity,

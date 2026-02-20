@@ -30,6 +30,19 @@ pub struct Data {
 }
 
 impl Data {
+    /// Validates invoice information and returns `self` when valid.
+    ///
+    /// # Errors
+    /// Returns an error if invoice metadata is invalid.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use klirr_core_invoice::*;
+    ///
+    /// let data = Data::sample();
+    /// assert!(data.validate().is_ok());
+    /// ```
     pub fn validate(self) -> Result<Self> {
         self.information.validate()?;
         Ok(self)
@@ -48,6 +61,23 @@ impl Data {
         Ok(quantity_in_period - time_off.map(|d| *d).unwrap_or(Quantity::ZERO))
     }
 
+    /// Converts data loaded from disk into render-ready invoice input.
+    ///
+    /// # Errors
+    /// Returns an error if granularity/cadence constraints are violated, or
+    /// when expenses are requested for a period with no recorded expenses.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use klirr_core_invoice::*;
+    ///
+    /// let data = Data::sample();
+    /// let input = ValidInput::sample();
+    /// let partial = data.to_partial(input).unwrap();
+    ///
+    /// assert!(!partial.line_items().is_expenses());
+    /// ```
     pub fn to_partial(self, input: ValidInput) -> Result<DataWithItemsPricedInSourceCurrency> {
         let items = input.items();
         let cadence = *self.service_fees().cadence();
