@@ -26,6 +26,7 @@ use serde_with::SerializeDisplay;
 #[display("{year:04}-{month:02}-{day:02}")]
 pub struct Date {
     /// e.g. 2025
+    #[builder(into)]
     #[getset(get = "pub")]
     year: Year,
 
@@ -73,7 +74,7 @@ impl std::str::FromStr for Date {
 
 fn from_ymd_parts(year: i32, month: u32, day: u32) -> Date {
     Date::builder()
-        .year(year.into())
+        .year(year)
         .month(Month::try_from(month).expect("Invalid month"))
         .day(Day::try_from(day).expect("Invalid day"))
         .build()
@@ -121,14 +122,14 @@ impl Date {
 impl HasSample for Date {
     fn sample() -> Self {
         Self::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::May)
             .day(Day::try_from(31).expect("LEQ 31 days"))
             .build()
     }
     fn sample_other() -> Self {
         Self::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .day(Day::try_from(15).expect("LEQ 31 days"))
             .build()

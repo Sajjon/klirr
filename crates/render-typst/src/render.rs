@@ -62,7 +62,7 @@ mod tests {
                 .items(InvoicedItems::Expenses)
                 .period(
                     YearMonthAndFortnight::builder()
-                        .year(2025.into())
+                        .year(2025)
                         .month(Month::May)
                         .half(MonthHalf::First)
                         .build(),

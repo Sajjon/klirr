@@ -55,7 +55,7 @@ impl From<Date> for YearAndMonth {
     /// ```
     /// extern crate klirr_core_invoice;
     /// use klirr_core_invoice::*;
-    /// let date = Date::builder().year(2025.into()).month(Month::May).day(Day::try_from(23).unwrap()).build();
+    /// let date = Date::builder().year(2025).month(Month::May).day(Day::try_from(23).unwrap()).build();
     /// let year_and_month: YearAndMonth = date.into();
     /// assert_eq!(year_and_month.year(), &Year::new(2025));
     /// assert_eq!(year_and_month.month(), &Month::May);
@@ -409,7 +409,7 @@ mod tests {
     #[test]
     fn test_from_date() {
         let date = Date::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::May)
             .day(Day::try_from(23).unwrap())
             .build();

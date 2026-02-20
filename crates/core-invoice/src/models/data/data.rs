@@ -15,11 +15,11 @@ use serde::Serialize;
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
 #[derive(
-    Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, WithSetters, Setters,
+    Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, Setters, WithSetters,
 )]
 pub struct Data<Period: IsPeriod> {
     /// Information about this specific invoice.
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set_with = "pub")]
     information: ProtoInvoiceInfo<Period>,
 
     /// The company that issued the invoice, the vendor/seller/supplier/issuer.
@@ -253,7 +253,7 @@ mod tests {
             .items(InvoicedItems::Expenses)
             .period(
                 YearMonthAndFortnight::builder()
-                    .year(2025.into())
+                    .year(2025)
                     .month(Month::May)
                     .half(MonthHalf::First)
                     .build(),
@@ -393,7 +393,7 @@ mod tests {
     #[test]
     fn test_to_partial_when_offset_is_year_month_and_fortnight() {
         let offset_period = YearMonthAndFortnight::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::May)
             .half(MonthHalf::First)
             .build();
@@ -402,7 +402,7 @@ mod tests {
                 ProtoInvoiceInfo::builder()
                     .offset(
                         TimestampedInvoiceNumber::<YearMonthAndFortnight>::builder()
-                            .offset(100.into())
+                            .offset(100)
                             .period(offset_period)
                             .build(),
                     )
@@ -415,7 +415,7 @@ mod tests {
             .expensed_periods(ExpensedPeriods::sample())
             .build();
         let target_period = YearMonthAndFortnight::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::May)
             .half(MonthHalf::First)
             .build();

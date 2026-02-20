@@ -233,7 +233,7 @@ impl IsPeriod for YearAndMonth {
 /// ```
 /// extern crate klirr_core_invoice;
 /// use klirr_core_invoice::*;
-/// let offset = TimestampedInvoiceNumber::<YearAndMonth>::builder().offset(100.into()).period(YearAndMonth::january(2024)).build();
+/// let offset = TimestampedInvoiceNumber::<YearAndMonth>::builder().offset(100).period(YearAndMonth::january(2024)).build();
 /// let target_month = YearAndMonth::august(2024);
 /// let is_expenses = true;
 /// let months_off_record = RecordOfPeriodsOff::new([
@@ -921,7 +921,7 @@ mod tests {
             .offset(
                 TimestampedInvoiceNumber::builder()
                     .period(month)
-                    .offset(237.into())
+                    .offset(237)
                     .build(),
             )
             .record_of_periods_off(RecordOfPeriodsOff::new([month]))

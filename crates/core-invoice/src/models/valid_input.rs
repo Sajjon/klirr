@@ -4,13 +4,13 @@ use crate::{
 };
 use bon::Builder;
 use derive_more::Display;
-use getset::Getters;
+use getset::{Getters, WithSetters};
 
 /// Input which has been validated and is ready for processing.
 /// Controls which language to use, the month for which to generate the invoice,
 /// the items to be invoiced, the layout of the invoice, and an optional output path
 /// for the generated PDF file.
-#[derive(Debug, Clone, Display, Builder, Getters)]
+#[derive(Debug, Clone, Display, Builder, Getters, WithSetters)]
 #[display("Layout: {}, Period: {}, out: {:?}, items: {}, language: {}", layout, period, maybe_output_path.as_ref().map(|d|d.display()), items, language)]
 pub struct ValidInput {
     /// The language to use for the invoice, used on labels, headers etc.
@@ -27,7 +27,7 @@ pub struct ValidInput {
     /// For example, if the period is `YearMonthAndFortnight`, we can always
     /// convert it to `YearAndMonth` later in the flow if that matches the invoice
     /// cadence.
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set_with = "pub")]
     period: YearMonthAndFortnight,
 
     /// The items to be invoiced, either services or expenses.

@@ -150,14 +150,14 @@ mod tests {
     fn test_elapsed_periods_since_year_and_fortnight() {
         let early = Sut::YearMonthAndFortnight(
             YearMonthAndFortnight::builder()
-                .year(2024.into())
+                .year(2024)
                 .month(Month::December)
                 .half(MonthHalf::Second)
                 .build(),
         );
         let late = Sut::YearMonthAndFortnight(
             YearMonthAndFortnight::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::February)
                 .half(MonthHalf::First)
                 .build(),
@@ -178,7 +178,7 @@ mod tests {
     fn test_to_date_end_of_period_year_and_fortnight() {
         let period = Sut::YearMonthAndFortnight(
             YearMonthAndFortnight::builder()
-                .year(2024.into())
+                .year(2024)
                 .month(Month::December)
                 .half(MonthHalf::First)
                 .build(),
@@ -193,7 +193,7 @@ mod tests {
     fn serde_fortnight() {
         assert_ron_snapshot!(Sut::YearMonthAndFortnight(
             YearMonthAndFortnight::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::May)
                 .half(MonthHalf::Second)
                 .build()
@@ -208,7 +208,7 @@ mod tests {
             period,
             Sut::YearMonthAndFortnight(
                 YearMonthAndFortnight::builder()
-                    .year(2025.into())
+                    .year(2025)
                     .month(Month::May)
                     .half(MonthHalf::Second)
                     .build()
@@ -240,7 +240,7 @@ mod tests {
     fn year_month_and_fortnight_get_year() {
         let sut = Sut::YearMonthAndFortnight(
             YearMonthAndFortnight::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::May)
                 .half(MonthHalf::Second)
                 .build(),
@@ -252,7 +252,7 @@ mod tests {
     fn year_month_and_fortnight_get_month() {
         let sut = Sut::YearMonthAndFortnight(
             YearMonthAndFortnight::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::May)
                 .half(MonthHalf::Second)
                 .build(),

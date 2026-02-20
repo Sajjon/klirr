@@ -33,6 +33,7 @@ use serde_with::SerializeDisplay;
 #[debug("{year:04}-{month:02}-{half}")]
 pub struct YearMonthAndFortnight {
     /// e.g. 2025
+    #[builder(into)]
     #[getset(get = "pub")]
     year: Year,
 
@@ -138,7 +139,7 @@ impl FromStr for YearMonthAndFortnight {
 impl HasSample for YearMonthAndFortnight {
     fn sample() -> Self {
         Self::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::July)
             .half(MonthHalf::First)
             .build()
@@ -146,7 +147,7 @@ impl HasSample for YearMonthAndFortnight {
 
     fn sample_other() -> Self {
         Self::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::July)
             .half(MonthHalf::Second)
             .build()
@@ -177,7 +178,7 @@ mod tests {
     #[test]
     fn elapsed_periods_since_same_is_zero() {
         let sut = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
@@ -188,12 +189,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_same_month_different_half_is_1() {
         let early = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::July)
             .half(MonthHalf::First)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::July)
             .half(MonthHalf::Second)
             .build();
@@ -203,12 +204,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_across_month_one_half_is_1() {
         let early = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::June)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::July)
             .half(MonthHalf::First)
             .build();
@@ -218,12 +219,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_across_month_and_year_one_half_is_1() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::January)
             .half(MonthHalf::First)
             .build();
@@ -233,12 +234,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_cross_year_early_is_second_half() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::March)
             .half(MonthHalf::First)
             .build();
@@ -249,12 +250,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_cross_year_early_one_period() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::January)
             .half(MonthHalf::First)
             .build();
@@ -264,12 +265,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_one_period_only() {
         let early = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::May)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::June)
             .half(MonthHalf::First)
             .build();
@@ -279,12 +280,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_cross_year_early_is_first_half() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::March)
             .half(MonthHalf::First)
             .build();
@@ -295,12 +296,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_cross_year_early_and_late_are_second_half() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::March)
             .half(MonthHalf::Second)
             .build();
@@ -311,12 +312,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_cross_year_early_is_first_half_and_late_is_second_half() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::March)
             .half(MonthHalf::Second)
             .build();
@@ -327,12 +328,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_one_year_first_first_is_24() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
@@ -342,12 +343,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_one_year_second_second_is_24() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
@@ -357,12 +358,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_one_year_second_first_is_23() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
@@ -372,12 +373,12 @@ mod tests {
     #[test]
     fn elapsed_periods_since_one_year_first_second_is_25() {
         let early = Sut::builder()
-            .year(2024.into())
+            .year(2024)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
         let late = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
@@ -387,7 +388,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_january_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::January)
             .half(MonthHalf::First)
             .build();
@@ -400,7 +401,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_january_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::January)
             .half(MonthHalf::Second)
             .build();
@@ -413,7 +414,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_non_leap_year_february_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::February)
             .half(MonthHalf::First)
             .build();
@@ -426,7 +427,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_non_leap_year_february_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::February)
             .half(MonthHalf::Second)
             .build();
@@ -439,7 +440,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_leap_year_february_first_half() {
         let sut = Sut::builder()
-            .year(2028.into())
+            .year(2028)
             .month(Month::February)
             .half(MonthHalf::First)
             .build();
@@ -452,7 +453,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_leap_year_february_second_half() {
         let sut = Sut::builder()
-            .year(2028.into())
+            .year(2028)
             .month(Month::February)
             .half(MonthHalf::Second)
             .build();
@@ -465,7 +466,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_march_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::March)
             .half(MonthHalf::First)
             .build();
@@ -478,7 +479,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_march_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::March)
             .half(MonthHalf::Second)
             .build();
@@ -491,7 +492,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_april_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::April)
             .half(MonthHalf::First)
             .build();
@@ -504,7 +505,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_april_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::April)
             .half(MonthHalf::Second)
             .build();
@@ -517,7 +518,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_may_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::May)
             .half(MonthHalf::First)
             .build();
@@ -530,7 +531,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_may_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::May)
             .half(MonthHalf::Second)
             .build();
@@ -543,7 +544,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_june_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::June)
             .half(MonthHalf::First)
             .build();
@@ -556,7 +557,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_june_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::June)
             .half(MonthHalf::Second)
             .build();
@@ -569,7 +570,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_july_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::July)
             .half(MonthHalf::First)
             .build();
@@ -582,7 +583,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_july_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::July)
             .half(MonthHalf::Second)
             .build();
@@ -595,7 +596,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_august_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::August)
             .half(MonthHalf::First)
             .build();
@@ -608,7 +609,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_august_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::August)
             .half(MonthHalf::Second)
             .build();
@@ -621,7 +622,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_september_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::September)
             .half(MonthHalf::First)
             .build();
@@ -634,7 +635,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_september_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::September)
             .half(MonthHalf::Second)
             .build();
@@ -647,7 +648,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_october_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::October)
             .half(MonthHalf::First)
             .build();
@@ -660,7 +661,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_october_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::October)
             .half(MonthHalf::Second)
             .build();
@@ -673,7 +674,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_november_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::November)
             .half(MonthHalf::First)
             .build();
@@ -686,7 +687,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_november_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::November)
             .half(MonthHalf::Second)
             .build();
@@ -699,7 +700,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_december_first_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::December)
             .half(MonthHalf::First)
             .build();
@@ -712,7 +713,7 @@ mod tests {
     #[test]
     fn to_date_end_of_period_december_second_half() {
         let sut = Sut::builder()
-            .year(2025.into())
+            .year(2025)
             .month(Month::December)
             .half(MonthHalf::Second)
             .build();
@@ -726,7 +727,7 @@ mod tests {
     fn year() {
         assert_eq!(
             **Sut::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::July)
                 .half(MonthHalf::First)
                 .build()
@@ -739,7 +740,7 @@ mod tests {
     fn month() {
         assert_eq!(
             *Sut::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::July)
                 .half(MonthHalf::First)
                 .build()

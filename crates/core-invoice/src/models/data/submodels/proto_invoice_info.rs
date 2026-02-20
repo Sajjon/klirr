@@ -5,11 +5,14 @@ use crate::{
 use bon::Builder;
 use getset::Getters;
 use getset::Setters;
+use getset::WithSetters;
 use serde::Deserialize;
 use serde::Serialize;
 
 /// Partial information about the invoice which can be used to derive a [`InvoiceInfoFull`]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, Setters)]
+#[derive(
+    Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, Setters, WithSetters,
+)]
 pub struct ProtoInvoiceInfo<Period: IsPeriod> {
     /// An offset which is used to calculate the invoice number, e.g. `(237, 2025-05)`.
     /// This is enables us to calculate the next invoice number based on the current
@@ -140,7 +143,7 @@ mod tests {
             .offset(
                 TimestampedInvoiceNumber::builder()
                     .period(month)
-                    .offset(237.into())
+                    .offset(237)
                     .build(),
             )
             .record_of_periods_off(RecordOfPeriodsOff::new([month]))

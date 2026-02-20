@@ -30,7 +30,7 @@ fn data_expenses_to_typst() {
         .items(InvoicedItems::Expenses)
         .period(
             YearMonthAndFortnight::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::May)
                 .half(MonthHalf::First)
                 .build(),
@@ -47,7 +47,7 @@ fn data_services_to_typst() {
         .items(InvoicedItems::Service { time_off: None })
         .period(
             YearMonthAndFortnight::builder()
-                .year(2025.into())
+                .year(2025)
                 .month(Month::May)
                 .half(MonthHalf::First)
                 .build(),

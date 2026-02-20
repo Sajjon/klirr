@@ -1,18 +1,18 @@
 use crate::{HasSample, InvoiceNumber, IsPeriod};
 use bon::Builder;
-use getset::Getters;
-use serde::Deserialize;
-use serde::Serialize;
+use getset::{Getters, WithSetters};
+use serde::{Deserialize, Serialize};
 
 /// An invoice number timestamp with year and month, e.g. `(237, 2025-05)`.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, WithSetters)]
 pub struct TimestampedInvoiceNumber<Period: IsPeriod> {
     /// A base offset for the invoice number, e.g. `237`.
+    #[builder(into)]
     #[getset(get = "pub")]
     offset: InvoiceNumber,
 
     /// The month and year for when the `offset` was used, e.g. `2025-05`.
-    #[getset(get = "pub")]
+    #[getset(get = "pub", set_with = "pub")]
     period: Period,
 }
 
