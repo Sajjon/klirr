@@ -12,7 +12,7 @@ permissions:
   contents: read
 env:
   CARGO_TERM_COLOR: always
-  RUST_TOOLCHAIN: 1.85.1
+  RUST_TOOLCHAIN: 1.93
   RUST_COMPONENTS: "rust-std"
 jobs:
   spelling:
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout Actions Repository
         uses: actions/checkout@v4
       - name: Spell Check Repo
-        uses: crate-ci/typos@v1.33.1
+        uses: crate-ci/typos@v1.42.3
 
   # cargo fmt check
   check-formatting:
@@ -74,7 +74,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     container:
-      image: xd009642/tarpaulin:0.32.8
+      image: xd009642/tarpaulin:0.34.1
       options: --security-opt seccomp=unconfined
 
     steps:

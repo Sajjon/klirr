@@ -6,7 +6,7 @@ on:
       - main
 env:
   CARGO_TERM_COLOR: always
-  RUST_TOOLCHAIN: 1.85.1
+  RUST_TOOLCHAIN: 1.93
 jobs:
   spelling:
     name: Spell Check with Typos
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Actions Repository
         uses: actions/checkout@v4
       - name: Spell Check Repo
-        uses: crate-ci/typos@v1.33.1
+        uses: crate-ci/typos@v1.42.3
   check-formatting:
     runs-on: ubuntu-latest
     steps:
