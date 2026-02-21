@@ -1,15 +1,12 @@
 use derive_more::Display;
 use derive_more::FromStr;
 use indexmap::IndexSet;
-use klirr_foundation::{FontIdentifier, FontRequiring, FontWeight, ToTypst, ToTypstFn};
+use klirr_foundation::{FontIdentifier, FontRequiring, FontWeight, ToTypst, ToTypstFn, TYPST_LAYOUT_TEST};
 use strum::EnumIter;
 use strum::IntoEnumIterator;
 
 /// The Typst layout "Aioo" as a string.
 const TYPST_LAYOUT_AIOO: &str = include_str!("../../layouts/aioo.typ");
-
-/// A layout used for testing only.
-const TYPST_LAYOUT_TEST: &str = include_str!("../../../foundation/layout/test.typ");
 
 /// Represents different Typst layouts used to render the invoice.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Display, Default, FromStr, EnumIter)]
