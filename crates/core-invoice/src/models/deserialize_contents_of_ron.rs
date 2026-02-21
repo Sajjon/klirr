@@ -92,7 +92,7 @@ mod tests {
     }
 
     #[test]
-    fn deseralize_ron_success() {
+    fn deserialize_ron_success() {
         let tempfile = tempfile::NamedTempFile::new().unwrap();
         let path = tempfile.path();
         fs::write(
