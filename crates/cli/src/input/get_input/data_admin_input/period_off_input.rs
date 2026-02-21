@@ -1,6 +1,5 @@
 use clap::Args;
 
-use crate::PeriodAnno;
 use getset::Getters;
 
 /// Record a new period off for the specified period.
@@ -14,5 +13,5 @@ pub struct PeriodOffInput {
         help = "The period for which you wanna record a period off, e.g. `2025-05`."
     )]
     #[getset(get = "pub")]
-    period: PeriodAnno,
+    period: String,
 }

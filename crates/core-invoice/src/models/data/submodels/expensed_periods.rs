@@ -1,118 +1,162 @@
 use super::expenses_for_periods::ExpensesForPeriods;
-use crate::{Error, HasSample, IsPeriod, Item, Result};
+use crate::{Date, Error, HasSample, Item, Result};
 use getset::Getters;
 use indexmap::IndexMap;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-/// Periods for which expenses have been recorded.
+/// Period-end dates for which expenses have been recorded.
 #[derive(Clone, Debug, Serialize, PartialEq, Deserialize, Getters)]
-pub struct ExpensedPeriods<Period: IsPeriod> {
+pub struct ExpensedPeriods {
+    /// Human-readable explanation persisted alongside the expenses map.
     explanation: String,
+    /// Expenses keyed by the period-end date they belong to.
     #[getset(get = "pub")]
-    expenses_for_periods: IndexMap<Period, ExpensesForPeriods>,
+    expenses_for_periods: IndexMap<Date, ExpensesForPeriods>,
 }
 
-impl<Period: IsPeriod + HasSample> HasSample for ExpensedPeriods<Period> {
+impl HasSample for ExpensedPeriods {
     fn sample() -> Self {
         Self::new(IndexMap::from_iter([(
-            Period::sample(),
+            Date::sample(),
             vec![Item::sample_expense_breakfast()],
         )]))
     }
 
     fn sample_other() -> Self {
         Self::new(IndexMap::from_iter([(
-            Period::sample_other(),
+            Date::sample_other(),
             vec![Item::sample_expense_coffee()],
         )]))
     }
 }
 
-impl<Period: IsPeriod> Default for ExpensedPeriods<Period> {
+impl Default for ExpensedPeriods {
     fn default() -> Self {
         Self::new(IndexMap::default())
     }
 }
 
-impl<Period: IsPeriod> ExpensedPeriods<Period> {
-    pub fn new(expenses_for_periods: IndexMap<Period, Vec<Item>>) -> Self {
+impl ExpensedPeriods {
+    /// Creates a new collection of expensed periods from raw items per period-end date.
+    ///
+    /// Items are normalized per period via [`ExpensesForPeriods::new`], meaning repeated
+    /// items are merged by summing quantities.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use indexmap::IndexMap;
+    /// use klirr_core_invoice::*;
+    ///
+    /// let period_end = "2025-01-31".parse::<Date>().unwrap();
+    /// let expensed = ExpensedPeriods::new(IndexMap::from([(
+    ///     period_end,
+    ///     vec![Item::sample_expense_coffee()],
+    /// )]));
+    ///
+    /// assert!(expensed.contains(&period_end));
+    /// ```
+    pub fn new(expenses_for_periods: IndexMap<Date, Vec<Item>>) -> Self {
         Self {
             explanation: "Expenses for periods".to_string(),
             expenses_for_periods: expenses_for_periods
                 .into_iter()
-                .map(|(month, items)| (month, ExpensesForPeriods::new(items)))
+                .map(|(period_end_date, items)| (period_end_date, ExpensesForPeriods::new(items)))
                 .collect(),
         }
     }
 
-    /// Checks if the given month has expenses recorded.
+    /// Returns `true` if expenses exist for `period_end_date`.
     ///
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
     /// use indexmap::IndexMap;
-    /// let month = YearAndMonth::january(2024);
-    /// let expenses = ExpensedPeriods::new(IndexMap::from_iter([
-    ///     (month.clone(), vec![Item::sample_expense_coffee()]),
-    /// ]));
-    /// assert!(expenses.contains(&month));
-    /// assert!(!expenses.contains(&YearAndMonth::february(2024)));
+    /// use klirr_core_invoice::*;
+    ///
+    /// let period_end = "2025-01-31".parse::<Date>().unwrap();
+    /// let expensed = ExpensedPeriods::new(IndexMap::from([(
+    ///     period_end,
+    ///     vec![Item::sample_expense_coffee()],
+    /// )]));
+    ///
+    /// assert!(expensed.contains(&period_end));
+    /// assert!(!expensed.contains(&"2025-02-28".parse::<Date>().unwrap()));
     /// ```
-    pub fn contains(&self, period: &Period) -> bool {
-        self.expenses_for_periods.contains_key(period)
+    pub fn contains(&self, period_end_date: &Date) -> bool {
+        self.expenses_for_periods.contains_key(period_end_date)
     }
 
-    /// Retrieves the expenses for a specific month from a collection of expenses
-    /// organized by `YearAndMonth`.
+    /// Returns all expenses for `target_period_end_date`.
     ///
-    /// /// # Errors
-    /// Returns an error if the target month does not have any expenses recorded.
+    /// # Errors
+    /// Returns [`Error::TargetPeriodMustHaveExpenses`] when no expenses are recorded
+    /// for the requested period.
     ///
+    /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
     /// use indexmap::IndexMap;
-    /// let target_month = YearAndMonth::january(2024);
-    /// let expenses_for_months = IndexMap::from_iter([(YearAndMonth::january(2024), vec![Item::sample_expense_breakfast()])]);
-    /// let expensed_months = ExpensedPeriods::new(expenses_for_months);
-    /// let expenses = expensed_months.get(&target_month);
-    /// assert_eq!(expenses.unwrap().len(), 1); // January 2024 has one expense
+    /// use klirr_core_invoice::*;
+    ///
+    /// let period_end = "2025-01-31".parse::<Date>().unwrap();
+    /// let expensed = ExpensedPeriods::new(IndexMap::from([(
+    ///     period_end,
+    ///     vec![Item::sample_expense_coffee()],
+    /// )]));
+    ///
+    /// let items = expensed.get(&period_end).unwrap();
+    /// assert_eq!(items.len(), 1);
     /// ```
-    pub fn get(&self, target_period: &Period) -> Result<Vec<Item>> {
-        if let Some(items) = self.expenses_for_periods().get(target_period) {
+    pub fn get(&self, target_period_end_date: &Date) -> Result<Vec<Item>> {
+        if let Some(items) = self.expenses_for_periods().get(target_period_end_date) {
             Ok(items.items())
         } else {
             Err(Error::TargetPeriodMustHaveExpenses {
-                target_period: format!("{:?}", target_period),
+                target_period: target_period_end_date.to_string(),
             })
         }
     }
 
-    /// Inserts expenses for a specific month into the collection of expenses.
-    /// If the month already exists, it merges the new items with the existing ones,
-    /// ensuring that items that are the same except for their quantity are combined.
+    /// Inserts expenses for a period-end date.
+    ///
+    /// If the date already exists, incoming items are merged with existing items and
+    /// quantities are aggregated for items that match on all fields except quantity.
     ///
     /// # Examples
     /// ```
     /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
     /// use indexmap::IndexMap;
+    /// use klirr_core_invoice::*;
     /// use rust_decimal::dec;
-    /// let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
-    /// let month = YearAndMonth::january(2024);
-    /// let items = vec![Item::sample_expense_coffee()];
-    /// expensed_months.insert_expenses(&month, items.clone());
-    /// assert_eq!(expensed_months.get(&month).unwrap().len(), 1);
-    /// assert_eq!(*expensed_months.get(&month).unwrap()[0].quantity(), Quantity::from(dec!(2.0)));
-    /// expensed_months.insert_expenses(&month, items.clone());
-    /// assert_eq!(expensed_months.get(&month).unwrap().len(), 1); // Still one item, but quantity is now 4.0
-    /// assert_eq!(*expensed_months.get(&month).unwrap()[0].quantity(), Quantity::from(dec!(4.0))); // 2 + 2
     ///
+    /// let period_end = "2025-01-31".parse::<Date>().unwrap();
+    /// let mut expensed = ExpensedPeriods::new(IndexMap::new());
+    ///
+    /// let first = Item::builder()
+    ///     .name("Coffee".to_owned())
+    ///     .unit_price(UnitPrice::from(dec!(4.0)))
+    ///     .currency(Currency::GBP)
+    ///     .quantity(Quantity::from(dec!(2.0)))
+    ///     .transaction_date("2025-01-12".parse::<Date>().unwrap())
+    ///     .build();
+    /// let second = Item::builder()
+    ///     .name("Coffee".to_owned())
+    ///     .unit_price(UnitPrice::from(dec!(4.0)))
+    ///     .currency(Currency::GBP)
+    ///     .quantity(Quantity::from(dec!(3.0)))
+    ///     .transaction_date("2025-01-12".parse::<Date>().unwrap())
+    ///     .build();
+    ///
+    /// expensed.insert_expenses(&period_end, vec![first]);
+    /// expensed.insert_expenses(&period_end, vec![second]);
+    ///
+    /// let merged = expensed.get(&period_end).unwrap();
+    /// assert_eq!(merged.len(), 1);
+    /// assert_eq!(*merged[0].quantity(), Quantity::from(dec!(5.0)));
     /// ```
-    pub fn insert_expenses(&mut self, period: &Period, items: Vec<Item>) {
-        match self.expenses_for_periods.entry(period.clone()) {
+    pub fn insert_expenses(&mut self, period_end_date: &Date, items: Vec<Item>) {
+        match self.expenses_for_periods.entry(*period_end_date) {
             indexmap::map::Entry::Occupied(mut entry) => {
                 entry.get_mut().insert(items);
             }
@@ -126,12 +170,11 @@ impl<Period: IsPeriod> ExpensedPeriods<Period> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::HasSample;
-    use crate::{Currency, Date, Quantity, UnitPrice, YearAndMonth};
+    use crate::{Currency, Quantity, UnitPrice};
     use rust_decimal::dec;
     use std::str::FromStr;
 
-    type Sut = ExpensedPeriods<YearAndMonth>;
+    type Sut = ExpensedPeriods;
 
     #[test]
     fn equality() {
@@ -145,76 +188,17 @@ mod tests {
     }
 
     #[test]
-    fn test_expensed_months_contains() {
-        let month = YearAndMonth::january(2024);
-        let expenses = ExpensedPeriods::new(IndexMap::from_iter([(
-            month,
-            vec![Item::sample_expense_coffee()],
-        )]));
-        assert!(expenses.contains(&month));
-        assert!(!expenses.contains(&YearAndMonth::february(2024)));
-    }
-
-    #[test]
     fn test_get_not_found() {
         let expenses = ExpensedPeriods::sample();
-        let target_month = YearAndMonth::january(1970);
-        let result = expenses.get(&target_month);
+        let target_period_end_date = Date::from_str("1970-01-31").unwrap();
+        let result = expenses.get(&target_period_end_date);
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_get() {
-        let target_month = YearAndMonth::january(2024);
-        let expenses_for_months = IndexMap::from_iter([(
-            YearAndMonth::january(2024),
-            vec![Item::sample_expense_breakfast()],
-        )]);
-        let expensed_months = ExpensedPeriods::new(expenses_for_months);
-        let expenses = expensed_months.get(&target_month);
-        assert_eq!(expenses.unwrap().len(), 1); // January 2024 has one expense
-    }
-
-    #[test]
-    fn test_insert_expenses_different() {
-        let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
-        let month = YearAndMonth::january(2024);
-        let items = vec![Item::sample_expense_coffee()];
-        expensed_months.insert_expenses(&month, items.clone());
-        assert!(expensed_months.contains(&month));
-        let retrieved_items = expensed_months.get(&month).unwrap();
-        assert_eq!(retrieved_items.len(), 1);
-    }
-
-    #[test]
-    fn test_insert_expenses_same_except_quantity() {
-        let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
-        let month = YearAndMonth::january(2024);
-        let item1 = Item::builder()
-            .name("Coffee".into())
-            .unit_price(UnitPrice::from(dec!(2.5)))
-            .currency(Currency::EUR)
-            .quantity(Quantity::from(dec!(3.0)))
-            .transaction_date(Date::from_str("2024-01-01").unwrap())
-            .build();
-        let item2 = Item::builder()
-            .name("Coffee".into())
-            .unit_price(UnitPrice::from(dec!(2.5)))
-            .currency(Currency::EUR)
-            .quantity(Quantity::from(dec!(4.0)))
-            .transaction_date(Date::from_str("2024-01-01").unwrap())
-            .build();
-        expensed_months.insert_expenses(&month, vec![item1.clone(), item2.clone()]);
-        assert!(expensed_months.contains(&month));
-        let retrieved_items = expensed_months.get(&month).unwrap();
-        assert_eq!(retrieved_items.len(), 1);
-        assert_eq!(*retrieved_items[0].quantity(), Quantity::from(dec!(7.0))); // 3.0 + 4.0
-    }
-
-    #[test]
     fn test_insert_expenses_same_except_quantity_added_in_two_batches() {
-        let mut expensed_months = ExpensedPeriods::new(IndexMap::new());
-        let month = YearAndMonth::january(2024);
+        let mut expensed_periods = ExpensedPeriods::new(IndexMap::new());
+        let period_end_date = Date::from_str("2024-01-31").unwrap();
         let item1 = Item::builder()
             .name("Coffee".into())
             .unit_price(UnitPrice::from(dec!(2.5)))
@@ -229,17 +213,11 @@ mod tests {
             .quantity(Quantity::from(dec!(4.0)))
             .transaction_date(Date::from_str("2024-01-01").unwrap())
             .build();
-        expensed_months.insert_expenses(&month, vec![item1.clone()]);
-        expensed_months.insert_expenses(&month, vec![item2.clone()]);
-        assert!(expensed_months.contains(&month));
-        let retrieved_items = expensed_months.get(&month).unwrap();
+        expensed_periods.insert_expenses(&period_end_date, vec![item1.clone()]);
+        expensed_periods.insert_expenses(&period_end_date, vec![item2.clone()]);
+        assert!(expensed_periods.contains(&period_end_date));
+        let retrieved_items = expensed_periods.get(&period_end_date).unwrap();
         assert_eq!(retrieved_items.len(), 1);
         assert_eq!(*retrieved_items[0].quantity(), Quantity::from(dec!(7.0))); // 3.0 + 4.0
-    }
-
-    #[test]
-    fn default_is_empty() {
-        let expensed_periods = ExpensedPeriods::<YearAndMonth>::default();
-        assert!(expensed_periods.expenses_for_periods.is_empty());
     }
 }

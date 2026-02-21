@@ -1,7 +1,7 @@
 use crate::render::render;
 use klirr_core_invoice::{
-    Currency, Data, ExchangeRates, ExchangeRatesMap, FetchExchangeRates, IsPeriod, Item, L10n,
-    Language, ValidInput, prepare_invoice_input_data,
+    Currency, Data, ExchangeRates, ExchangeRatesMap, FetchExchangeRates, Item, L10n, Language,
+    ValidInput, prepare_invoice_input_data,
 };
 
 use std::path::{Path, PathBuf};
@@ -29,8 +29,8 @@ pub fn running_in_ci() -> bool {
 
 /// Compares a generated image against an expected image, saving the new image if it differs.
 /// If the expected image does not exist, it will save the new image as the expected one.
-pub fn compare_image_against_expected<Period: IsPeriod>(
-    sample: Data<Period>,
+pub fn compare_image_against_expected(
+    sample: Data,
     input: ValidInput,
     path_to_expected_image: impl AsRef<Path>,
     fetcher: impl FetchExchangeRates,
@@ -69,9 +69,9 @@ impl FetchExchangeRates for MockedExchangeRatesFetcher {
 }
 
 /// Generates a PNG image from a PDF rendered from the given layout path and input data.
-fn generate_pdf_into_png_image<Period: IsPeriod>(
+fn generate_pdf_into_png_image(
     l10n: L10n,
-    sample: Data<Period>,
+    sample: Data,
     input: ValidInput,
     fetcher: impl FetchExchangeRates,
 ) -> Result<Vec<u8>, Box<dyn Error>> {

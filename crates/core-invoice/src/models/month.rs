@@ -1,4 +1,4 @@
-use crate::{Error, FromStr, Result};
+use crate::{Day, Error, FromStr, Result, Year};
 use derive_more::Display;
 use derive_more::IsVariant;
 use serde::Deserialize;
@@ -10,17 +10,29 @@ use serde::Serialize;
 )]
 #[display("{}", self.month())]
 pub enum Month {
+    /// January.
     January = 1,
+    /// February.
     February,
+    /// March.
     March,
+    /// April.
     April,
+    /// May.
     May,
+    /// June.
     June,
+    /// July.
     July,
+    /// August.
     August,
+    /// September.
     September,
+    /// October.
     October,
+    /// November.
     November,
+    /// December.
     December,
 }
 
@@ -54,6 +66,39 @@ impl Month {
             Month::October => &10,
             Month::November => &11,
             Month::December => &12,
+        }
+    }
+
+    /// Returns the last day in this month for the given year.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use klirr_core_invoice::*;
+    ///
+    /// assert_eq!(Month::January.last_day(Year::from(2025)), Day::try_from(31).unwrap());
+    /// assert_eq!(Month::February.last_day(Year::from(2024)), Day::try_from(29).unwrap());
+    /// assert_eq!(Month::February.last_day(Year::from(2025)), Day::try_from(28).unwrap());
+    /// ```
+    pub fn last_day(&self, year: Year) -> Day {
+        match self {
+            Self::January
+            | Self::March
+            | Self::May
+            | Self::July
+            | Self::August
+            | Self::October
+            | Self::December => Day::try_from(31).expect("31 is a valid day"),
+            Self::April | Self::June | Self::September | Self::November => {
+                Day::try_from(30).expect("30 is a valid day")
+            }
+            Self::February => {
+                if year.is_leap() {
+                    Day::try_from(29).expect("29 is a valid day")
+                } else {
+                    Day::try_from(28).expect("28 is a valid day")
+                }
+            }
         }
     }
 }

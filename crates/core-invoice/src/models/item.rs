@@ -75,7 +75,7 @@ impl Item {
             .name("Breakfast".into())
             .transaction_date(
                 Date::builder()
-                    .year(2025.into())
+                    .year(2025)
                     .month(Month::May)
                     .day(Day::try_from(20).unwrap())
                     .build(),

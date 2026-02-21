@@ -1,5 +1,0 @@
----
-source: crates/core-invoice/src/models/data/submodels/year_month_and_fortnight.rs
-expression: "&Sut::sample()"
----
-"2025-07-first-half"

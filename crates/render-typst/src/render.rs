@@ -45,8 +45,8 @@ pub fn render<I: ToTypstFn, D: ToTypstFn, L: ToTypstFn + FontRequiring, E>(
 mod tests {
     use crate::render_test_helpers::*;
     use klirr_core_invoice::{
-        Currency, Data, ExchangeRatesMap, HasSample, InvoicedItems, Language, Month, MonthHalf,
-        UnitPrice, ValidInput, YearAndMonth, YearMonthAndFortnight,
+        Currency, Data, Date, ExchangeRatesMap, HasSample, InvoicedItems, Language, UnitPrice,
+        ValidInput,
     };
     use test_log::test;
 
@@ -57,16 +57,10 @@ mod tests {
             return;
         }
         compare_image_against_expected(
-            Data::<YearAndMonth>::sample(),
+            Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Expenses)
-                .period(
-                    YearMonthAndFortnight::builder()
-                        .year(2025.into())
-                        .month(Month::May)
-                        .half(MonthHalf::First)
-                        .build(),
-                )
+                .date("2025-05-31".parse::<Date>().unwrap())
                 .language(Language::EN)
                 .build(),
             fixture("expected_expenses.png"),
@@ -84,10 +78,10 @@ mod tests {
             return;
         }
         compare_image_against_expected(
-            Data::<YearAndMonth>::sample(),
+            Data::sample(),
             ValidInput::builder()
                 .items(InvoicedItems::Service { time_off: None })
-                .period(YearMonthAndFortnight::sample())
+                .date(Date::sample())
                 .language(Language::EN)
                 .build(),
             fixture("expected_services.png"),

@@ -8,16 +8,28 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub enum Error {
     /// Failed to build an in-memory Typst source file.
     #[error("Failed to load typst source, because: {underlying}")]
-    LoadSource { underlying: String },
+    LoadSource {
+        /// Underlying load/parse error message.
+        underlying: String,
+    },
     /// Typst compilation failed.
     #[error("Failed to compile Typst source, because: {underlying}")]
-    BuildPdf { underlying: String },
+    BuildPdf {
+        /// Underlying compile error message.
+        underlying: String,
+    },
     /// PDF export from a compiled Typst document failed.
     #[error("Failed to export document to PDF, because: {underlying}")]
-    ExportDocumentToPdf { underlying: String },
+    ExportDocumentToPdf {
+        /// Underlying PDF-export error message.
+        underlying: String,
+    },
     /// The requested font family could not be loaded.
     #[error("Failed to load font '{family_name}'")]
-    FailedToLoadFont { family_name: String },
+    FailedToLoadFont {
+        /// Font family name that failed to load.
+        family_name: String,
+    },
 }
 
 impl Error {

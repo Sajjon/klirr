@@ -7,18 +7,17 @@ mod input;
 mod run;
 
 pub(crate) use klirr_core_invoice::{
-    BINARY_NAME, Cadence, CompanyInformation, Currency, Data, DataSelector, Date, Decimal,
+    BINARY_NAME, Cadence, CompanyInformation, Currency, Data, DataSelector, Date, Day, Decimal,
     DecryptedEmailSettings, EmailAccount, EmailAddress, EmailSettingsSelector,
     EncryptedAppPassword, EncryptedEmailSettings, FooterText, Granularity, HasSample, HexColor,
-    InvoiceNumber, InvoicedItems, IsPeriod, Item, Language, Month, MonthHalf, NamedPdf, Path,
-    PathBuf, PaymentInformation, PaymentTerms, PeriodAnno, PostalAddress, ProtoInvoiceInfo,
-    PurchaseOrder, Quantity, Rate, ResultExt, Salt, Select, ServiceFees, SmtpServer, StreetAddress,
-    Template, TemplatePart, TimeOff, TimestampedInvoiceNumber, UnitPrice, ValidInput, Year,
-    YearAndMonth, YearMonthAndFortnight, client_path, create_invoice_pdf_with_data,
-    create_invoice_pdf_with_data_base_path, curry1, curry2, data_dir, data_dir_create_if,
-    edit_data_at, edit_email_data_at, expensed_periods_path, init_data_at, init_email_data_at,
-    load_email_data_and_send_test_email_at, payment_info_path, proto_invoice_info_path,
-    read_data_from_disk_with_base_path, record_expenses_with_base_path,
+    InvoiceNumber, InvoicedItems, Item, Language, Month, MonthHalf, NamedPdf, Path, PathBuf,
+    PaymentInformation, PaymentTerms, PostalAddress, ProtoInvoiceInfo, PurchaseOrder, Quantity,
+    Rate, RelativeTime, ResultExt, Salt, Select, ServiceFees, SmtpServer, StreetAddress, Template,
+    TemplatePart, TimeOff, TimestampedInvoiceNumber, UnitPrice, ValidInput, Year, client_path,
+    create_invoice_pdf_with_data, curry1, curry2, data_dir, data_dir_create_if, edit_data_at,
+    edit_email_data_at, expensed_periods_path, init_data_at, init_email_data_at,
+    load_email_data_and_send_test_email_at, payment_info_path, period_end_from_relative_time,
+    proto_invoice_info_path, read_data_from_disk_with_base_path, record_expenses_with_base_path,
     record_period_off_with_base_path, save_pdf_location_to_tmp_file,
     send_email_with_settings_for_pdf, service_fees_path, validate_email_data_at, vendor_path,
 };

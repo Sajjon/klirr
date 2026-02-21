@@ -1,33 +1,34 @@
-use crate::{HasSample, InvoiceNumber, IsPeriod};
+use crate::{Date, HasSample, InvoiceNumber};
 use bon::Builder;
-use getset::Getters;
-use serde::Deserialize;
-use serde::Serialize;
+use getset::{Getters, WithSetters};
+use serde::{Deserialize, Serialize};
 
-/// An invoice number timestamp with year and month, e.g. `(237, 2025-05)`.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters)]
-pub struct TimestampedInvoiceNumber<Period: IsPeriod> {
+/// An invoice number timestamped with the period-end date it belongs to.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, WithSetters)]
+pub struct TimestampedInvoiceNumber {
     /// A base offset for the invoice number, e.g. `237`.
+    #[builder(into)]
     #[getset(get = "pub")]
     offset: InvoiceNumber,
 
-    /// The month and year for when the `offset` was used, e.g. `2025-05`.
-    #[getset(get = "pub")]
-    period: Period,
+    /// Period-end date when the `offset` was used, e.g. `2025-05-31`.
+    #[serde(alias = "period")]
+    #[getset(get = "pub", set_with = "pub")]
+    date: Date,
 }
 
-impl<Period: IsPeriod + HasSample> HasSample for TimestampedInvoiceNumber<Period> {
+impl HasSample for TimestampedInvoiceNumber {
     fn sample() -> Self {
         Self::builder()
             .offset(InvoiceNumber::from(17u16))
-            .period(Period::sample_other())
+            .date(Date::sample_other())
             .build()
     }
 
     fn sample_other() -> Self {
         Self::builder()
             .offset(InvoiceNumber::from(42u16))
-            .period(Period::sample())
+            .date(Date::sample())
             .build()
     }
 }
@@ -35,9 +36,8 @@ impl<Period: IsPeriod + HasSample> HasSample for TimestampedInvoiceNumber<Period
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{HasSample, YearAndMonth};
 
-    type Sut = TimestampedInvoiceNumber<YearAndMonth>;
+    type Sut = TimestampedInvoiceNumber;
 
     #[test]
     fn equality() {

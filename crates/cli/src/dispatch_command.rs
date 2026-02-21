@@ -1,14 +1,14 @@
 use crate::{
     Data, DataAdminInputCommand, DataSelector, DecryptedEmailSettings, EmailInputCommand,
     EmailSettingsSelector, EncryptedEmailSettings, Error, HasSample, InvoiceInput, Item, NamedPdf,
-    Path, PathBuf, PeriodAnno, Result, ResultExt, ValidInput, YearAndMonth, YearMonthAndFortnight,
-    ask_for_data, ask_for_email, client_path, create_invoice_pdf_with_data,
-    create_invoice_pdf_with_data_base_path, curry2, data_dir, data_dir_create_if, edit_data_at,
+    Path, PathBuf, RelativeTime, Result, ResultExt, ValidInput, ask_for_data, ask_for_email,
+    client_path, create_invoice_pdf_with_data, curry2, data_dir, data_dir_create_if, edit_data_at,
     edit_email_data_at, expensed_periods_path, get_email_encryption_password, init_data_at,
     init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
-    proto_invoice_info_path, read_data_from_disk_with_base_path, record_expenses_with_base_path,
-    record_period_off_with_base_path, save_pdf_location_to_tmp_file,
-    send_email_with_settings_for_pdf, service_fees_path, validate_email_data_at, vendor_path,
+    period_end_from_relative_time, proto_invoice_info_path, read_data_from_disk_with_base_path,
+    record_expenses_with_base_path, record_period_off_with_base_path,
+    save_pdf_location_to_tmp_file, send_email_with_settings_for_pdf, service_fees_path,
+    validate_email_data_at, vendor_path,
 };
 use klirr_core_invoice::L10n as InvoiceL10n;
 use klirr_core_invoice::PreparedData as InvoiceDataPrepared;
@@ -32,15 +32,11 @@ fn init_email_data(
     init_email_data_at(data_dir(), provide_data)
 }
 
-fn init_data(
-    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>>,
-) -> Result<()> {
+fn init_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
     init_data_at(data_dir_create_if(true), provide_data)
 }
 
-fn edit_data(
-    provide_data: impl FnOnce(Data<PeriodAnno>) -> Result<Data<PeriodAnno>>,
-) -> Result<()> {
+fn edit_data(provide_data: impl FnOnce(Data) -> Result<Data>) -> Result<()> {
     edit_data_at(data_dir(), provide_data)
 }
 
@@ -95,11 +91,11 @@ fn validate_data() -> Result<()> {
         .map_err(Error::from)
 }
 
-fn record_expenses(period: &PeriodAnno, expenses: &[Item]) -> Result<()> {
+fn record_expenses(period: &str, expenses: &[Item]) -> Result<()> {
     record_expenses_with_base_path(period, expenses, data_dir()).map_err(Error::from)
 }
 
-fn record_period_off(period: &PeriodAnno) -> Result<()> {
+fn record_period_off(period: &str) -> Result<()> {
     record_period_off_with_base_path(period, data_dir()).map_err(Error::from)
 }
 
@@ -133,18 +129,21 @@ pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
     let path = dirs_next::home_dir()
         .expect("Expected to be able to find HOME dir")
         .join("klirr_sample.pdf");
-    let mut data = Data::<YearAndMonth>::sample();
+    let mut data = Data::sample();
     if use_nonce {
         let vat = format!("VAT{} {}", rand::random::<u64>(), rand::random::<u64>());
         data = data
             .clone()
             .with_client(data.client().clone().with_vat_number(vat));
     }
+    let sample_date = period_end_from_relative_time(RelativeTime::last(
+        data.service_fees().cadence().max_granularity(),
+    ))?;
     create_invoice_pdf_with_data(
         data,
         ValidInput::builder()
             .maybe_output_path(path)
-            .period(YearMonthAndFortnight::last())
+            .date(sample_date)
             .build(),
         render_invoice,
     )
@@ -154,10 +153,12 @@ fn run_invoice_command_with_base_path(
     input: InvoiceInput,
     data_path: impl AsRef<Path>,
 ) -> Result<NamedPdf> {
-    let input = input.parsed()?;
+    let data_path = data_path.as_ref();
+    let data = read_data_from_disk_with_base_path(data_path)?;
+    let input = input.parsed(*data.service_fees().cadence())?;
     info!("🔮 Starting invoice PDF creation, input: {:?}...", input);
     let email_settings = input.email().clone();
-    let named_pdf = create_invoice_pdf_with_data_base_path(data_path, input, render_invoice)?;
+    let named_pdf = create_invoice_pdf_with_data(data, input, render_invoice)?;
     save_pdf_location_to_tmp_file(named_pdf.saved_at().clone())?;
     if let Some(email_settings) = email_settings {
         send_email_with_settings_for_pdf(&named_pdf, &email_settings)?
@@ -218,7 +219,7 @@ mod tests {
     fn test_run_invoice_command() {
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
         let tempfile = tempdir.path().join("out.pdf");
-        save_data_with_base_path(Data::<YearAndMonth>::sample(), tempdir.path()).unwrap();
+        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
         let input = InvoiceInput::parse_from([
             "invoice",
             "--out",

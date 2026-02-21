@@ -1,58 +1,51 @@
-use crate::{HasSample, IsPeriod, PeriodAnno, YearAndMonth, YearMonthAndFortnight};
+use crate::{Date, HasSample};
 use derive_more::Deref;
 use derive_more::From;
 use indexmap::IndexSet;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-/// A record of periods off, e.g. `2025-05-1` for the first half of May 2025.
+/// A record of period-end dates when no invoice was issued.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Deref, From)]
-pub struct RecordOfPeriodsOff<Period: IsPeriod>(IndexSet<Period>);
+pub struct RecordOfPeriodsOff(IndexSet<Date>);
 
-impl<Record: IsPeriod> Default for RecordOfPeriodsOff<Record> {
+impl Default for RecordOfPeriodsOff {
     fn default() -> Self {
         Self::new([])
     }
 }
 
-pub type RecordOfMonthsOff = RecordOfPeriodsOff<YearAndMonth>;
-pub type RecordOfFortnightsOff = RecordOfPeriodsOff<YearMonthAndFortnight>;
-
-pub type PeriodsOffRecord = RecordOfPeriodsOff<PeriodAnno>;
-
-impl<Period: IsPeriod> RecordOfPeriodsOff<Period> {
-    /// Creates a new `RecordOfPeriodsOff` from an iterator of `Period`.
-    pub fn new(periods: impl IntoIterator<Item = Period>) -> Self {
+impl RecordOfPeriodsOff {
+    /// Creates a new `RecordOfPeriodsOff` from an iterator of dates.
+    pub fn new(periods: impl IntoIterator<Item = Date>) -> Self {
         Self(IndexSet::from_iter(periods))
     }
 
-    /// Inserts a new period off into the record.
-    pub fn insert(&mut self, period: Period) {
+    /// Inserts a new period-off date into the record.
+    pub fn insert(&mut self, period: Date) {
         self.0.insert(period);
     }
 
-    /// Checks if this record contains a specific period.
-    pub fn contains(&self, period: &Period) -> bool {
+    /// Checks if this record contains a specific period-end date.
+    pub fn contains(&self, period: &Date) -> bool {
         self.0.contains(period)
     }
 }
 
-impl<Period: IsPeriod + HasSample> HasSample for RecordOfPeriodsOff<Period> {
+impl HasSample for RecordOfPeriodsOff {
     fn sample() -> Self {
-        Self::new([Period::sample()])
+        Self::new([Date::sample()])
     }
 
     fn sample_other() -> Self {
-        Self::new([Period::sample_other()])
+        Self::new([Date::sample_other()])
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::HasSample;
 
-    type Sut = RecordOfPeriodsOff<YearAndMonth>;
+    type Sut = RecordOfPeriodsOff;
 
     #[test]
     fn equality() {

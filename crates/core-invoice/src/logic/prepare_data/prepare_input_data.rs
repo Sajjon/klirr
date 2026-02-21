@@ -1,6 +1,6 @@
 use crate::{
-    Currency, Data, ExchangeRates, ExchangeRatesMap, IsPeriod, Item,
-    LineItemsPricedInSourceCurrency, PreparedData, Result, ValidInput,
+    Currency, Data, ExchangeRates, ExchangeRatesMap, Item, LineItemsPricedInSourceCurrency,
+    PreparedData, Result, ValidInput,
 };
 use log::debug;
 use log::info;
@@ -26,8 +26,8 @@ pub trait FetchExchangeRates {
     }
 }
 
-pub fn prepare_invoice_input_data<Period: IsPeriod>(
-    data: Data<Period>,
+pub fn prepare_invoice_input_data(
+    data: Data,
     input: ValidInput,
     fetcher: impl FetchExchangeRates,
 ) -> Result<PreparedData> {

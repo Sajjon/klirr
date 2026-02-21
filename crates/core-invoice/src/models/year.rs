@@ -61,3 +61,20 @@ impl From<i32> for Year {
         Self(year as u16)
     }
 }
+
+impl Year {
+    /// Returns `true` if the year is a leap year.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate klirr_core_invoice;
+    /// use klirr_core_invoice::*;
+    ///
+    /// assert!(Year::from(2024).is_leap());
+    /// assert!(!Year::from(2025).is_leap());
+    /// ```
+    pub fn is_leap(&self) -> bool {
+        let year = **self;
+        (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+    }
+}

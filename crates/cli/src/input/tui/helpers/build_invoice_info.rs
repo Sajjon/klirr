@@ -1,19 +1,16 @@
 use inquire::{CustomType, error::InquireResult};
 
 use crate::{
-    Cadence, FooterText, HexColor, InvoiceDataFromTuiError, InvoiceNumber, PeriodAnno,
-    ProtoInvoiceInfo, PurchaseOrder, Result, TimestampedInvoiceNumber, WithOptionalDefault,
-    YearAndMonth, build_period, format_help_skippable,
+    Cadence, FooterText, HexColor, InvoiceDataFromTuiError, InvoiceNumber, ProtoInvoiceInfo,
+    PurchaseOrder, Result, TimestampedInvoiceNumber, WithOptionalDefault, build_period,
+    format_help_skippable,
 };
 
 pub fn build_invoice_info(
-    default: &ProtoInvoiceInfo<PeriodAnno>,
+    default: &ProtoInvoiceInfo,
     cadence: Cadence,
-) -> Result<ProtoInvoiceInfo<PeriodAnno>> {
-    fn inner(
-        default: &ProtoInvoiceInfo<PeriodAnno>,
-        cadence: Cadence,
-    ) -> InquireResult<ProtoInvoiceInfo<PeriodAnno>> {
+) -> Result<ProtoInvoiceInfo> {
+    fn inner(default: &ProtoInvoiceInfo, cadence: Cadence) -> InquireResult<ProtoInvoiceInfo> {
         let invoice_number_offset = CustomType::<InvoiceNumber>::new(
             "What is the last invoice number you issued? We call this the 'offset'",
         )
@@ -26,15 +23,14 @@ pub fn build_invoice_info(
 
         let invoice_number_offset_period = build_period(
             "When was that invoice issued? (Used to calculate future invoice numbers)".to_owned(),
-            Some(default.offset().period().clone()),
+            Some(*default.offset().date()),
             cadence,
         )?
-        // if we use `0` as offset and set month to last month, then the next invoice number will be `1` for this month, which is correct.
-        .unwrap_or(YearAndMonth::last().into());
+        .unwrap_or(*default.offset().date());
 
-        let offset = TimestampedInvoiceNumber::<PeriodAnno>::builder()
+        let offset = TimestampedInvoiceNumber::builder()
             .offset(invoice_number_offset)
-            .period(invoice_number_offset_period)
+            .date(invoice_number_offset_period)
             .build();
 
         let purchase_order = CustomType::<PurchaseOrder>::new("Purchase order number (optional)")
