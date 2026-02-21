@@ -52,7 +52,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     outputs:
       version: ${{ steps.extract_version.outputs.version }}
     steps:
