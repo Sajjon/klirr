@@ -1,4 +1,4 @@
-use klirr_foundation::{FontRequiring, Pdf, ToTypstFn};
+use klirr_foundation::{FontRequiring, Pdf, TYPST_LAYOUT_FOUNDATION, ToTypstFn};
 use klirr_render_pdf::{DocumentPlan, Error as RenderPdfError, InlineModule, render_document};
 
 pub const TYPST_VIRTUAL_NAME_MAIN: &str = "main.typ";
@@ -6,7 +6,7 @@ pub const TYPST_VIRTUAL_NAME_LAYOUT: &str = "layout.typ";
 pub const TYPST_VIRTUAL_NAME_DATA: &str = "data.typ";
 pub const TYPST_VIRTUAL_NAME_L10N: &str = "l10n.typ";
 pub const TYPST_FOUNDATION_NAME: &str = "foundation.typ";
-pub const TYPST_FOUNDATION_CONTENT: &str = include_str!("../../foundation/layout/foundation.typ");
+pub const TYPST_FOUNDATION_CONTENT: &str = TYPST_LAYOUT_FOUNDATION;
 
 /// Renders a PDF document using Typst with the provided layout, localization, and data.
 pub fn render<I: ToTypstFn, D: ToTypstFn, L: ToTypstFn + FontRequiring, E>(
