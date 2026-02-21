@@ -10,10 +10,10 @@ members = [
 
 [workspace.dependencies]
 # Internal dependencies
-klirr-core-invoice = { path = "crates/core-invoice", version = "0.2.4" }
-klirr-foundation = { path = "crates/foundation", version = "0.2.4" }
-klirr-render-pdf = { path = "crates/render-pdf", version = "0.2.4" }
-klirr-render-typst = { path = "crates/render-typst", version = "0.2.4" }
+klirr-core-invoice = { path = "crates/core-invoice", version = "0.2.5" }
+klirr-foundation = { path = "crates/foundation", version = "0.2.5" }
+klirr-render-pdf = { path = "crates/render-pdf", version = "0.2.5" }
+klirr-render-typst = { path = "crates/render-typst", version = "0.2.5" }
 
 # External dependencies
 aes-gcm = { version = "=0.10.3", default-features = false, features = [
