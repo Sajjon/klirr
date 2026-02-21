@@ -7,3 +7,4 @@ extend-exclude = [
 [default.extend-words]
 typ = "typ"
 cheduling = "cheduling"
+utomatic = "utomatic"
