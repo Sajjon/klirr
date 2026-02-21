@@ -1,7 +1,9 @@
 use derive_more::Display;
 use derive_more::FromStr;
 use indexmap::IndexSet;
-use klirr_foundation::{FontIdentifier, FontRequiring, FontWeight, ToTypst, ToTypstFn, TYPST_LAYOUT_TEST};
+use klirr_foundation::{
+    FontIdentifier, FontRequiring, FontWeight, TYPST_LAYOUT_TEST, ToTypst, ToTypstFn,
+};
 use strum::EnumIter;
 use strum::IntoEnumIterator;
 
