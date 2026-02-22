@@ -218,7 +218,7 @@ pub enum Error {
 
     /// Data schema version does not match the currently supported version.
     #[error(
-        "Data version mismatch, found: {found:?}, expected: {current:?}. Your data must be manually migrated."
+        "Data version mismatch, found: {found}, expected: {current}. Your data must be manually migrated."
     )]
     DataVersionMismatch {
         /// Version found on disk.
