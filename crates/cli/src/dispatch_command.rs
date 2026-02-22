@@ -93,11 +93,9 @@ fn validate_data() -> Result<()> {
             info!("✅ Data directory is valid");
         })
         .inspect_err(|e| {
-            if !matches!(
-                e,
-                klirr_core_invoice::Error::MissingDataVersionFile { .. }
-                    | klirr_core_invoice::Error::DataVersionMismatch { .. }
-            ) {
+            // Intentionally do not log DataVersionMismatch here:
+            // these errors are handled and reported elsewhere in the CLI.
+            if !matches!(e, klirr_core_invoice::Error::DataVersionMismatch { .. }) {
                 error!("❌ Data directory is invalid: {}", e);
             }
         })
