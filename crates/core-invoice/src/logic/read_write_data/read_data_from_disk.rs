@@ -2,7 +2,7 @@ use serde::de::DeserializeOwned;
 
 use crate::{
     CompanyInformation, Data, EncryptedEmailSettings, Error, ExpensedPeriods, Path, PathBuf,
-    PaymentInformation, ProtoInvoiceInfo, Result, ServiceFees, create_folder_if_needed,
+    PaymentInformation, ProtoInvoiceInfo, Result, ServiceFees, Version, create_folder_if_needed,
     deserialize_contents_of_ron, type_name,
 };
 use log::debug;
@@ -70,6 +70,7 @@ pub fn save_email_settings_with_base_path(
 
 pub fn save_data_with_base_path(data: Data, base_path: impl AsRef<Path>) -> Result<()> {
     let base_path = base_path.as_ref();
+    save_to_disk(data.version(), version_path(base_path))?;
     save_to_disk(data.vendor(), vendor_path(base_path))?;
     save_to_disk(data.client(), client_path(base_path))?;
     save_to_disk(data.information(), proto_invoice_info_path(base_path))?;
@@ -95,6 +96,7 @@ const DATA_FILE_NAME_SERVICE_FEES: &str = "service_fees";
 const DATA_FILE_NAME_PROTO_INVOICE_INFO: &str = "invoice_info";
 const DATA_FILE_NAME_EXPENSES: &str = "expenses";
 const DATA_FILE_NAME_CACHED_RATES: &str = "cached_rates";
+const DATA_FILE_NAME_VERSION: &str = "version";
 
 pub fn email_settings_path(base_path: impl AsRef<Path>) -> PathBuf {
     path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EMAIL_SETTINGS)
@@ -102,6 +104,10 @@ pub fn email_settings_path(base_path: impl AsRef<Path>) -> PathBuf {
 
 pub fn cached_rates_path(base_path: impl AsRef<Path>) -> PathBuf {
     path_to_ron_file_with_base(base_path, DATA_FILE_NAME_CACHED_RATES)
+}
+
+pub fn version_path(base_path: impl AsRef<Path>) -> PathBuf {
+    path_to_ron_file_with_base(base_path, DATA_FILE_NAME_VERSION)
 }
 
 pub fn client_path(base_path: impl AsRef<Path>) -> PathBuf {
@@ -158,11 +164,33 @@ pub fn read_email_data_from_disk_with_base_path(
     deserialize_contents_of_ron(email_settings_path(base_path))
 }
 
+pub fn version(base_path: impl AsRef<Path>) -> Result<Version> {
+    let base_path = base_path.as_ref();
+    let path = version_path(base_path);
+    if !path.exists() && base_path.exists() {
+        let version = Version::current();
+        save_to_disk(&version, &path)?;
+        info!("Automatically migrated data to {}", version);
+        return Ok(version);
+    }
+    deserialize_contents_of_ron(path)
+}
+
+fn validate_data_version(version: Version) -> Result<()> {
+    let current = Version::current();
+    if version != current {
+        return Err(Error::data_version_mismatch(version, current));
+    }
+    Ok(())
+}
+
 pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result<Data> {
     let base_path = base_path.as_ref();
     // Read the input data from a file or other source.
     // This is a placeholder function, you can add your own logic here.
     debug!("☑️ Reading data from disk...");
+    let version = version(base_path)?;
+    validate_data_version(version)?;
     let client = client(base_path)?;
     let vendor = vendor(base_path)?;
     let payment_info = payment_info(base_path)?;
@@ -171,6 +199,7 @@ pub fn read_data_from_disk_with_base_path(base_path: impl AsRef<Path>) -> Result
     let expensed_periods = expensed_periods(base_path)?;
 
     let input_data = Data::builder()
+        .version(version)
         .client(client)
         .vendor(vendor)
         .payment_info(payment_info)
@@ -195,5 +224,44 @@ mod tests {
         save_data_with_base_path(data.clone(), tempdir.path()).unwrap();
         let loaded_data = read_data_from_disk_with_base_path(tempdir.path()).unwrap();
         assert_eq!(loaded_data, data, "Loaded data should match saved data");
+    }
+
+    #[test]
+    fn save_data_writes_version_file() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
+
+        let loaded_version: Version = deserialize_contents_of_ron(version_path(tempdir.path()))
+            .expect("Expected version.ron to deserialize");
+        assert_eq!(loaded_version, Version::current());
+    }
+
+    #[test]
+    fn read_data_auto_migrates_when_version_file_is_missing_in_existing_data_dir() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
+        std::fs::remove_file(version_path(tempdir.path())).expect("Expected version.ron to exist");
+
+        let result = read_data_from_disk_with_base_path(tempdir.path())
+            .expect("Expected read_data_from_disk_with_base_path to auto-migrate version.ron");
+        assert_eq!(*result.version(), Version::current());
+
+        let persisted_version: Version = deserialize_contents_of_ron(version_path(tempdir.path()))
+            .expect("Expected version.ron to be recreated");
+        assert_eq!(persisted_version, Version::current());
+    }
+
+    #[test]
+    fn read_data_fails_when_version_does_not_match_current() {
+        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
+        save_data_with_base_path(Data::sample(), tempdir.path()).unwrap();
+        save_to_disk(&Version::V0, version_path(tempdir.path())).unwrap();
+
+        let result = read_data_from_disk_with_base_path(tempdir.path());
+        assert!(matches!(
+            result,
+            Err(Error::DataVersionMismatch { found, current })
+                if found == Version::V0 && current == Version::current()
+        ));
     }
 }

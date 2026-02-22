@@ -2,13 +2,44 @@ use crate::{
     CliArgs, CliResult, Command, Error, curry1, data_dir, render_invoice_sample,
     render_invoice_sample_with_nonce, run_data_command, run_email_command, run_invoice_command,
 };
+use klirr_core_invoice::Version;
 use log::{error, warn};
 use std::path::Path;
+#[cfg(test)]
+use strum::IntoEnumIterator;
 
 use std::env::consts::OS;
 
 pub const DATA_INIT_HINT: &str =
     "💡 You seem to not have setup klirr, run `klirr data init` to get started";
+pub const DATA_MANUAL_MIGRATION_HINT: &str =
+    "💡 Your klirr data version is incompatible and must be manually migrated.";
+
+const EMBEDDED_MIGRATION_GUIDES: [&str; 2] = [
+    include_str!("../../../docs/migration/v0.md"),
+    include_str!("../../../docs/migration/v1.md"),
+];
+
+#[cfg(test)]
+fn migration_guide_source_path(version: Version) -> String {
+    format!("docs/migration/v{}.md", version as u16)
+}
+
+fn migration_guide_markdown(version: Version) -> &'static str {
+    EMBEDDED_MIGRATION_GUIDES
+        .get(version as usize)
+        .copied()
+        .expect("No embedded migration guide found for version")
+}
+
+#[cfg(test)]
+fn empty_migration_guides() -> Vec<(Version, String)> {
+    Version::iter()
+        .map(|version| (version, migration_guide_markdown(version).trim()))
+        .filter(|(_, guide)| guide.is_empty())
+        .map(|(version, _)| (version, migration_guide_source_path(version)))
+        .collect()
+}
 
 fn has_missing_setup_data(error: &Error) -> bool {
     matches!(
@@ -18,8 +49,66 @@ fn has_missing_setup_data(error: &Error) -> bool {
     )
 }
 
+#[derive(Clone, Debug)]
+enum MigrationGuide {
+    NoVersion,
+    OldVersion(MigrationGuideOldVersion),
+}
+impl std::fmt::Display for MigrationGuide {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.instructions())
+    }
+}
+impl MigrationGuide {
+    pub fn instructions(&self) -> String {
+        match self {
+            MigrationGuide::NoVersion => String::new(),
+            MigrationGuide::OldVersion(migration) => migration.instructions(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+struct MigrationGuideOldVersion {
+    from: Version,
+    to: Version,
+}
+impl MigrationGuideOldVersion {
+    pub fn instructions(&self) -> String {
+        let guide_markdown = migration_guide_markdown(self.to);
+        format!(
+            "{hint}\n\nFrom data version: {from}\nTo data version: {to}\nRON files location: {data_dir}\n\n{guide}",
+            hint = DATA_MANUAL_MIGRATION_HINT,
+            from = self.from,
+            to = self.to,
+            data_dir = data_dir().display(),
+            guide = guide_markdown
+        )
+    }
+}
+
+fn requires_manual_data_migration(error: &Error) -> Option<MigrationGuide> {
+    match error {
+        Error::Core(klirr_core_invoice::Error::MissingDataVersionFile { path: _ }) => {
+            Some(MigrationGuide::NoVersion)
+        }
+        Error::Core(klirr_core_invoice::Error::DataVersionMismatch { found, current }) => {
+            Some(MigrationGuide::OldVersion(MigrationGuideOldVersion {
+                from: *found,
+                to: *current,
+            }))
+        }
+        _ => None,
+    }
+}
+
 fn log_data_setup_hint_or_error(context: &str, error: &Error) {
-    if has_missing_setup_data(error) {
+    if let Some(migration) = requires_manual_data_migration(error) {
+        let instructions = migration.instructions();
+        if !instructions.is_empty() {
+            warn!("{}", instructions);
+        }
+    } else if has_missing_setup_data(error) {
         warn!("{}", DATA_INIT_HINT);
     } else {
         error!("{context}: {error}");
@@ -105,5 +194,52 @@ mod tests {
         });
 
         assert!(!has_missing_setup_data(&err));
+    }
+
+    #[test]
+    fn classifies_missing_data_version_file_as_manual_migration() {
+        let err = Error::Core(klirr_core_invoice::Error::MissingDataVersionFile {
+            path: data_dir().join("version.ron").display().to_string(),
+        });
+
+        assert!(requires_manual_data_migration(&err).is_some());
+    }
+
+    #[test]
+    fn classifies_data_version_mismatch_as_manual_migration() {
+        let err = Error::Core(klirr_core_invoice::Error::DataVersionMismatch {
+            found: klirr_core_invoice::Version::V0,
+            current: klirr_core_invoice::Version::current(),
+        });
+
+        assert!(requires_manual_data_migration(&err).is_some());
+    }
+
+    #[test]
+    fn no_version_guide_prints_no_instructions() {
+        assert!(MigrationGuide::NoVersion.instructions().is_empty());
+    }
+
+    #[test]
+    fn migration_guide_exists_for_every_version_variant() {
+        let empty_guides = empty_migration_guides();
+        assert!(
+            empty_guides.is_empty(),
+            "Missing or empty migration guides for versions: {}",
+            empty_guides
+                .iter()
+                .map(|(version, source_path)| format!("{version} ({source_path})"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
+
+    #[test]
+    fn embedded_guide_count_matches_version_count() {
+        assert_eq!(
+            EMBEDDED_MIGRATION_GUIDES.len(),
+            Version::iter().count(),
+            "Update EMBEDDED_MIGRATION_GUIDES when adding/removing Version variants"
+        );
     }
 }

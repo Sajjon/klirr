@@ -93,7 +93,13 @@ fn validate_data() -> Result<()> {
             info!("✅ Data directory is valid");
         })
         .inspect_err(|e| {
-            error!("❌ Data directory is invalid: {}", e);
+            if !matches!(
+                e,
+                klirr_core_invoice::Error::MissingDataVersionFile { .. }
+                    | klirr_core_invoice::Error::DataVersionMismatch { .. }
+            ) {
+                error!("❌ Data directory is invalid: {}", e);
+            }
         })
         .map_err(Error::from)
 }

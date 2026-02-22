@@ -6,15 +6,47 @@ use crate::{
     normalize_period_end_date_for_cadence, quantity_in_period,
 };
 use bon::Builder;
+use derive_more::Display;
 use getset::{Getters, Setters, WithSetters};
 use log::debug;
 use serde::{Deserialize, Serialize};
+use strum::{EnumIter, IntoEnumIterator};
+
+/// Data schema version used for persistence and migrations.
+#[repr(u16)]
+#[derive(
+    Clone, Copy, Debug, Display, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, EnumIter,
+)]
+pub enum Version {
+    // Never used, theoretical such that we can test migration.
+    V0 = 0,
+    V1 = 1,
+}
+
+impl Version {
+    /// Returns the newest supported data schema version.
+    pub fn current() -> Self {
+        Self::iter()
+            .max_by_key(|version| *version as u16)
+            .expect("Version enum should contain at least one variant")
+    }
+}
+
+impl Default for Version {
+    fn default() -> Self {
+        Self::current()
+    }
+}
 
 /// Input data for invoice generation.
 #[derive(
     Clone, Debug, Serialize, Deserialize, PartialEq, Builder, Getters, Setters, WithSetters,
 )]
 pub struct Data {
+    #[getset(get = "pub")]
+    #[builder(default = Version::current())]
+    #[serde(default = "Version::current")]
+    version: Version,
     #[getset(get = "pub", set_with = "pub")]
     information: ProtoInvoiceInfo,
     #[getset(get = "pub")]
@@ -44,6 +76,12 @@ impl Data {
     /// assert!(data.validate().is_ok());
     /// ```
     pub fn validate(self) -> Result<Self> {
+        if self.version != Version::current() {
+            return Err(Error::data_version_mismatch(
+                self.version,
+                Version::current(),
+            ));
+        }
         self.information.validate()?;
         Ok(self)
     }
@@ -210,6 +248,15 @@ mod tests {
     #[test]
     fn inequality() {
         assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn current_version_is_highest_variant() {
+        let highest = Version::iter()
+            .max_by_key(|version| *version as u16)
+            .expect("Version enum should contain at least one variant");
+
+        assert_eq!(Version::current(), highest);
     }
 
     #[test]
