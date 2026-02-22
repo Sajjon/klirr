@@ -25,7 +25,7 @@ macro_rules! migration_guides {
 
         fn migration_guide_markdown(version: Version) -> &'static str {
             match version {
-                $(Version::$version => include_str!(concat!("../../../", $path)),)+
+                $(Version::$version => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $path)),)+
             }
         }
 
@@ -34,8 +34,8 @@ macro_rules! migration_guides {
     };
 }
 migration_guides! {
-    V0 => "docs/migration/v0.md",
-    V1 => "docs/migration/v1.md",
+    V0 => "migration/v0.md",
+    V1 => "migration/v1.md",
 }
 
 #[cfg(test)]
