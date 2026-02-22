@@ -1,3 +1,4 @@
+use crate::run::DATA_INIT_HINT;
 use crate::{
     Data, DataAdminInputCommand, DataSelector, DecryptedEmailSettings, EmailInputCommand,
     EmailSettingsSelector, EncryptedEmailSettings, Error, HasSample, InvoiceInput, Item, NamedPdf,
@@ -16,6 +17,7 @@ use klirr_foundation::Pdf;
 use klirr_render_typst::render as render_base;
 use log::error;
 use log::info;
+use log::warn;
 use secrecy::SecretString;
 
 fn render_invoice(
@@ -78,6 +80,11 @@ fn dump_data() -> Result<()> {
 
 fn validate_data() -> Result<()> {
     let base_path = data_dir();
+    if !base_path.exists() {
+        warn!("{}", DATA_INIT_HINT);
+        return Ok(());
+    }
+
     info!("Validating data directory at: {}", base_path.display());
 
     read_data_from_disk_with_base_path(base_path)

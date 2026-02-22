@@ -1,10 +1,30 @@
 use crate::{
-    CliArgs, CliResult, Command, curry1, render_invoice_sample, render_invoice_sample_with_nonce,
-    run_data_command, run_email_command, run_invoice_command,
+    CliArgs, CliResult, Command, Error, curry1, data_dir, render_invoice_sample,
+    render_invoice_sample_with_nonce, run_data_command, run_email_command, run_invoice_command,
 };
-use log::error;
+use log::{error, warn};
+use std::path::Path;
 
 use std::env::consts::OS;
+
+pub const DATA_INIT_HINT: &str =
+    "💡 You seem to not have setup klirr, run `klirr data init` to get started";
+
+fn has_missing_setup_data(error: &Error) -> bool {
+    matches!(
+        error,
+        Error::Core(klirr_core_invoice::Error::FileNotFound { path, .. })
+            if Path::new(path).starts_with(data_dir())
+    )
+}
+
+fn log_data_setup_hint_or_error(context: &str, error: &Error) {
+    if has_missing_setup_data(error) {
+        warn!("{}", DATA_INIT_HINT);
+    } else {
+        error!("{context}: {error}");
+    }
+}
 
 /// Opens the file at `path`.
 fn open_file_at(path: impl AsRef<std::path::Path>) {
@@ -41,14 +61,49 @@ pub fn run(input: CliArgs) -> CliResult<()> {
         }
         Command::Invoice(invoice_input) => {
             let outcome = run_invoice_command(invoice_input)
-                .inspect_err(|e| error!("Error creating PDF: {}", e))?;
+                .inspect_err(|e| log_data_setup_hint_or_error("Error creating PDF", e))?;
             open_file_at(outcome.saved_at());
         }
         Command::Data(data_admin_input) => {
             run_data_command(data_admin_input.command()).inspect_err(|e| {
-                error!("Error running data admin command: {}", e);
+                log_data_setup_hint_or_error("Error running data admin command", e);
             })?;
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classifies_missing_file_in_data_dir_as_missing_setup() {
+        let missing_data_file = data_dir().join("client.ron");
+        let err = Error::Core(klirr_core_invoice::Error::FileNotFound {
+            path: missing_data_file.display().to_string(),
+            underlying: "No such file or directory".to_string(),
+        });
+
+        assert!(has_missing_setup_data(&err));
+    }
+
+    #[test]
+    fn does_not_classify_non_file_not_found_errors_as_missing_setup() {
+        let err = Error::SpecifiedOutputPathDoesNotExist {
+            path: "/tmp/nowhere".to_string(),
+        };
+
+        assert!(!has_missing_setup_data(&err));
+    }
+
+    #[test]
+    fn does_not_classify_missing_file_outside_data_dir_as_missing_setup() {
+        let err = Error::Core(klirr_core_invoice::Error::FileNotFound {
+            path: "/tmp/client.ron".to_string(),
+            underlying: "No such file or directory".to_string(),
+        });
+
+        assert!(!has_missing_setup_data(&err));
+    }
 }
