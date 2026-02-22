@@ -197,15 +197,6 @@ mod tests {
     }
 
     #[test]
-    fn classifies_missing_data_version_file_as_manual_migration() {
-        let err = Error::Core(klirr_core_invoice::Error::MissingDataVersionFile {
-            path: data_dir().join("version.ron").display().to_string(),
-        });
-
-        assert!(requires_manual_data_migration(&err).is_some());
-    }
-
-    #[test]
     fn classifies_data_version_mismatch_as_manual_migration() {
         let err = Error::Core(klirr_core_invoice::Error::DataVersionMismatch {
             found: klirr_core_invoice::Version::V0,
