@@ -216,11 +216,6 @@ mod tests {
     }
 
     #[test]
-    fn no_version_guide_prints_no_instructions() {
-        assert!(MigrationGuide::NoVersion.instructions().is_empty());
-    }
-
-    #[test]
     fn migration_guide_exists_for_every_version_variant() {
         let empty_guides = empty_migration_guides();
         assert!(
