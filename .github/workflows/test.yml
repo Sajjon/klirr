@@ -83,7 +83,7 @@ jobs:
 
       - name: Generate code coverage
         run: |
-          RUST_LOG=trace cargo +nightly tarpaulin --verbose --all-features --workspace --ignore-tests --timeout 120 --out xml
+          RUST_LOG=trace cargo tarpaulin --engine llvm --locked --verbose --all-features --workspace --ignore-tests --timeout 120 --out xml
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2
