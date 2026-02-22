@@ -260,6 +260,43 @@ mod tests {
     }
 
     #[test]
+    fn default_version_is_current() {
+        assert_eq!(Version::default(), Version::current());
+    }
+
+    #[test]
+    fn data_builder_defaults_version_to_current() {
+        let data = Data::builder()
+            .information(ProtoInvoiceInfo::sample())
+            .client(CompanyInformation::sample_client())
+            .vendor(CompanyInformation::sample_vendor())
+            .payment_info(PaymentInformation::sample())
+            .service_fees(ServiceFees::sample())
+            .expensed_periods(ExpensedPeriods::sample())
+            .build();
+
+        assert_eq!(*data.version(), Version::current());
+    }
+
+    #[test]
+    fn validate_succeeds_for_current_version() {
+        assert!(Data::sample().validate().is_ok());
+    }
+
+    #[test]
+    fn validate_fails_when_data_version_does_not_match_current() {
+        let mut data = Data::sample();
+        data.version = Version::V0;
+
+        let result = data.validate();
+        assert!(matches!(
+            result,
+            Err(Error::DataVersionMismatch { found, current })
+                if found == Version::V0 && current == Version::current()
+        ));
+    }
+
+    #[test]
     fn expenses() {
         let sut = Sut::sample();
         let input = ValidInput::builder()
