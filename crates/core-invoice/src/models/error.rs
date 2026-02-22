@@ -1,4 +1,4 @@
-use crate::{Currency, Granularity, Language};
+use crate::{Currency, Granularity, Language, Version};
 use thiserror::Error as ThisError;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -207,6 +207,17 @@ pub enum Error {
         underlying: String,
     },
 
+    /// Data schema version does not match the currently supported version.
+    #[error(
+        "Data version mismatch, found: {found}, expected: {current}. Your data must be manually migrated."
+    )]
+    DataVersionMismatch {
+        /// Version found on disk.
+        found: Version,
+        /// Currently supported version.
+        current: Version,
+    },
+
     /// Failed to deserialize a type
     #[error("Failed to deserialize {type_name}, because: {error}")]
     Deserialize {
@@ -395,6 +406,11 @@ impl Error {
         }
     }
 
+    /// Creates a [`Error::DataVersionMismatch`] from found/current versions.
+    pub fn data_version_mismatch(found: Version, current: Version) -> Self {
+        Self::DataVersionMismatch { found, current }
+    }
+
     /// Returns a `map_err` helper that constructs [`Error::Deserialize`].
     pub fn deserialize<E: std::fmt::Display>(
         type_name: impl Into<String>,
@@ -448,6 +464,7 @@ impl Error {
 #[cfg(test)]
 mod tests {
     use super::Error;
+    use crate::Version;
     use std::fmt;
 
     struct DebugPassthrough(&'static str);
@@ -536,6 +553,16 @@ mod tests {
             err,
             Error::FileNotFound { path, underlying }
                 if path == "/tmp/missing.ron" && underlying == "no such file"
+        ));
+    }
+
+    #[test]
+    fn data_version_mismatch_sets_versions() {
+        let err = Error::data_version_mismatch(Version::V0, Version::current());
+        assert!(matches!(
+            err,
+            Error::DataVersionMismatch { found, current }
+                if found == Version::V0 && current == Version::current()
         ));
     }
 
