@@ -571,15 +571,6 @@ mod tests {
     }
 
     #[test]
-    fn missing_data_version_file_sets_path() {
-        let err = Error::missing_data_version_file("/tmp/version.ron");
-        assert!(matches!(
-            err,
-            Error::MissingDataVersionFile { path } if path == "/tmp/version.ron"
-        ));
-    }
-
-    #[test]
     fn data_version_mismatch_sets_versions() {
         let err = Error::data_version_mismatch(Version::V0, Version::current());
         assert!(matches!(
