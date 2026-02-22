@@ -11,7 +11,7 @@ use strum::IntoEnumIterator;
 use std::env::consts::OS;
 
 pub const DATA_INIT_HINT: &str =
-    "💡 You seem to not have setup klirr, run `klirr data init` to get started";
+    "💡 You seem to not have set up klirr, run `klirr data init` to get started";
 pub const DATA_MANUAL_MIGRATION_HINT: &str =
     "💡 Your klirr data version is incompatible and must be manually migrated.";
 
