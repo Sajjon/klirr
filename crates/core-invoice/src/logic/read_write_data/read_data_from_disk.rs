@@ -168,10 +168,17 @@ pub fn version(base_path: impl AsRef<Path>) -> Result<Version> {
     let base_path = base_path.as_ref();
     let path = version_path(base_path);
     if !path.exists() && base_path.exists() {
-        let version = Version::current();
-        save_to_disk(&version, &path)?;
-        info!("Automatically migrated data to {}", version);
-        return Ok(version);
+        let current = Version::current();
+        if current == Version::V1 {
+            // For backwards compatibility with pre-versioned on-disk data:
+            // treat missing version.ron as V1 and persist it.
+            save_to_disk(&current, &path)?;
+            info!("Automatically migrated data to {}", current);
+            return Ok(current);
+        }
+        // If we are beyond V1, a missing version.ron is ambiguous and
+        // requires explicit migration instructions instead of auto-upgrading.
+        return Err(Error::data_version_mismatch(Version::V0, current));
     }
     deserialize_contents_of_ron(path)
 }

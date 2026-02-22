@@ -207,15 +207,6 @@ pub enum Error {
         underlying: String,
     },
 
-    /// Missing data schema version file.
-    #[error(
-        "Data version file is missing: {path}. Your data was created by an older klirr version and must be manually migrated."
-    )]
-    MissingDataVersionFile {
-        /// Expected data-version file path.
-        path: String,
-    },
-
     /// Data schema version does not match the currently supported version.
     #[error(
         "Data version mismatch, found: {found}, expected: {current}. Your data must be manually migrated."
@@ -413,11 +404,6 @@ impl Error {
             path,
             underlying: format!("{error:?}"),
         }
-    }
-
-    /// Creates a [`Error::MissingDataVersionFile`] from a path-like input.
-    pub fn missing_data_version_file(path: impl Into<String>) -> Self {
-        Self::MissingDataVersionFile { path: path.into() }
     }
 
     /// Creates a [`Error::DataVersionMismatch`] from found/current versions.

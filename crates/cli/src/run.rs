@@ -15,25 +15,31 @@ pub const DATA_INIT_HINT: &str =
 pub const DATA_MANUAL_MIGRATION_HINT: &str =
     "💡 Your klirr data version is incompatible and must be manually migrated.";
 
-const EMBEDDED_MIGRATION_GUIDES: [&str; 2] = [
-    include_str!("../../../docs/migration/v0.md"),
-    include_str!("../../../docs/migration/v1.md"),
-];
+macro_rules! migration_guides {
+    ($($version:ident => $path:literal),+ $(,)?) => {
+        fn migration_guide_source_path(version: Version) -> &'static str {
+            match version {
+                $(Version::$version => $path,)+
+            }
+        }
 
-#[cfg(test)]
-fn migration_guide_source_path(version: Version) -> String {
-    format!("docs/migration/v{}.md", version as u16)
+        fn migration_guide_markdown(version: Version) -> &'static str {
+            match version {
+                $(Version::$version => include_str!(concat!("../../../", $path)),)+
+            }
+        }
+
+        #[cfg(test)]
+        const MIGRATION_GUIDES_COUNT: usize = [$(stringify!($version)),+].len();
+    };
+}
+migration_guides! {
+    V0 => "docs/migration/v0.md",
+    V1 => "docs/migration/v1.md",
 }
 
-fn migration_guide_markdown(version: Version) -> &'static str {
-    EMBEDDED_MIGRATION_GUIDES
-        .get(version as usize)
-        .copied()
-        .expect("No embedded migration guide found for version")
-}
-
 #[cfg(test)]
-fn empty_migration_guides() -> Vec<(Version, String)> {
+fn empty_migration_guides() -> Vec<(Version, &'static str)> {
     Version::iter()
         .map(|version| (version, migration_guide_markdown(version).trim()))
         .filter(|(_, guide)| guide.is_empty())
@@ -51,7 +57,6 @@ fn has_missing_setup_data(error: &Error) -> bool {
 
 #[derive(Clone, Debug)]
 enum MigrationGuide {
-    NoVersion,
     OldVersion(MigrationGuideOldVersion),
 }
 impl std::fmt::Display for MigrationGuide {
@@ -62,7 +67,6 @@ impl std::fmt::Display for MigrationGuide {
 impl MigrationGuide {
     pub fn instructions(&self) -> String {
         match self {
-            MigrationGuide::NoVersion => String::new(),
             MigrationGuide::OldVersion(migration) => migration.instructions(),
         }
     }
@@ -76,12 +80,14 @@ struct MigrationGuideOldVersion {
 impl MigrationGuideOldVersion {
     pub fn instructions(&self) -> String {
         let guide_markdown = migration_guide_markdown(self.to);
+        let guide_source_path = migration_guide_source_path(self.to);
         format!(
-            "{hint}\n\nFrom data version: {from}\nTo data version: {to}\nRON files location: {data_dir}\n\n{guide}",
+            "{hint}\n\nFrom data version: {from}\nTo data version: {to}\nRON files location: {data_dir}\nMigration guide: {guide_source_path}\n\n{guide}",
             hint = DATA_MANUAL_MIGRATION_HINT,
             from = self.from,
             to = self.to,
             data_dir = data_dir().display(),
+            guide_source_path = guide_source_path,
             guide = guide_markdown
         )
     }
@@ -89,9 +95,6 @@ impl MigrationGuideOldVersion {
 
 fn requires_manual_data_migration(error: &Error) -> Option<MigrationGuide> {
     match error {
-        Error::Core(klirr_core_invoice::Error::MissingDataVersionFile { path: _ }) => {
-            Some(MigrationGuide::NoVersion)
-        }
         Error::Core(klirr_core_invoice::Error::DataVersionMismatch { found, current }) => {
             Some(MigrationGuide::OldVersion(MigrationGuideOldVersion {
                 from: *found,
@@ -223,9 +226,9 @@ mod tests {
     #[test]
     fn embedded_guide_count_matches_version_count() {
         assert_eq!(
-            EMBEDDED_MIGRATION_GUIDES.len(),
+            MIGRATION_GUIDES_COUNT,
             Version::iter().count(),
-            "Update EMBEDDED_MIGRATION_GUIDES when adding/removing Version variants"
+            "Update migration_guides! when adding/removing Version variants"
         );
     }
 }
