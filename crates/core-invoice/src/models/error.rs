@@ -454,9 +454,8 @@ impl Error {
         }
     }
 
-    /// Logs a decryption error and maps it to [`Error::AESDecryptionFailed`].
-    pub fn aes_decryption_failed(error: impl std::fmt::Debug) -> Self {
-        log::error!("Failed to AES decrypt data - error: {error:?}");
+    /// Maps a decryption failure to [`Error::AESDecryptionFailed`].
+    pub fn aes_decryption_failed(_error: impl std::fmt::Debug) -> Self {
         Self::AESDecryptionFailed
     }
 }

@@ -22,7 +22,7 @@ fn send_email_with_credentials(email: Email, credentials: EmailCredentials) -> R
     let smtp_server = credentials.smtp_server().clone();
     let creds = Credentials::from(credentials);
 
-    // Open a remote connection to gmail
+    // Open a remote connection to SMTP server
     let mailer = SmtpTransport::relay(smtp_server.as_ref())
         .map_err(crate::Error::create_smtp_transport_error)?
         .credentials(creds)

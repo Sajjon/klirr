@@ -100,7 +100,7 @@ impl TryFrom<EmailWithSender> for Message {
 impl From<EmailCredentials> for Credentials {
     fn from(credentials: EmailCredentials) -> Self {
         Credentials::new(
-            credentials.account().email().user().to_owned(),
+            credentials.account().email().to_string(),
             credentials.password().expose_secret().to_owned(),
         )
     }
@@ -147,7 +147,7 @@ mod tests {
 
         assert_eq!(
             mechanism.response(&credentials, Some("Username")).unwrap(),
-            "alice"
+            "alice@example.com"
         );
         assert_eq!(
             mechanism.response(&credentials, Some("Password")).unwrap(),
