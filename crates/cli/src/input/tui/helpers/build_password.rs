@@ -1,3 +1,4 @@
+use log::info;
 use rpassword::prompt_password;
 use secrecy::{ExposeSecret as _, SecretString};
 
@@ -66,6 +67,10 @@ pub fn ask_for_email_encryption_password_with_confirmation(
 ) -> Result<SecretString> {
     if let Ok(env_pw) = std::env::var(ENV_VAR_KLIRR_EMAIL_ENCRYPTION_PASSWORD) {
         if env_pw.len() >= PASSWORD_MIN_LENGTH {
+            info!(
+                "Read encryption password from ENV variable (`{}`) so skipping prompting of it",
+                ENV_VAR_KLIRR_EMAIL_ENCRYPTION_PASSWORD
+            );
             return Ok(SecretString::from(env_pw));
         }
     }

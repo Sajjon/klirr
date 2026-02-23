@@ -167,12 +167,14 @@ fn run_invoice_command_with_base_path(
     let data_path = data_path.as_ref();
     let data = read_data_from_disk_with_base_path(data_path)?;
     let input = input.parsed(*data.service_fees().cadence())?;
-    info!("🔮 Starting invoice PDF creation, input: {:?}...", input);
+    info!("🔮 Starting invoice PDF creation...");
     let email_settings = input.email().clone();
     let named_pdf = create_invoice_pdf_with_data(data, input, render_invoice)?;
     save_pdf_location_to_tmp_file(named_pdf.saved_at().clone())?;
     if let Some(email_settings) = email_settings {
-        send_email_with_settings_for_pdf(&named_pdf, &email_settings)?
+        info!("Sending email with invoice...");
+        send_email_with_settings_for_pdf(&named_pdf, &email_settings)?;
+        info!("✅ Sent email with invoice");
     }
     Ok(named_pdf)
 }
