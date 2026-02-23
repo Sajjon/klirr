@@ -1,6 +1,7 @@
 use crate::{
-    CliArgs, CliResult, Command, Error, curry1, data_dir, render_invoice_sample,
-    render_invoice_sample_with_nonce, run_data_command, run_email_command, run_invoice_command,
+    CliArgs, CliResult, Command, Error, curry1, data_dir, email_settings_path,
+    render_invoice_sample, render_invoice_sample_with_nonce, run_data_command, run_email_command,
+    run_invoice_command,
 };
 use klirr_core_invoice::Version;
 use log::{error, warn};
@@ -12,6 +13,8 @@ use std::env::consts::OS;
 
 pub const DATA_INIT_HINT: &str =
     "💡 You seem to not have set up klirr, run `klirr data init` to get started";
+pub const EMAIL_INIT_HINT: &str =
+    "💡 You seem to not have set up email, run `klirr email init` to get started";
 pub const DATA_MANUAL_MIGRATION_HINT: &str =
     "💡 Your klirr data version is incompatible and must be manually migrated.";
 
@@ -52,6 +55,14 @@ fn has_missing_setup_data(error: &Error) -> bool {
         error,
         Error::Core(klirr_core_invoice::Error::FileNotFound { path, .. })
             if Path::new(path).starts_with(data_dir())
+    )
+}
+
+fn has_missing_email_setup_data(error: &Error) -> bool {
+    matches!(
+        error,
+        Error::Core(klirr_core_invoice::Error::FileNotFound { path, .. })
+            if Path::new(path) == email_settings_path(data_dir())
     )
 }
 
@@ -111,6 +122,8 @@ fn log_data_setup_hint_or_error(context: &str, error: &Error) {
         if !instructions.is_empty() {
             warn!("{}", instructions);
         }
+    } else if has_missing_email_setup_data(error) {
+        warn!("{}", EMAIL_INIT_HINT);
     } else if has_missing_setup_data(error) {
         warn!("{}", DATA_INIT_HINT);
     } else {
@@ -168,6 +181,28 @@ pub fn run(input: CliArgs) -> CliResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn classifies_missing_email_settings_file_as_missing_email_setup() {
+        let missing_email_file = email_settings_path(data_dir());
+        let err = Error::Core(klirr_core_invoice::Error::FileNotFound {
+            path: missing_email_file.display().to_string(),
+            underlying: "No such file or directory".to_string(),
+        });
+
+        assert!(has_missing_email_setup_data(&err));
+    }
+
+    #[test]
+    fn does_not_classify_non_email_file_as_missing_email_setup() {
+        let missing_data_file = data_dir().join("client.ron");
+        let err = Error::Core(klirr_core_invoice::Error::FileNotFound {
+            path: missing_data_file.display().to_string(),
+            underlying: "No such file or directory".to_string(),
+        });
+
+        assert!(!has_missing_email_setup_data(&err));
+    }
 
     #[test]
     fn classifies_missing_file_in_data_dir_as_missing_setup() {
