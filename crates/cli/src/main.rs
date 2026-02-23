@@ -15,11 +15,12 @@ pub(crate) use klirr_core_invoice::{
     Rate, RelativeTime, ResultExt, Salt, Select, ServiceFees, SmtpServer, StreetAddress, Template,
     TemplatePart, TimeOff, TimestampedInvoiceNumber, UnitPrice, ValidInput, Year, client_path,
     create_invoice_pdf_with_data, curry1, curry2, data_dir, data_dir_create_if, edit_data_at,
-    edit_email_data_at, email_settings_path, expensed_periods_path, init_data_at, init_email_data_at,
-    load_email_data_and_send_test_email_at, payment_info_path, period_end_from_relative_time,
-    proto_invoice_info_path, read_data_from_disk_with_base_path, record_expenses_with_base_path,
-    record_period_off_with_base_path, save_pdf_location_to_tmp_file,
-    send_email_with_settings_for_pdf, service_fees_path, validate_email_data_at, vendor_path,
+    edit_email_data_at, email_settings_path, expensed_periods_path, init_data_at,
+    init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
+    period_end_from_relative_time, proto_invoice_info_path, read_data_from_disk_with_base_path,
+    record_expenses_with_base_path, record_period_off_with_base_path,
+    save_pdf_location_to_tmp_file, send_email_with_settings_for_pdf, service_fees_path,
+    validate_email_data_at, vendor_path,
 };
 
 pub(crate) use crate::dispatch_command::{
