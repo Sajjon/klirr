@@ -460,6 +460,60 @@ impl Error {
     }
 }
 
+impl From<klirr_foundation::CryptoError> for Error {
+    fn from(value: klirr_foundation::CryptoError) -> Self {
+        match value {
+            klirr_foundation::CryptoError::InvalidUtf8 => Self::InvalidUtf8,
+            klirr_foundation::CryptoError::AesDecryptionFailed => Self::AESDecryptionFailed,
+            klirr_foundation::CryptoError::InvalidAesBytesTooShort {
+                expected_at_least,
+                found,
+            } => Self::InvalidAESBytesTooShort {
+                expected_at_least,
+                found,
+            },
+        }
+    }
+}
+
+impl From<klirr_foundation::ModelError> for Error {
+    fn from(value: klirr_foundation::ModelError) -> Self {
+        match value {
+            klirr_foundation::ModelError::InvalidDecimalToF64Conversion { value } => {
+                Self::InvalidDecimalToF64Conversion { value }
+            }
+            klirr_foundation::ModelError::InvalidDecimalFromF64Conversion { value } => {
+                Self::InvalidDecimalFromF64Conversion { value }
+            }
+            klirr_foundation::ModelError::FailedToParseYear { invalid_string } => {
+                Self::FailedToParseYear { invalid_string }
+            }
+            klirr_foundation::ModelError::InvalidDayFromString {
+                invalid_string,
+                reason,
+            } => Self::InvalidDayFromString {
+                invalid_string,
+                reason,
+            },
+            klirr_foundation::ModelError::InvalidDay { day, reason } => {
+                Self::InvalidDay { day, reason }
+            }
+            klirr_foundation::ModelError::InvalidMonth { month, reason } => {
+                Self::InvalidMonth { month, reason }
+            }
+            klirr_foundation::ModelError::FailedToParseMonth { invalid_string } => {
+                Self::FailedToParseMonth { invalid_string }
+            }
+            klirr_foundation::ModelError::FailedToParseDate { underlying } => {
+                Self::FailedToParseDate { underlying }
+            }
+            klirr_foundation::ModelError::InvalidDate { underlying } => {
+                Self::InvalidDate { underlying }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Error;

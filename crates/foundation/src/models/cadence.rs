@@ -1,6 +1,6 @@
 use derive_more::FromStr;
 
-use crate::{Error, Granularity, HasSample, Result};
+use crate::{Granularity, HasSample};
 use derive_more::Display;
 use serde::Deserialize;
 use serde::Serialize;
@@ -26,14 +26,14 @@ impl Cadence {
         }
     }
 
-    pub fn validate(&self, granularity: impl Into<Granularity>) -> Result<()> {
+    pub fn validate(&self, granularity: impl Into<Granularity>) -> bool {
         use Cadence::*;
         use Granularity::*;
         let granularity = granularity.into();
         match (self, granularity) {
-            (BiWeekly, Month) => Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly),
-            (BiWeekly, Fortnight | Day | Hour) => Ok(()),
-            (Monthly, Fortnight | Day | Hour | Month) => Ok(()),
+            (BiWeekly, Month) => false,
+            (BiWeekly, Fortnight | Day | Hour) => true,
+            (Monthly, Fortnight | Day | Hour | Month) => true,
         }
     }
 }
@@ -69,14 +69,14 @@ mod tests {
 
     #[test]
     fn validate_successful() {
-        assert!(Sut::Monthly.validate(Granularity::Month).is_ok());
-        assert!(Sut::Monthly.validate(Granularity::Fortnight).is_ok());
-        assert!(Sut::Monthly.validate(Granularity::Day).is_ok());
-        assert!(Sut::Monthly.validate(Granularity::Hour).is_ok());
+        assert!(Sut::Monthly.validate(Granularity::Month));
+        assert!(Sut::Monthly.validate(Granularity::Fortnight));
+        assert!(Sut::Monthly.validate(Granularity::Day));
+        assert!(Sut::Monthly.validate(Granularity::Hour));
 
-        assert!(Sut::BiWeekly.validate(Granularity::Month).is_err());
-        assert!(Sut::BiWeekly.validate(Granularity::Fortnight).is_ok());
-        assert!(Sut::BiWeekly.validate(Granularity::Day).is_ok());
-        assert!(Sut::BiWeekly.validate(Granularity::Hour).is_ok());
+        assert!(!Sut::BiWeekly.validate(Granularity::Month));
+        assert!(Sut::BiWeekly.validate(Granularity::Fortnight));
+        assert!(Sut::BiWeekly.validate(Granularity::Day));
+        assert!(Sut::BiWeekly.validate(Granularity::Hour));
     }
 }

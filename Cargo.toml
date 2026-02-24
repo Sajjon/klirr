@@ -4,7 +4,6 @@ members = [
     "crates/cli",
     "crates/core-invoice",
     "crates/foundation",
-    "crates/render-pdf",
     "crates/render-typst",
 ]
 
@@ -12,7 +11,6 @@ members = [
 # Internal dependencies
 klirr-core-invoice = { path = "crates/core-invoice", version = "0.2.10" }
 klirr-foundation = { path = "crates/foundation", version = "0.2.10" }
-klirr-render-pdf = { path = "crates/render-pdf", version = "0.2.10" }
 klirr-render-typst = { path = "crates/render-typst", version = "0.2.10" }
 
 # External dependencies

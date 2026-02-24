@@ -7,9 +7,9 @@ pub enum CliError {
     #[error(transparent)]
     Core(#[from] klirr_core_invoice::Error),
 
-    /// Wraps errors coming from `klirr-render-pdf`.
+    /// Wraps errors coming from `klirr-render-typst`.
     #[error(transparent)]
-    Render(#[from] klirr_render_pdf::Error),
+    Render(#[from] klirr_render_typst::Error),
 
     /// Wraps errors originating from email-related terminal prompts.
     #[error(transparent)]

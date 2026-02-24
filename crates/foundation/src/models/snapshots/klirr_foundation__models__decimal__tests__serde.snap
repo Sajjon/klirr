@@ -1,0 +1,6 @@
+---
+source: crates/foundation/src/models/decimal.rs
+assertion_line: 105
+expression: "Sut::from(dec!(3.14159265))"
+---
+3.14159265

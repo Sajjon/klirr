@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::{HasSample, Result};
+use crate::HasSample;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, DeserializeFromStr, SerializeDisplay)]
 pub enum Currency {
@@ -129,7 +129,7 @@ impl fmt::Display for Currency {
 impl FromStr for Currency {
     type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s {
             "USD" => Ok(Currency::USD),
             "EUR" => Ok(Currency::EUR),
@@ -173,7 +173,6 @@ impl FromStr for Currency {
 mod tests {
     use super::*;
     use crate::HasSample;
-    use insta::assert_debug_snapshot;
     use std::str::FromStr;
     use test_log::test;
 
@@ -229,39 +228,39 @@ mod tests {
 
     #[test]
     fn test_debug() {
-        assert_debug_snapshot!(Sut::USD, @"USD");
-        assert_debug_snapshot!(Sut::EUR, @"EUR");
-        assert_debug_snapshot!(Sut::GBP, @"GBP");
-        assert_debug_snapshot!(Sut::JPY, @"JPY");
-        assert_debug_snapshot!(Sut::CAD, @"CAD");
-        assert_debug_snapshot!(Sut::AUD, @"AUD");
-        assert_debug_snapshot!(Sut::CHF, @"CHF");
-        assert_debug_snapshot!(Sut::SEK, @"SEK");
-        assert_debug_snapshot!(Sut::NOK, @"NOK");
-        assert_debug_snapshot!(Sut::DKK, @"DKK");
-        assert_debug_snapshot!(Sut::CNY, @"CNY");
-        assert_debug_snapshot!(Sut::INR, @"INR");
-        assert_debug_snapshot!(Sut::BRL, @"BRL");
-        assert_debug_snapshot!(Sut::RUB, @"RUB");
-        assert_debug_snapshot!(Sut::ZAR, @"ZAR");
-        assert_debug_snapshot!(Sut::MXN, @"MXN");
-        assert_debug_snapshot!(Sut::NZD, @"NZD");
-        assert_debug_snapshot!(Sut::SGD, @"SGD");
-        assert_debug_snapshot!(Sut::HKD, @"HKD");
-        assert_debug_snapshot!(Sut::KRW, @"KRW");
-        assert_debug_snapshot!(Sut::SAR, @"SAR");
-        assert_debug_snapshot!(Sut::AED, @"AED");
-        assert_debug_snapshot!(Sut::TRY, @"TRY");
-        assert_debug_snapshot!(Sut::PLN, @"PLN");
-        assert_debug_snapshot!(Sut::THB, @"THB");
-        assert_debug_snapshot!(Sut::TWD, @"TWD");
-        assert_debug_snapshot!(Sut::XAF, @"XAF");
-        assert_debug_snapshot!(Sut::XOF, @"XOF");
-        assert_debug_snapshot!(Sut::XCD, @"XCD");
-        assert_debug_snapshot!(Sut::XBT, @"XBT");
-        assert_debug_snapshot!(Sut::ETH, @"ETH");
-        assert_debug_snapshot!(Sut::XRD, @"XRD");
-        assert_debug_snapshot!(Sut::DOT, @"DOT");
+        assert_eq!(format!("{:?}", Sut::USD), "USD");
+        assert_eq!(format!("{:?}", Sut::EUR), "EUR");
+        assert_eq!(format!("{:?}", Sut::GBP), "GBP");
+        assert_eq!(format!("{:?}", Sut::JPY), "JPY");
+        assert_eq!(format!("{:?}", Sut::CAD), "CAD");
+        assert_eq!(format!("{:?}", Sut::AUD), "AUD");
+        assert_eq!(format!("{:?}", Sut::CHF), "CHF");
+        assert_eq!(format!("{:?}", Sut::SEK), "SEK");
+        assert_eq!(format!("{:?}", Sut::NOK), "NOK");
+        assert_eq!(format!("{:?}", Sut::DKK), "DKK");
+        assert_eq!(format!("{:?}", Sut::CNY), "CNY");
+        assert_eq!(format!("{:?}", Sut::INR), "INR");
+        assert_eq!(format!("{:?}", Sut::BRL), "BRL");
+        assert_eq!(format!("{:?}", Sut::RUB), "RUB");
+        assert_eq!(format!("{:?}", Sut::ZAR), "ZAR");
+        assert_eq!(format!("{:?}", Sut::MXN), "MXN");
+        assert_eq!(format!("{:?}", Sut::NZD), "NZD");
+        assert_eq!(format!("{:?}", Sut::SGD), "SGD");
+        assert_eq!(format!("{:?}", Sut::HKD), "HKD");
+        assert_eq!(format!("{:?}", Sut::KRW), "KRW");
+        assert_eq!(format!("{:?}", Sut::SAR), "SAR");
+        assert_eq!(format!("{:?}", Sut::AED), "AED");
+        assert_eq!(format!("{:?}", Sut::TRY), "TRY");
+        assert_eq!(format!("{:?}", Sut::PLN), "PLN");
+        assert_eq!(format!("{:?}", Sut::THB), "THB");
+        assert_eq!(format!("{:?}", Sut::TWD), "TWD");
+        assert_eq!(format!("{:?}", Sut::XAF), "XAF");
+        assert_eq!(format!("{:?}", Sut::XOF), "XOF");
+        assert_eq!(format!("{:?}", Sut::XCD), "XCD");
+        assert_eq!(format!("{:?}", Sut::XBT), "XBT");
+        assert_eq!(format!("{:?}", Sut::ETH), "ETH");
+        assert_eq!(format!("{:?}", Sut::XRD), "XRD");
+        assert_eq!(format!("{:?}", Sut::DOT), "DOT");
     }
 
     #[test]

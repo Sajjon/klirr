@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use crate::HasSample;
 use crate::Pdf;
 use bon::Builder;
 use getset::Getters;
@@ -23,4 +24,24 @@ pub struct AbstractNamedPdf<D> {
     /// The name of the PDF file, e.g. "invoice_123.pdf"
     #[getset(get = "pub")]
     name: String,
+}
+
+impl<D: HasSample> HasSample for AbstractNamedPdf<D> {
+    fn sample() -> Self {
+        Self::builder()
+            .prepared_data(D::sample())
+            .pdf(Pdf::sample())
+            .saved_at(PathBuf::from("/tmp/sample.pdf"))
+            .name("sample.pdf".to_string())
+            .build()
+    }
+
+    fn sample_other() -> Self {
+        Self::builder()
+            .prepared_data(D::sample_other())
+            .pdf(Pdf::sample_other())
+            .saved_at(PathBuf::from("/tmp/another_sample.pdf"))
+            .name("another_sample.pdf".to_string())
+            .build()
+    }
 }

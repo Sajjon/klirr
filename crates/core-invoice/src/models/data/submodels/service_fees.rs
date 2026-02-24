@@ -32,7 +32,9 @@ impl ServiceFees {
         cadence: Cadence,
     ) -> Result<Self, Error> {
         let rate = rate.into();
-        cadence.validate(rate.granularity())?;
+        if !cadence.validate(rate.granularity()) {
+            return Err(Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly);
+        }
         Ok(Self {
             name: name.as_ref().to_owned(),
             rate,

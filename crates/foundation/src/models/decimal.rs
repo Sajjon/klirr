@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{ModelError, ModelResult};
 use derive_more::Deref;
 use derive_more::Display;
 use derive_more::From;
@@ -47,26 +47,26 @@ impl Decimal {
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 
 impl TryFrom<Decimal> for f64 {
-    type Error = crate::Error;
-    fn try_from(value: Decimal) -> Result<Self> {
+    type Error = ModelError;
+    fn try_from(value: Decimal) -> ModelResult<Self> {
         value
             .0
             .to_f64()
-            .ok_or_else(|| Error::InvalidDecimalToF64Conversion {
+            .ok_or_else(|| ModelError::InvalidDecimalToF64Conversion {
                 value: value.to_string(),
             })
     }
 }
 impl TryFrom<f64> for Decimal {
-    type Error = crate::Error;
-    fn try_from(value: f64) -> Result<Self> {
+    type Error = ModelError;
+    fn try_from(value: f64) -> ModelResult<Self> {
         rust_decimal::Decimal::from_f64(value)
-            .ok_or(Error::InvalidDecimalFromF64Conversion { value })
+            .ok_or(ModelError::InvalidDecimalFromF64Conversion { value })
             .map(Decimal)
     }
 }
 impl Serialize for Decimal {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -77,7 +77,7 @@ impl Serialize for Decimal {
 }
 
 impl<'de> Deserialize<'de> for Decimal {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {

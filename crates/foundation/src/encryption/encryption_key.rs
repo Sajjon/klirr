@@ -1,13 +1,9 @@
 use aes_gcm::Key;
+use derive_more::{Deref, From};
+use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use derive_more::Deref;
-use derive_more::From;
-use serde::Deserialize;
-use serde::Serialize;
-
-/// A 32 bytes symmetric encryption key for AES GCM 256 encryption.
-/// This key is used to encrypt and decrypt data securely.
+/// A 32-byte symmetric key used with AES-GCM-256.
 #[derive(
     Clone,
     PartialEq,

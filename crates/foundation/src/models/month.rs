@@ -1,8 +1,9 @@
-use crate::{Day, Error, FromStr, Result, Year};
+use crate::{Day, ModelError, ModelResult, Year};
 use derive_more::Display;
 use derive_more::IsVariant;
 use serde::Deserialize;
 use serde::Serialize;
+use std::str::FromStr;
 
 /// A month of the year, e.g. 1 for January, 2 for February, etc.
 #[derive(
@@ -47,8 +48,8 @@ impl Month {
     /// This is useful for serialization and comparisons.
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// assert_eq!(Month::January.month(), &1);
     /// assert_eq!(Month::December.month(), &12);
     /// ```
@@ -73,8 +74,8 @@ impl Month {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     ///
     /// assert_eq!(Month::January.last_day(Year::from(2025)), Day::try_from(31).unwrap());
     /// assert_eq!(Month::February.last_day(Year::from(2024)), Day::try_from(29).unwrap());
@@ -110,20 +111,20 @@ impl std::ops::Deref for Month {
 }
 
 impl TryFrom<i32> for Month {
-    type Error = crate::Error;
+    type Error = ModelError;
 
     /// Attempts to convert an integer to a `Month`.
     /// The integer must be between 1 and 12, inclusive.
-    /// If the integer is outside this range, an `Error::InvalidMonth` is returned
+    /// If the integer is outside this range, a `ModelError::InvalidMonth` is returned.
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let march = Month::try_from(3).unwrap();
     /// assert_eq!(march.to_string(), "3".to_owned());
     /// ```
-    fn try_from(month: i32) -> Result<Self> {
+    fn try_from(month: i32) -> ModelResult<Self> {
         match month {
             1 => Ok(Month::January),
             2 => Ok(Month::February),
@@ -137,7 +138,7 @@ impl TryFrom<i32> for Month {
             10 => Ok(Month::October),
             11 => Ok(Month::November),
             12 => Ok(Month::December),
-            _ => Err(Error::InvalidMonth {
+            _ => Err(ModelError::InvalidMonth {
                 month,
                 reason: "Month must be between 1 and 12".to_string(),
             }),
@@ -146,37 +147,39 @@ impl TryFrom<i32> for Month {
 }
 
 impl FromStr for Month {
-    type Err = crate::Error;
+    type Err = ModelError;
 
     /// Parses a month from a string.
     /// The string must be a valid month number (1-12).
-    /// If the string is not a valid month, an `Error::InvalidMonth` is returned.
+    /// If the string is not a valid month, a `ModelError::InvalidMonth` is returned.
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let month: Month = "3".parse().unwrap();
     /// assert_eq!(month, Month::March);
     /// ```
-    fn from_str(s: &str) -> Result<Self> {
-        let month = s.parse::<i32>().map_err(|_| Error::FailedToParseMonth {
-            invalid_string: s.to_owned(),
-        })?;
+    fn from_str(s: &str) -> ModelResult<Self> {
+        let month = s
+            .parse::<i32>()
+            .map_err(|_| ModelError::FailedToParseMonth {
+                invalid_string: s.to_owned(),
+            })?;
         Self::try_from(month)
     }
 }
 
 impl TryFrom<u8> for Month {
-    type Error = crate::Error;
-    fn try_from(month: u8) -> Result<Self> {
+    type Error = ModelError;
+    fn try_from(month: u8) -> ModelResult<Self> {
         Self::try_from(month as i32)
     }
 }
 
 impl TryFrom<u32> for Month {
-    type Error = crate::Error;
-    fn try_from(month: u32) -> Result<Self> {
+    type Error = ModelError;
+    fn try_from(month: u32) -> ModelResult<Self> {
         Self::try_from(month as i32)
     }
 }
@@ -222,7 +225,7 @@ mod tests {
     fn test_from_str_invalid_all_reasons() {
         let invalid_months = ["0", "13", "abc", "1.5"];
         for &invalid in &invalid_months {
-            let result: Result<Month> = invalid.parse();
+            let result: ModelResult<Month> = invalid.parse();
             assert!(
                 result.is_err(),
                 "Expected error for invalid month '{}'",

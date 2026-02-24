@@ -1,9 +1,8 @@
 use crate::{
     Data, Error, ExchangeRatesFetcher, L10n, Layout, NamedPdf, Path, PreparedData, Result,
-    ValidInput, create_folder_to_parent_of_path_if_needed, get_localization,
-    prepare_invoice_input_data, read_data_from_disk_with_base_path,
+    ValidInput, get_localization, prepare_invoice_input_data, read_data_from_disk_with_base_path,
 };
-use klirr_foundation::{Pdf, save_pdf};
+use klirr_foundation::{Pdf, create_pdf_document};
 
 /// Compile the Typst source into a PDF and save it at the specified path, by
 /// reading data from disk at the provided path and using the provided `ValidInput`.
@@ -37,23 +36,18 @@ where
 {
     let l10n: L10n = get_localization(input.language()).map_err(E::from)?;
     let layout = *input.layout();
-    let data = prepare_invoice_input_data(data, input, ExchangeRatesFetcher::default())
-        .map_err(E::from)?;
-    let output_path_and_name = data.absolute_path_and_name().map_err(E::from)?;
-    let output_path = output_path_and_name.path().to_owned();
-    let name = output_path_and_name.name().to_owned();
-    create_folder_to_parent_of_path_if_needed(&output_path).map_err(E::from)?;
-    let prepared_data = data.clone();
-    let pdf = render(l10n, data, layout)?;
-    save_pdf(pdf.clone(), &output_path)
-        .map_err(Error::save_pdf)
-        .map_err(E::from)?;
-    Ok(NamedPdf::builder()
-        .pdf(pdf)
-        .saved_at(output_path.clone())
-        .name(name)
-        .prepared_data(prepared_data)
-        .build())
+    create_pdf_document(
+        input,
+        || Ok::<Data, E>(data),
+        |data, input| {
+            prepare_invoice_input_data(data, input, ExchangeRatesFetcher::default())
+                .map_err(E::from)
+        },
+        |prepared_data| prepared_data.absolute_path_and_name().map_err(E::from),
+        |prepared_data| render(l10n, prepared_data, layout),
+        |error| E::from(Error::failed_to_create_output_directory(error)),
+        |error| E::from(Error::save_pdf(error)),
+    )
 }
 
 #[cfg(test)]
@@ -61,6 +55,7 @@ mod tests {
     use super::*;
     use crate::HasSample;
     use crate::PathBuf;
+    use klirr_foundation::save_pdf;
 
     use tempfile::NamedTempFile;
     use test_log::test;

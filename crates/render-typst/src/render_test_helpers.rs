@@ -1,3 +1,4 @@
+use crate::compare_images;
 use crate::render::render;
 use klirr_core_invoice::{
     Currency, Data, ExchangeRates, ExchangeRatesMap, FetchExchangeRates, Item, L10n, Language,
@@ -44,7 +45,7 @@ pub fn compare_image_against_expected(
                 return;
             }
         };
-    klirr_render_pdf::compare_images::compare_image_against_expected(
+    compare_images::_compare_image_against_expected(
         new_image,
         path_to_expected_image,
         !running_in_ci(),

@@ -1,64 +1,33 @@
 use serde::de::DeserializeOwned;
 
+use crate::deserialize_contents_of_ron;
 use crate::{
     CompanyInformation, Data, EncryptedEmailSettings, Error, ExpensedPeriods, Path, PathBuf,
-    PaymentInformation, ProtoInvoiceInfo, Result, ServiceFees, Version, create_folder_if_needed,
-    deserialize_contents_of_ron, type_name,
+    PaymentInformation, ProtoInvoiceInfo, Result, ServiceFees, Version,
 };
+use klirr_foundation::RonError;
+pub use klirr_foundation::{data_dir, data_dir_create_if};
 use log::debug;
 use log::info;
 use serde::Serialize;
 
-pub const BINARY_NAME: &str = "klirr";
+const DATA_FILE_NAME_EMAIL_SETTINGS: &str = "email";
+const DATA_FILE_NAME_VENDOR: &str = "vendor";
+const DATA_FILE_NAME_CLIENT: &str = "client";
+const DATA_FILE_NAME_PAYMENT: &str = "payment";
+const DATA_FILE_NAME_SERVICE_FEES: &str = "service_fees";
+const DATA_FILE_NAME_PROTO_INVOICE_INFO: &str = "invoice_info";
+const DATA_FILE_NAME_EXPENSES: &str = "expenses";
+const DATA_FILE_NAME_CACHED_RATES: &str = "cached_rates";
+const DATA_FILE_NAME_VERSION: &str = "version";
 
-/// Returns the path to the data directory, which is typically located at
-/// ```text
-/// macOS: `~/Library/Application Support/klirr/data`
-/// Linux: `~/.local/share/klirr/data`
-/// Windows: `C:\Users\Alice\AppData\Local\klirr\data`
-/// ```
-///
-/// Creates if `create_if_not_exists` is true and if needed.
-///
-/// For more information
-/// see [dirs_next][ref]
-///
-/// [ref]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html
-pub fn data_dir_create_if(create_if_not_exists: bool) -> PathBuf {
-    let dir = dirs_next::data_local_dir()
-        .expect("Should have a data directory")
-        .join(BINARY_NAME)
-        .join("data");
-    if create_if_not_exists {
-        create_folder_if_needed(&dir)
-            .expect("Should be able to create directory at data_dir()/klirr/data");
-    }
-    dir
-}
-
-/// Returns the path to the data directory, which is typically located at
-/// ```text
-/// macOS: `~/Library/Application Support/klirr/data`
-/// Linux: `~/.local/share/klirr/data`
-/// Windows: `C:\Users\Alice\AppData\Local\klirr\data`
-/// ```
-///
-/// For more information
-/// see [dirs_next][ref]
-///
-/// [ref]: https://docs.rs/dirs-next/latest/dirs_next/fn.data_local_dir.html
-pub fn data_dir() -> PathBuf {
-    data_dir_create_if(false)
-}
-
-pub fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<()> {
-    let ron_config = ron::ser::PrettyConfig::new().struct_names(true);
-    let serialized = ron::ser::to_string_pretty(model, ron_config)
-        .map_err(Error::failed_to_ron_serialize_data(type_name::<T>()))?;
-    std::fs::write(path.as_ref(), serialized).map_err(Error::failed_to_write_data_to_disk)?;
-    info!("✅ Successfully saved file at: {}", path.as_ref().display());
+pub(crate) fn save_to_disk<T: Serialize>(model: &T, path: impl AsRef<Path>) -> Result<()> {
+    let path = path.as_ref();
+    klirr_foundation::save_to_disk(model, path).map_err(map_ron_error)?;
+    info!("✅ Successfully saved file at: {}", path.display());
     Ok(())
 }
+
 pub fn save_email_settings_with_base_path(
     email_settings: EncryptedEmailSettings,
     base_path: impl AsRef<Path>,
@@ -81,22 +50,29 @@ pub fn save_data_with_base_path(data: Data, base_path: impl AsRef<Path>) -> Resu
 }
 
 pub fn path_to_ron_file_with_base(base_path: impl AsRef<Path>, name: &str) -> PathBuf {
-    base_path.as_ref().join(format!("{}.ron", name))
+    klirr_foundation::path_to_ron_file_with_base(base_path, name)
 }
 
 pub fn load_data<T: DeserializeOwned>(base_path: impl AsRef<Path>, name: &str) -> Result<T> {
     deserialize_contents_of_ron(path_to_ron_file_with_base(base_path, name))
 }
 
-const DATA_FILE_NAME_EMAIL_SETTINGS: &str = "email";
-const DATA_FILE_NAME_VENDOR: &str = "vendor";
-const DATA_FILE_NAME_CLIENT: &str = "client";
-const DATA_FILE_NAME_PAYMENT: &str = "payment";
-const DATA_FILE_NAME_SERVICE_FEES: &str = "service_fees";
-const DATA_FILE_NAME_PROTO_INVOICE_INFO: &str = "invoice_info";
-const DATA_FILE_NAME_EXPENSES: &str = "expenses";
-const DATA_FILE_NAME_CACHED_RATES: &str = "cached_rates";
-const DATA_FILE_NAME_VERSION: &str = "version";
+fn map_ron_error(error: RonError) -> Error {
+    match error {
+        RonError::FileNotFound { path, underlying } => Error::FileNotFound { path, underlying },
+        RonError::FailedToSerialize {
+            type_name,
+            underlying,
+        } => Error::FailedToRonSerializeData {
+            type_name,
+            underlying,
+        },
+        RonError::FailedToWriteDataToDisk { underlying } => {
+            Error::FailedToWriteDataToDisk { underlying }
+        }
+        RonError::Deserialize { type_name, error } => Error::Deserialize { type_name, error },
+    }
+}
 
 pub fn email_settings_path(base_path: impl AsRef<Path>) -> PathBuf {
     path_to_ron_file_with_base(base_path, DATA_FILE_NAME_EMAIL_SETTINGS)

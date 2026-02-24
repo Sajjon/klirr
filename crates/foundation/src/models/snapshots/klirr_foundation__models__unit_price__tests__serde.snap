@@ -1,0 +1,6 @@
+---
+source: crates/foundation/src/models/unit_price.rs
+assertion_line: 79
+expression: "UnitPrice::sample()"
+---
+UnitPrice(350.0)

@@ -1,4 +1,4 @@
-use crate::{Day, Error, HasSample, Month, PaymentTerms, Result, Year};
+use crate::{Day, HasSample, ModelError, ModelResult, Month, Year};
 use bon::Builder;
 use chrono::Datelike;
 use chrono::Local;
@@ -42,8 +42,13 @@ pub struct Date {
     day: Day,
 }
 
+/// Abstraction for terms that can advance a date by a number of days.
+pub trait DueInDays {
+    fn due_in_days(&self) -> Day;
+}
+
 impl std::str::FromStr for Date {
-    type Err = crate::Error;
+    type Err = ModelError;
 
     /// Parses a date from one of the supported formats:
     /// - `YYYY-MM-DD`
@@ -55,8 +60,8 @@ impl std::str::FromStr for Date {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let date: Date = "2025-05-23".parse().unwrap();
     /// assert_eq!(date.year(), &Year::from(2025));
     /// assert_eq!(date.month(), &Month::May);
@@ -68,11 +73,11 @@ impl std::str::FromStr for Date {
     /// let first_half: Date = "2025-02-first-half".parse().unwrap();
     /// assert_eq!(first_half.to_string(), "2025-02-14");
     /// ```
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> ModelResult<Self, Self::Err> {
         let mut parts = s.splitn(3, '-');
         let year_part = parts.next().expect("splitn always returns a first segment");
         let Some(month_part) = parts.next() else {
-            return Err(Error::FailedToParseDate {
+            return Err(ModelError::FailedToParseDate {
                 underlying: "Invalid Format".to_owned(),
             });
         };
@@ -100,7 +105,7 @@ impl std::str::FromStr for Date {
                     }
                     "second" | "second-half" | "2" => month.last_day(year),
                     _ => {
-                        return Err(Error::FailedToParseDate {
+                        return Err(ModelError::FailedToParseDate {
                             underlying: "Invalid Format".to_owned(),
                         });
                     }
@@ -138,11 +143,11 @@ impl Date {
         year: impl Into<i32>,
         month: impl Into<u32>,
         day: impl Into<u32>,
-    ) -> Result<Self> {
+    ) -> ModelResult<Self> {
         let year = year.into();
         let month = month.into();
         let day = day.into();
-        let naive = NaiveDate::from_ymd_opt(year, month, day).ok_or(Error::InvalidDate {
+        let naive = NaiveDate::from_ymd_opt(year, month, day).ok_or(ModelError::InvalidDate {
             underlying: format!("invalid Y-M-D: {year}-{month}-{day}"),
         })?;
         Ok(Self::from(naive))
@@ -171,9 +176,9 @@ impl Date {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
+    /// extern crate klirr_foundation;
     /// use chrono::{NaiveDate, Timelike};
-    /// use klirr_core_invoice::*;
+    /// use klirr_foundation::*;
     ///
     /// let date = "2025-05-23".parse::<Date>().unwrap();
     /// let dt = date.to_datetime();
@@ -199,8 +204,8 @@ impl Date {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     ///
     /// let date = "2025-05-23".parse::<Date>().unwrap();
     /// let advanced = date.advance_days(&Day::try_from(7).unwrap());
@@ -214,22 +219,27 @@ impl Date {
         Self::from(advanced_date)
     }
 
-    /// Advances this date according to payment terms.
+    /// Advances this date according to due-in-day terms.
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     ///
     /// let invoice_date = "2025-05-23".parse::<Date>().unwrap();
-    /// let due_date = invoice_date.advance(&PaymentTerms::net30());
+    /// struct Net7;
+    /// impl DueInDays for Net7 {
+    ///     fn due_in_days(&self) -> Day {
+    ///         Day::try_from(7).unwrap()
+    ///     }
+    /// }
     ///
-    /// assert_eq!(due_date.to_string(), "2025-06-22");
+    /// let due_date = invoice_date.advance(&Net7);
+    ///
+    /// assert_eq!(due_date.to_string(), "2025-05-30");
     /// ```
-    pub fn advance(&self, terms: &PaymentTerms) -> Self {
-        match terms {
-            PaymentTerms::Net(days) => self.advance_days(days.due_in()),
-        }
+    pub fn advance(&self, terms: &impl DueInDays) -> Self {
+        self.advance_days(&terms.due_in_days())
     }
 }
 
@@ -341,7 +351,7 @@ mod tests {
         assert_eq!(ok, Sut::from_str("2025-05-23").unwrap());
 
         let err = Sut::from_ymd(2025, 2_u32, 30_u32).unwrap_err();
-        assert!(matches!(err, Error::InvalidDate { .. }));
+        assert!(matches!(err, ModelError::InvalidDate { .. }));
     }
 
     #[test]
@@ -373,7 +383,14 @@ mod tests {
         let plus_seven = date.advance_days(&Day::try_from(7).unwrap());
         assert_eq!(plus_seven, Sut::from_str("2025-05-30").unwrap());
 
-        let due = date.advance(&PaymentTerms::net30());
+        struct Net30;
+        impl DueInDays for Net30 {
+            fn due_in_days(&self) -> Day {
+                Day::try_from(30).unwrap()
+            }
+        }
+
+        let due = date.advance(&Net30);
         assert_eq!(due, Sut::from_str("2025-06-22").unwrap());
     }
 }

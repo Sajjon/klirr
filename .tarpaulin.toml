@@ -1,14 +1,14 @@
 [all]
 exclude-files = [
-    "crates/core/src/logic/prepare_data/fetch_exchange_rate_with_reqwest.rs",
-    "crates/render-pdf/src/compare_images.rs",
-    "crates/render/src/render.rs",
+    "crates/foundation/src/exchange_rates.rs",
+    "crates/render-typst/src/compare_images.rs",
+    "crates/render-typst/src/render.rs",
     "crates/cli/src/init_logging.rs",
     "crates/cli/src/input/tui/**",
     "crates/cli/src/main.rs",
     "crates/cli/src/run.rs",
     "crates/cli/src/dispatch_command.rs",
-    "crates/core/src/logic/send_email.rs",
+    "crates/core-invoice/src/logic/send_email.rs",
 ]
 verbose = false
 timeout = "2m"

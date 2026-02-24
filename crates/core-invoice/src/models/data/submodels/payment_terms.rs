@@ -44,6 +44,14 @@ impl PaymentTerms {
     }
 }
 
+impl klirr_foundation::DueInDays for PaymentTerms {
+    fn due_in_days(&self) -> Day {
+        match self {
+            PaymentTerms::Net(days) => *days.due_in(),
+        }
+    }
+}
+
 impl HasSample for PaymentTerms {
     fn sample() -> Self {
         Self::default()

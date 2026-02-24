@@ -1,11 +1,9 @@
-/// Curry a function that takes two arguments into a function that takes one argument and returns another function.
-/// This is useful for partially applying functions in a functional programming style.
+/// Curry a two-argument function into a one-argument function.
 pub fn curry2<T, U, R>(f: impl FnOnce(T, U) -> R, u: U) -> impl FnOnce(T) -> R {
     move |t| f(t, u)
 }
 
-/// Curry a function that takes one argument into a function that takes zero argument and returns another function.
-/// This is useful for partially applying functions in a functional programming style.
+/// Curry a one-argument function into a zero-argument function.
 pub fn curry1<T, R>(f: impl FnOnce(T) -> R, t: T) -> impl FnOnce() -> R {
     move || f(t)
 }

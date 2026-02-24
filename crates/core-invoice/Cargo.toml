@@ -9,33 +9,25 @@ documentation = "https://docs.rs/klirr-core-invoice"
 repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
-klirr-foundation.workspace = true
+klirr-foundation = { workspace = true, features = ["crypto", "exchange-rates"] }
 
-aes-gcm.workspace = true
 bon.workspace = true
 chrono.workspace = true
 derive_more.workspace = true
 dirs-next.workspace = true
 getset.workspace = true
 hex.workspace = true
-hkdf.workspace = true
 indexmap = { version = "2.9.0", features = ["serde"] }
 lazy_static = "1.5.0"
 lettre.workspace = true
 log.workspace = true
 rand.workspace = true
-reqwest = { version = "0.12.19", default-features = false, features = [
-    "blocking",
-    "json",
-    "rustls-tls",
-] }
 ron.workspace = true
 rust_decimal.workspace = true
 secrecy.workspace = true
 serde_json.workspace = true
 serde_with = { version = "3.9", features = ["hex"] }
 serde.workspace = true
-sha2.workspace = true
 strum.workspace = true
 thiserror.workspace = true
 zeroize.workspace = true

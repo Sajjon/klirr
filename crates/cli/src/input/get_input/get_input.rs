@@ -1,15 +1,17 @@
 use crate::{
-    BINARY_NAME, Cadence, DataAdminInput, EmailInput, Error, InvoicedItems, Language, PathBuf,
-    Result, TargetItems, TargetPeriod, TimeOff, ValidInput, period_end_from_relative_time,
+    Cadence, DataAdminInput, EmailInput, Error, InvoicedItems, Language, PathBuf, Result,
+    TargetItems, TargetPeriod, TimeOff, ValidInput, period_end_from_relative_time,
     validate_email_data,
 };
-use bon::Builder;
-use clap::Subcommand;
-use getset::Getters;
 
-use clap::Parser;
-use derive_more::{Debug, Unwrap};
 use klirr_core_invoice::Layout as InvoiceLayout;
+use klirr_foundation::BINARY_NAME;
+
+use bon::Builder;
+use clap::Parser;
+use clap::Subcommand;
+use derive_more::{Debug, Unwrap};
+use getset::Getters;
 
 /// The root argument for the CLI, which contains the subcommands for
 /// generating invoices and managing data.
