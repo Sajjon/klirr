@@ -52,4 +52,9 @@ mod tests {
         assert!(sub1.is_dir());
         assert!(!file.exists());
     }
+
+    #[test]
+    fn create_parent_folder_with_no_parent_path_is_noop() {
+        assert!(create_folder_to_parent_of_path_if_needed(std::path::PathBuf::new()).is_ok());
+    }
 }

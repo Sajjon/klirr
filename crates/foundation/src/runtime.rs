@@ -64,7 +64,16 @@ fn save_pdf_location_to_tmp_file_target(pdf_location: PathBuf, target: Option<Pa
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::OsString;
     use tempfile::NamedTempFile;
+    use tempfile::tempdir;
+
+    fn restore_env_var(name: &str, previous: Option<OsString>) {
+        match previous {
+            Some(value) => unsafe { std::env::set_var(name, value) },
+            None => unsafe { std::env::remove_var(name) },
+        }
+    }
 
     #[test]
     fn save_pdf_location_to_tmp_file_writes_when_env_is_set() {
@@ -85,5 +94,38 @@ mod tests {
     #[test]
     fn save_pdf_location_to_tmp_file_target_no_target_is_noop() {
         save_pdf_location_to_tmp_file_target(PathBuf::from("test.pdf"), None);
+    }
+
+    #[test]
+    fn save_pdf_location_to_tmp_file_target_logs_on_write_error() {
+        let dir = tempdir().unwrap();
+        save_pdf_location_to_tmp_file_target(
+            PathBuf::from("test.pdf"),
+            Some(dir.path().to_path_buf()),
+        );
+    }
+
+    #[test]
+    fn data_dir_create_if_true_creates_directory() {
+        let tmp = tempdir().unwrap();
+        let previous_xdg_data_home = std::env::var_os("XDG_DATA_HOME");
+        let previous_home = std::env::var_os("HOME");
+
+        unsafe {
+            std::env::set_var("XDG_DATA_HOME", tmp.path());
+            std::env::set_var("HOME", tmp.path());
+        }
+
+        let dir = data_dir_create_if(true);
+        assert!(dir.ends_with("klirr/data"));
+        assert!(dir.is_dir());
+
+        restore_env_var("XDG_DATA_HOME", previous_xdg_data_home);
+        restore_env_var("HOME", previous_home);
+    }
+
+    #[test]
+    fn data_dir_matches_non_creating_variant() {
+        assert_eq!(data_dir(), data_dir_create_if(false));
     }
 }

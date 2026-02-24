@@ -119,4 +119,12 @@ mod tests {
             assert!(Sut::from_str(s).is_err(), "Expected error for input: {}", s);
         }
     }
+
+    #[test]
+    fn test_day_try_from_u8_and_u32() {
+        assert_eq!(Sut::try_from(7u8).unwrap(), Day(7));
+        assert_eq!(Sut::try_from(21u32).unwrap(), Day(21));
+        assert!(Sut::try_from(0u8).is_err());
+        assert!(Sut::try_from(42u32).is_err());
+    }
 }

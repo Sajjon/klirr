@@ -59,16 +59,18 @@ fn to_typst_value(value: &Value, indent: usize) -> String {
         Value::Object(map) => {
             // Flatten single-entry enum-like objects (e.g. { "Net": 30 }) to (net: 30)
             if map.len() == 1 {
-                if let Some((variant, inner)) = map.iter().next() {
-                    if inner.is_number() || inner.is_string() || inner.is_object() {
-                        return format!(
-                            "(\n{}{}: {},\n{})",
-                            next_indent_str,
-                            variant.to_lowercase(),
-                            to_typst_value(inner, next_indent),
-                            indent_str
-                        );
-                    }
+                let (variant, inner) = map
+                    .iter()
+                    .next()
+                    .expect("single-entry object must have one entry");
+                if inner.is_number() || inner.is_string() || inner.is_object() {
+                    return format!(
+                        "(\n{}{}: {},\n{})",
+                        next_indent_str,
+                        variant.to_lowercase(),
+                        to_typst_value(inner, next_indent),
+                        indent_str
+                    );
                 }
             }
 
@@ -109,6 +111,7 @@ fn to_typst_value(value: &Value, indent: usize) -> String {
 mod tests {
     use super::*;
     use serde::Serialize;
+    use serde_json::json;
 
     #[derive(Serialize)]
     struct Dummy {
@@ -131,5 +134,48 @@ mod tests {
         assert!(typst.contains("title: \"Example\""));
         assert!(typst.contains("count: 2"));
         assert!(typst.contains("tags: ("));
+    }
+
+    struct FakeTypst;
+
+    impl ToTypstFn for FakeTypst {
+        fn to_typst_fn(&self) -> String {
+            r#"
+            #set text(font: "CMU Serif", size: 12pt)
+            #set text(font: "CMU Sans", size: 11pt)
+            #set text(size: 10pt)
+            "#
+            .to_owned()
+        }
+    }
+
+    #[test]
+    fn extracts_used_fonts() {
+        let fonts = FakeTypst.used_fonts();
+        assert!(fonts.contains("CMU Serif"));
+        assert!(fonts.contains("CMU Sans"));
+        assert_eq!(fonts.len(), 2);
+    }
+
+    #[test]
+    fn typst_value_flattens_single_entry_enum_like_object() {
+        let value = json!({ "Net": 30 });
+        let typst = to_typst_value(&value, 0);
+        assert!(typst.contains("net: 30"));
+    }
+
+    #[test]
+    fn typst_value_keeps_single_entry_array_object_as_regular_object() {
+        let value = json!({ "items": [1, 2] });
+        let typst = to_typst_value(&value, 0);
+        assert!(typst.contains("items: ("));
+    }
+
+    #[test]
+    fn typst_value_handles_scalars_and_null() {
+        assert_eq!(to_typst_value(&json!(true), 0), "true");
+        assert_eq!(to_typst_value(&json!(12), 0), "12");
+        assert_eq!(to_typst_value(&json!("abc"), 0), "\"abc\"");
+        assert_eq!(to_typst_value(&json!(null), 0), "none");
     }
 }

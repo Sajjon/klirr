@@ -305,4 +305,10 @@ mod tests {
         let sample_currency = Sut::sample();
         assert_eq!(sample_currency, Sut::EUR);
     }
+
+    #[test]
+    fn test_from_str_invalid() {
+        let error = Sut::from_str("ZZZ").unwrap_err();
+        assert_eq!(error, "unknown currency code: ZZZ");
+    }
 }

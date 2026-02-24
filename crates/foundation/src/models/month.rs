@@ -233,4 +233,22 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_month_method_covers_middle_variants() {
+        assert_eq!(*Month::June.month(), 6);
+        assert_eq!(*Month::July.month(), 7);
+        assert_eq!(*Month::August.month(), 8);
+        assert_eq!(*Month::September.month(), 9);
+        assert_eq!(*Month::October.month(), 10);
+        assert_eq!(*Month::November.month(), 11);
+    }
+
+    #[test]
+    fn test_month_try_from_u8_and_u32() {
+        assert_eq!(Month::try_from(6u8).unwrap(), Month::June);
+        assert_eq!(Month::try_from(11u32).unwrap(), Month::November);
+        assert!(Month::try_from(0u8).is_err());
+        assert!(Month::try_from(99u32).is_err());
+    }
 }

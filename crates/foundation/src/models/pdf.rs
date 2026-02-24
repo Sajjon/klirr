@@ -37,6 +37,7 @@ pub fn save_pdf(pdf: Pdf, pdf_path: impl AsRef<Path>) -> Result<PathBuf, String>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn equality() {
@@ -49,5 +50,12 @@ mod tests {
     fn inequality() {
         assert_ne!(Pdf(vec![1, 2, 3, 4]), Pdf(vec![4, 3, 2, 1]));
         assert_ne!(Pdf::sample(), Pdf::sample_other());
+    }
+
+    #[test]
+    fn save_pdf_error_uses_debug_formatter() {
+        let dir = tempdir().unwrap();
+        let error = save_pdf(Pdf::sample(), dir.path()).unwrap_err();
+        assert!(error.contains(", "));
     }
 }

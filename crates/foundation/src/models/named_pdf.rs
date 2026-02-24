@@ -45,3 +45,29 @@ impl<D: HasSample> HasSample for AbstractNamedPdf<D> {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Day;
+
+    type Sut = AbstractNamedPdf<Day>;
+
+    #[test]
+    fn sample_populates_expected_fields() {
+        let sample = Sut::sample();
+        assert_eq!(*sample.prepared_data(), Day::sample());
+        assert_eq!(*sample.pdf(), Pdf::sample());
+        assert_eq!(sample.saved_at(), &PathBuf::from("/tmp/sample.pdf"));
+        assert_eq!(sample.name(), "sample.pdf");
+    }
+
+    #[test]
+    fn sample_other_populates_expected_fields() {
+        let sample = Sut::sample_other();
+        assert_eq!(*sample.prepared_data(), Day::sample_other());
+        assert_eq!(*sample.pdf(), Pdf::sample_other());
+        assert_eq!(sample.saved_at(), &PathBuf::from("/tmp/another_sample.pdf"));
+        assert_eq!(sample.name(), "another_sample.pdf");
+    }
+}

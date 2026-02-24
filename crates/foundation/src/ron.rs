@@ -77,6 +77,7 @@ pub fn path_to_ron_file_with_base(base_path: impl AsRef<Path>, name: &str) -> Pa
 mod tests {
     use super::*;
     use serde::Deserialize;
+    use serde::Serializer;
     use tempfile::NamedTempFile;
 
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -113,5 +114,37 @@ mod tests {
     fn path_builder_adds_extension() {
         let path = path_to_ron_file_with_base("/tmp/klirr", "data");
         assert!(path.ends_with("data.ron"));
+    }
+
+    struct FailingSerialize;
+
+    impl Serialize for FailingSerialize {
+        fn serialize<S>(&self, _serializer: S) -> std::result::Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            Err(serde::ser::Error::custom("cannot serialize"))
+        }
+    }
+
+    #[test]
+    fn save_to_disk_serialize_error() {
+        let tmp = NamedTempFile::new().unwrap();
+        let result = save_to_disk(&FailingSerialize, tmp.path());
+        assert!(matches!(result, Err(RonError::FailedToSerialize { .. })));
+    }
+
+    #[test]
+    fn save_to_disk_write_error() {
+        let result = save_to_disk(
+            &Example {
+                name: "A".to_owned(),
+            },
+            "/definitely/missing/parent/folder/example.ron",
+        );
+        assert!(matches!(
+            result,
+            Err(RonError::FailedToWriteDataToDisk { .. })
+        ));
     }
 }

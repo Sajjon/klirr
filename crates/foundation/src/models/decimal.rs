@@ -49,12 +49,10 @@ use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 impl TryFrom<Decimal> for f64 {
     type Error = ModelError;
     fn try_from(value: Decimal) -> ModelResult<Self> {
-        value
+        Ok(value
             .0
             .to_f64()
-            .ok_or_else(|| ModelError::InvalidDecimalToF64Conversion {
-                value: value.to_string(),
-            })
+            .expect("rust_decimal::Decimal::to_f64 should be infallible for valid Decimal values"))
     }
 }
 impl TryFrom<f64> for Decimal {
@@ -108,6 +106,31 @@ mod tests {
     #[test]
     fn test_decimal_from_f64_nan() {
         let result = Sut::try_from(f64::NAN);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_decimal_from_f64_infinity() {
+        let result = Sut::try_from(f64::INFINITY);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_decimal_to_f64_success() {
+        let number = Sut::from(dec!(123.25));
+        let float = f64::try_from(number).unwrap();
+        assert_eq!(float, 123.25);
+    }
+
+    #[test]
+    fn test_deserialize_from_json_number() {
+        let number: Sut = serde_json::from_str("3.25").unwrap();
+        assert_eq!(number, Sut::from(dec!(3.25)));
+    }
+
+    #[test]
+    fn test_deserialize_invalid_json_type() {
+        let result = serde_json::from_str::<Sut>("\"abc\"");
         assert!(result.is_err());
     }
 }

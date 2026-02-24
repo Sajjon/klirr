@@ -84,6 +84,14 @@ mod tests {
         bytes: Vec<u8>,
     }
 
+    fn map_io_error(error: std::io::Error) -> String {
+        format!("{error:?}")
+    }
+
+    fn render_prepared(prepared: Prepared) -> Result<Pdf, String> {
+        Ok(Pdf::from(prepared.bytes))
+    }
+
     #[test]
     fn pipeline_builds_pdf_and_persists_to_disk() {
         let tmp = tempfile::NamedTempFile::new().unwrap();
@@ -101,13 +109,46 @@ mod tests {
                 let _ = prepared;
                 resolve_output_path_and_name(&out, "ignored")
             },
-            |prepared| Ok::<Pdf, String>(Pdf::from(prepared.bytes)),
-            |e| format!("{e:?}"),
+            render_prepared,
+            map_io_error,
             |e| e,
         )
         .unwrap();
 
         assert_eq!(named_pdf.pdf().as_ref(), &vec![1, 2, 3]);
         assert!(named_pdf.saved_at().exists());
+    }
+
+    #[test]
+    fn resolve_output_path_and_name_for_name_variant() {
+        let output = OutputPath::Name("invoice.pdf".to_owned());
+        let path_and_name = resolve_output_path_and_name(&output, "Invoices").unwrap();
+        assert_eq!(path_and_name.name(), "invoice.pdf");
+        assert!(path_and_name.path().ends_with("Invoices/invoice.pdf"));
+    }
+
+    #[test]
+    fn pipeline_maps_create_output_dir_errors() {
+        let blocker = tempfile::NamedTempFile::new().unwrap();
+        let out = OutputPath::AbsolutePath(blocker.path().join("blocked").join("invoice.pdf"));
+
+        let result = create_pdf_document(
+            (),
+            || {
+                Ok::<Prepared, String>(Prepared {
+                    bytes: vec![1, 2, 3],
+                })
+            },
+            |data, _| Ok::<Prepared, String>(data),
+            |prepared| {
+                let _ = prepared;
+                resolve_output_path_and_name(&out, "ignored")
+            },
+            render_prepared,
+            map_io_error,
+            |e| e,
+        );
+
+        assert!(result.is_err());
     }
 }
