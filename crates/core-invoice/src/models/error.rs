@@ -664,4 +664,128 @@ mod tests {
         let err = Error::aes_decryption_failed(DebugPassthrough("tag mismatch"));
         assert!(matches!(err, Error::AESDecryptionFailed));
     }
+
+    #[test]
+    fn from_crypto_error_maps_all_variants() {
+        let invalid_utf8: Error = klirr_foundation::CryptoError::InvalidUtf8.into();
+        assert_eq!(invalid_utf8, Error::InvalidUtf8);
+
+        let aes_decryption_failed: Error =
+            klirr_foundation::CryptoError::AesDecryptionFailed.into();
+        assert_eq!(aes_decryption_failed, Error::AESDecryptionFailed);
+
+        let invalid_too_short: Error = klirr_foundation::CryptoError::InvalidAesBytesTooShort {
+            expected_at_least: 32,
+            found: 7,
+        }
+        .into();
+        assert_eq!(
+            invalid_too_short,
+            Error::InvalidAESBytesTooShort {
+                expected_at_least: 32,
+                found: 7,
+            }
+        );
+    }
+
+    #[test]
+    fn from_model_error_maps_all_variants() {
+        let err: Error = klirr_foundation::ModelError::InvalidDecimalToF64Conversion {
+            value: "12.34".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidDecimalToF64Conversion {
+                value: "12.34".to_string()
+            }
+        );
+
+        let err: Error =
+            klirr_foundation::ModelError::InvalidDecimalFromF64Conversion { value: 99.5 }.into();
+        assert_eq!(err, Error::InvalidDecimalFromF64Conversion { value: 99.5 });
+
+        let err: Error = klirr_foundation::ModelError::FailedToParseYear {
+            invalid_string: "20xx".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::FailedToParseYear {
+                invalid_string: "20xx".to_string()
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidDayFromString {
+            invalid_string: "foo".to_string(),
+            reason: "not a number".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidDayFromString {
+                invalid_string: "foo".to_string(),
+                reason: "not a number".to_string(),
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidDay {
+            day: 99,
+            reason: "out of range".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidDay {
+                day: 99,
+                reason: "out of range".to_string(),
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidMonth {
+            month: 13,
+            reason: "out of range".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidMonth {
+                month: 13,
+                reason: "out of range".to_string(),
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::FailedToParseMonth {
+            invalid_string: "Smarch".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::FailedToParseMonth {
+                invalid_string: "Smarch".to_string()
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::FailedToParseDate {
+            underlying: "bad format".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::FailedToParseDate {
+                underlying: "bad format".to_string()
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidDate {
+            underlying: "day out of range".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidDate {
+                underlying: "day out of range".to_string()
+            }
+        );
+    }
 }

@@ -103,6 +103,32 @@ mod tests {
     }
 
     #[test]
+    fn ignores_non_data_version_mismatch_errors() {
+        let err = Error::Core(klirr_core_invoice::Error::FileNotFound {
+            path: "/tmp/missing.ron".to_string(),
+            underlying: "No such file or directory".to_string(),
+        });
+
+        assert!(requires_manual_data_migration(&err).is_none());
+    }
+
+    #[test]
+    fn instructions_include_hint_versions_data_dir_and_guide_path() {
+        let err = Error::Core(klirr_core_invoice::Error::DataVersionMismatch {
+            found: klirr_core_invoice::Version::V0,
+            current: klirr_core_invoice::Version::V1,
+        });
+        let migration = requires_manual_data_migration(&err).expect("expected migration guide");
+        let instructions = migration.instructions();
+
+        assert!(instructions.contains(DATA_MANUAL_MIGRATION_HINT));
+        assert!(instructions.contains("From data version: V0"));
+        assert!(instructions.contains("To data version: V1"));
+        assert!(instructions.contains(&format!("RON files location: {}", data_dir().display())));
+        assert!(instructions.contains("Migration guide: migration/v1.md"));
+    }
+
+    #[test]
     fn migration_guide_exists_for_every_version_variant() {
         let empty_guides = empty_migration_guides();
         assert!(
