@@ -1,7 +1,7 @@
 [package]
 name = "klirr"
 rust-version = "1.85.1"
-version = "0.2.10"
+version = "0.2.11"
 edition = "2024"
 description = "Zero-maintenance and smart FOSS generating beautiful invoices for services and expenses."
 license = "MIT"
