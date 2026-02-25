@@ -170,7 +170,7 @@ fn run_invoice_command_with_base_path(
     info!("🔮 Starting invoice PDF creation...");
     let email_settings = input.email().clone();
     let named_pdf = create_invoice_pdf_with_data(data, input, render_invoice)?;
-    save_pdf_location_to_tmp_file(named_pdf.saved_at().clone())?;
+    save_pdf_location_to_tmp_file(named_pdf.saved_at().clone());
     if let Some(email_settings) = email_settings {
         info!("Sending email with invoice...");
         send_email_with_settings_for_pdf(&named_pdf, &email_settings)?;

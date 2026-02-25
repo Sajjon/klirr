@@ -1,5 +1,8 @@
+use crate::{DocumentPlan, Error, InlineModule, Result, typst_context::TypstContext};
 use klirr_foundation::{FontRequiring, Pdf, TYPST_LAYOUT_FOUNDATION, ToTypstFn};
-use klirr_render_pdf::{DocumentPlan, Error as RenderPdfError, InlineModule, render_document};
+use log::debug;
+use typst::layout::PagedDocument;
+use typst_pdf::PdfOptions;
 
 pub const TYPST_VIRTUAL_NAME_MAIN: &str = "main.typ";
 pub const TYPST_VIRTUAL_NAME_LAYOUT: &str = "layout.typ";
@@ -8,12 +11,25 @@ pub const TYPST_VIRTUAL_NAME_L10N: &str = "l10n.typ";
 pub const TYPST_FOUNDATION_NAME: &str = "foundation.typ";
 pub const TYPST_FOUNDATION_CONTENT: &str = TYPST_LAYOUT_FOUNDATION;
 
+/// Renders a Typst document described by the provided plan into a PDF.
+fn render_document(plan: &DocumentPlan) -> Result<Pdf> {
+    debug!("☑️ Creating typst context");
+    let context = TypstContext::from_plan(plan)?;
+    debug!("☑️ Compiling typst...");
+    let compile_result = typst::compile::<PagedDocument>(&context);
+    let doc = compile_result.output.map_err(Error::build_pdf)?;
+    debug!("✅ Compiled typst source: #{} pages", doc.pages.len());
+    let pdf_bytes =
+        typst_pdf::pdf(&doc, &PdfOptions::default()).map_err(Error::export_document_to_pdf)?;
+    Ok(Pdf::from(pdf_bytes))
+}
+
 /// Renders a PDF document using Typst with the provided layout, localization, and data.
 pub fn render<I: ToTypstFn, D: ToTypstFn, L: ToTypstFn + FontRequiring, E>(
     i18n: I,
     data: D,
     layout: L,
-    map_render_error: impl Fn(RenderPdfError) -> E,
+    map_render_error: impl Fn(Error) -> E,
 ) -> Result<Pdf, E> {
     let l10n_typst_str = i18n.to_typst_fn();
     let data_typst_str = data.to_typst_fn();
@@ -43,12 +59,22 @@ pub fn render<I: ToTypstFn, D: ToTypstFn, L: ToTypstFn + FontRequiring, E>(
 
 #[cfg(test)]
 mod tests {
-    use crate::render_test_helpers::*;
+    use crate::{DocumentPlan, render::render_document, render_test_helpers::*};
     use klirr_core_invoice::{
         Currency, Data, Date, ExchangeRatesMap, HasSample, InvoicedItems, Language, UnitPrice,
         ValidInput,
     };
+    use klirr_foundation::{FontIdentifier, FontWeight};
     use test_log::test;
+
+    #[test]
+    fn renders_simple_document() {
+        let plan = DocumentPlan::new(
+            [FontIdentifier::ComputerModern(FontWeight::Regular)],
+            crate::module::InlineModule::new("main.typ", "#box(\"hello\")"),
+        );
+        assert!(render_document(&plan).is_ok());
+    }
 
     #[test]
     fn sample_expenses() {

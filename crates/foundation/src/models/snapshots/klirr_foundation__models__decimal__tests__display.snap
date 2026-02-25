@@ -1,0 +1,6 @@
+---
+source: crates/foundation/src/models/decimal.rs
+assertion_line: 100
+expression: "Sut::EIGHT"
+---
+8

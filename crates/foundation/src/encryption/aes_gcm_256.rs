@@ -1,11 +1,11 @@
-use crate::{AesGcmSealedBox, AesNonce, EncryptionKey, Error, Result};
-
 use aes_gcm::{
     Key,
     aead::{Aead, AeadCore, KeyInit, OsRng},
 };
 
-/// AES GCM 256 encryption
+use super::{AesGcmSealedBox, AesNonce, CryptoError, EncryptionKey, Result};
+
+/// AES-GCM-256 encryption helper.
 #[derive(Clone, Default, PartialEq, Eq, Hash, derive_more::Display, derive_more::Debug)]
 pub struct AesGcm256;
 
@@ -24,7 +24,7 @@ impl AesGcm256 {
         encryption_key: Key<aes_gcm::Aes256Gcm>,
     ) -> AesGcmSealedBox {
         let cipher = aes_gcm::Aes256Gcm::new(&encryption_key);
-        let nonce = aes_gcm::Aes256Gcm::generate_nonce(&mut OsRng); // 12 bytes; unique per message
+        let nonce = aes_gcm::Aes256Gcm::generate_nonce(&mut OsRng);
         let cipher_text = cipher
             .encrypt(&nonce, plaintext.as_ref())
             .expect("AES encrypt never fails for valid nonce.");
@@ -49,11 +49,9 @@ impl AesGcm256 {
         let cipher_text = sealed_box.cipher_text();
         cipher
             .decrypt(sealed_box.nonce().into(), cipher_text.as_ref())
-            .map_err(Error::aes_decryption_failed)
+            .map_err(CryptoError::aes_decryption_failed)
     }
-}
 
-impl AesGcm256 {
     /// Seals the plaintext using AES GCM 256 encryption with the provided encryption key.
     /// Returns an `AesGcmSealedBox` containing the encrypted data and nonce
     /// # Arguments
@@ -64,8 +62,8 @@ impl AesGcm256 {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let secret = "super secret data";
     /// let encryption_key = EncryptionKey([0xabu8; 32]);
     /// // Seal the plaintext
@@ -87,8 +85,8 @@ impl AesGcm256 {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let secret = "super secret data";
     /// let encryption_key = EncryptionKey([0xabu8; 32]);
     /// // Seal the plaintext
@@ -103,11 +101,8 @@ impl AesGcm256 {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use hex::decode as hex_decode;
-
-    type Sut = AesGcm256;
 
     fn sample_encryption_key() -> EncryptionKey {
         EncryptionKey([0xabu8; 32])
@@ -117,7 +112,7 @@ mod tests {
     fn test_decrypt() {
         let combined = hex_decode("ae8e7654ded1c276d5c428b10bef17f2a3b885e156a853e781fabe219fa19e5780c1a57a51a58c7384e69545da6a83bf4f").unwrap();
         let sealed_box = AesGcmSealedBox::try_from(combined.as_slice()).unwrap();
-        let decrypted = Sut::open(sealed_box, sample_encryption_key()).unwrap();
+        let decrypted = AesGcm256::open(sealed_box, sample_encryption_key()).unwrap();
         let decrypted_str = String::from_utf8(decrypted).unwrap();
         assert_eq!(decrypted_str, "yay decryption worked");
     }
@@ -126,8 +121,8 @@ mod tests {
     fn test_roundtrip() {
         let plaintext = "so super secret".to_owned();
         let encryption_key = sample_encryption_key();
-        let sealed = Sut::seal(plaintext.clone(), encryption_key.clone());
-        let decrypted = Sut::open(sealed.clone(), encryption_key).unwrap();
+        let sealed = AesGcm256::seal(plaintext.clone(), encryption_key.clone());
+        let decrypted = AesGcm256::open(sealed.clone(), encryption_key).unwrap();
         let decrypted_str = String::from_utf8(decrypted).unwrap();
         assert_eq!(plaintext, decrypted_str);
     }
@@ -135,14 +130,14 @@ mod tests {
     #[test]
     fn test_fail() {
         assert_eq!(
-            Sut::open(
+            AesGcm256::open(
                 AesGcmSealedBox::builder()
                     .nonce([0xabu8; 12])
                     .cipher_text(hex_decode("deadbeef").unwrap())
                     .build(),
                 sample_encryption_key()
             ),
-            Err(Error::AESDecryptionFailed)
+            Err(CryptoError::AesDecryptionFailed)
         )
     }
 }

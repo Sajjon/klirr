@@ -1,11 +1,10 @@
 pub const INVOICES_FOLDER_NAME: &str = "invoices";
 
-use klirr_foundation::ToTypst;
+use klirr_foundation::{PathAndName, ToTypst, resolve_output_path_and_name};
 
 use crate::{
-    CompanyInformation, Error, ExchangeRates, InvoiceInfoFull, LineItemsFlat,
-    LineItemsPricedInSourceCurrency, MaybeIsExpenses, OutputPath, PathBuf, PaymentInformation,
-    Result,
+    CompanyInformation, Error, ExchangeRates, HasSample, InvoiceInfoFull, LineItemsFlat,
+    LineItemsPricedInSourceCurrency, MaybeIsExpenses, OutputPath, PaymentInformation, Result,
 };
 use bon::Builder;
 use getset::Getters;
@@ -17,12 +16,6 @@ pub type DataWithItemsPricedInSourceCurrency =
 pub type PreparedData = DataFromDiskWithItemsOfKind<LineItemsFlat>;
 
 impl ToTypst for PreparedData {}
-
-pub trait HasSample: Sized {
-    /// Returns a sample instance of the type.
-    fn sample() -> Self;
-    fn sample_other() -> Self;
-}
 
 /// The input data for the invoice, which includes information about the invoice,
 /// the vendor, and the client and the products/services included in the invoice.
@@ -56,7 +49,8 @@ pub struct DataFromDiskWithItemsOfKind<Items: Serialize + MaybeIsExpenses> {
 
 impl<Items: Serialize + MaybeIsExpenses> DataFromDiskWithItemsOfKind<Items> {
     /// Returns the absolute path where the invoice will be saved.
-    /// If the path is relative, it will be created relative to the workspace root.
+    /// If the path is relative (`OutputPath::Name`), it will be created in
+    /// `$HOME/invoices`.
     /// If the path is absolute, it will be returned as is.
     ///
     /// # Errors
@@ -81,33 +75,9 @@ impl<Items: Serialize + MaybeIsExpenses> DataFromDiskWithItemsOfKind<Items> {
     /// assert_eq!(path_and_name.name(), "invoice.pdf");
     /// ```
     pub fn absolute_path_and_name(&self) -> Result<PathAndName> {
-        match &self.output_path {
-            OutputPath::AbsolutePath(path) => Ok(PathAndName::builder()
-                .path(path.clone())
-                .name(path.file_name().unwrap().to_string_lossy().into())
-                .build()),
-            OutputPath::Name(name) => {
-                let mut path =
-                    dirs_next::home_dir().ok_or(Error::FailedToCreateOutputDirectory {
-                        underlying: "Failed to find output dir (home dir)".to_owned(),
-                    })?;
-                path.push(INVOICES_FOLDER_NAME);
-                path.push(name);
-                Ok(PathAndName::builder().path(path).name(name.clone()).build())
-            }
-        }
+        resolve_output_path_and_name(&self.output_path, INVOICES_FOLDER_NAME)
+            .map_err(Error::failed_to_create_output_directory)
     }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Builder, Getters)]
-pub struct PathAndName {
-    /// The absolute path to the file.
-    #[getset(get = "pub")]
-    path: PathBuf,
-
-    /// The name of the file.
-    #[getset(get = "pub")]
-    name: String,
 }
 
 impl<Items: Serialize + MaybeIsExpenses + HasSample> HasSample
@@ -190,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_get_absolute_path_with_absolute_path() {
-        let custom_path = PathBuf::from("custom/invoice.pdf");
+        let custom_path = crate::PathBuf::from("custom/invoice.pdf");
         let data = DataWithItemsPricedInSourceCurrency::builder()
             .output_path(OutputPath::AbsolutePath(custom_path.clone()))
             .information(InvoiceInfoFull::sample())

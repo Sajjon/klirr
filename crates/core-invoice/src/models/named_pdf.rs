@@ -1,28 +1,8 @@
-use klirr_foundation::{AbstractNamedPdf, Pdf};
+use klirr_foundation::AbstractNamedPdf;
 
-use crate::{HasSample, PathBuf, PreparedData};
+use crate::PreparedData;
 
 pub type NamedPdf = AbstractNamedPdf<PreparedData>;
-
-impl HasSample for NamedPdf {
-    fn sample() -> Self {
-        Self::builder()
-            .prepared_data(PreparedData::sample())
-            .pdf(Pdf::sample()) // Sample PDF data
-            .saved_at(PathBuf::from("/tmp/sample_invoice.pdf"))
-            .name("sample_invoice.pdf".to_string())
-            .build()
-    }
-
-    fn sample_other() -> Self {
-        Self::builder()
-            .prepared_data(PreparedData::sample_other())
-            .pdf(Pdf::sample_other()) // Another sample PDF data
-            .saved_at(PathBuf::from("/tmp/another_invoice.pdf"))
-            .name("another_invoice.pdf".to_string())
-            .build()
-    }
-}
 
 #[cfg(test)]
 mod tests {

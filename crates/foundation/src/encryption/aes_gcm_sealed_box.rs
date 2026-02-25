@@ -1,8 +1,8 @@
-use crate::{Error, Result};
 use bon::Builder;
 use getset::Getters;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+use super::{CryptoError, Result};
 
 pub type AesNonce = [u8; 12];
 
@@ -20,9 +20,9 @@ pub struct AesGcmSealedBox {
 impl AesGcmSealedBox {
     const AUTH_TAG_LEN: usize = 16;
     const NONCE_LEN: usize = 12;
-    const LOWER_BOUND_LEN: usize = Self::AUTH_TAG_LEN + Self::NONCE_LEN + 1; // at least 1 byte cipher. VERY much LOWER bound
+    const LOWER_BOUND_LEN: usize = Self::AUTH_TAG_LEN + Self::NONCE_LEN + 1;
 
-    pub(super) fn combined(self) -> Vec<u8> {
+    pub fn combined(self) -> Vec<u8> {
         let mut combined = Vec::with_capacity(self.nonce.len() + self.cipher_text.len());
         let mut nonce = self.nonce.to_vec();
         let mut cipher_text = self.cipher_text;
@@ -34,11 +34,11 @@ impl AesGcmSealedBox {
 }
 
 impl TryFrom<&[u8]> for AesGcmSealedBox {
-    type Error = crate::Error;
+    type Error = CryptoError;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         if bytes.len() < Self::LOWER_BOUND_LEN {
-            return Err(Error::InvalidAESBytesTooShort {
+            return Err(CryptoError::InvalidAesBytesTooShort {
                 expected_at_least: Self::LOWER_BOUND_LEN,
                 found: bytes.len(),
             });

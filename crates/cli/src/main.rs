@@ -4,10 +4,11 @@ mod dispatch_command;
 mod error;
 mod init_logging;
 mod input;
+mod migration_guides;
 mod run;
 
 pub(crate) use klirr_core_invoice::{
-    BINARY_NAME, Cadence, CompanyInformation, Currency, Data, DataSelector, Date, Day, Decimal,
+    Cadence, CompanyInformation, Currency, Data, DataSelector, Date, Day, Decimal,
     DecryptedEmailSettings, EmailAccount, EmailAddress, EmailSettingsSelector,
     EncryptedAppPassword, EncryptedEmailSettings, FooterText, Granularity, HasSample, HexColor,
     InvoiceNumber, InvoicedItems, Item, Language, Month, MonthHalf, NamedPdf, Path, PathBuf,

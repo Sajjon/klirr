@@ -1,11 +1,12 @@
 use crate::{
-    BINARY_NAME, Data, DecryptedEmailSettings, EncryptedEmailSettings, Error, ExpensedPeriods,
-    HasSample, Item, NamedPdf, Path, ProtoInvoiceInfo, Result, deserialize_contents_of_ron,
-    expensed_periods_path, parse_period_label_for_cadence, proto_invoice_info_path,
-    read_data_from_disk_with_base_path, read_email_data_from_disk_with_base_path,
-    save_data_with_base_path, save_email_settings_with_base_path, save_to_disk,
-    send_email_with_settings_for_pdf, service_fees,
+    Data, DecryptedEmailSettings, EncryptedEmailSettings, Error, ExpensedPeriods, HasSample, Item,
+    NamedPdf, Path, ProtoInvoiceInfo, Result, deserialize_contents_of_ron, expensed_periods_path,
+    parse_period_label_for_cadence, proto_invoice_info_path, read_data_from_disk_with_base_path,
+    read_email_data_from_disk_with_base_path, save_data_with_base_path,
+    save_email_settings_with_base_path, save_to_disk, send_email_with_settings_for_pdf,
+    service_fees,
 };
+use klirr_foundation::BINARY_NAME;
 use log::error;
 use log::info;
 use secrecy::{ExposeSecret, SecretString};

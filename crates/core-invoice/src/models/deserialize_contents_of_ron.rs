@@ -1,5 +1,5 @@
 use crate::{Error, Path, Result};
-use log::trace;
+use klirr_foundation::RonError;
 use serde::de::DeserializeOwned;
 
 /// Returns the type name of the generic type `T` as a `String`.
@@ -12,7 +12,7 @@ use serde::de::DeserializeOwned;
 /// assert!(type_name.ends_with("CompanyInformation"));
 /// ```
 pub fn type_name<T>() -> String {
-    std::any::type_name::<T>().to_string()
+    klirr_foundation::type_name::<T>()
 }
 
 /// Tries to load the contents of a file at the given path and deserialize it from RON format into the specified type.
@@ -21,22 +21,28 @@ pub fn type_name<T>() -> String {
 /// - `Error::FileNotFound` if the file does not exist or cannot be read
 /// - `Error::Deserialize` if the contents cannot be deserialized into the specified type
 pub fn deserialize_contents_of_ron<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T> {
-    use std::fs;
-    let path = path.as_ref();
-    let ron_str =
-        fs::read_to_string(path).map_err(Error::file_not_found(path.display().to_string()))?;
-    deserialize_ron_str(&ron_str)
+    klirr_foundation::deserialize_contents_of_ron(path).map_err(map_ron_error)
 }
 
 pub fn deserialize_ron_str<T: DeserializeOwned>(ron_str: &str) -> Result<T> {
-    use ron::de::from_str;
-    let type_name = type_name::<T>();
-    trace!("☑️ Deserializing {} from RON str", type_name);
-    let result = from_str(ron_str)
-        .inspect(|_| trace!("✅ Deserialized {} from RON str", type_name))
-        .map_err(Error::deserialize(type_name))?;
+    klirr_foundation::deserialize_ron_str(ron_str).map_err(map_ron_error)
+}
 
-    Ok(result)
+fn map_ron_error(error: RonError) -> Error {
+    match error {
+        RonError::FileNotFound { path, underlying } => Error::FileNotFound { path, underlying },
+        RonError::Deserialize { type_name, error } => Error::Deserialize { type_name, error },
+        RonError::FailedToSerialize {
+            type_name,
+            underlying,
+        } => Error::FailedToRonSerializeData {
+            type_name,
+            underlying,
+        },
+        RonError::FailedToWriteDataToDisk { underlying } => {
+            Error::FailedToWriteDataToDisk { underlying }
+        }
+    }
 }
 
 #[cfg(test)]

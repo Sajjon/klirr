@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{ModelError, ModelResult};
 use derive_more::Deref;
 use derive_more::Display;
 use derive_more::From;
@@ -47,26 +47,24 @@ impl Decimal {
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 
 impl TryFrom<Decimal> for f64 {
-    type Error = crate::Error;
-    fn try_from(value: Decimal) -> Result<Self> {
-        value
+    type Error = ModelError;
+    fn try_from(value: Decimal) -> ModelResult<Self> {
+        Ok(value
             .0
             .to_f64()
-            .ok_or_else(|| Error::InvalidDecimalToF64Conversion {
-                value: value.to_string(),
-            })
+            .expect("rust_decimal::Decimal::to_f64 should be infallible for valid Decimal values"))
     }
 }
 impl TryFrom<f64> for Decimal {
-    type Error = crate::Error;
-    fn try_from(value: f64) -> Result<Self> {
+    type Error = ModelError;
+    fn try_from(value: f64) -> ModelResult<Self> {
         rust_decimal::Decimal::from_f64(value)
-            .ok_or(Error::InvalidDecimalFromF64Conversion { value })
+            .ok_or(ModelError::InvalidDecimalFromF64Conversion { value })
             .map(Decimal)
     }
 }
 impl Serialize for Decimal {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -77,7 +75,7 @@ impl Serialize for Decimal {
 }
 
 impl<'de> Deserialize<'de> for Decimal {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
@@ -108,6 +106,31 @@ mod tests {
     #[test]
     fn test_decimal_from_f64_nan() {
         let result = Sut::try_from(f64::NAN);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_decimal_from_f64_infinity() {
+        let result = Sut::try_from(f64::INFINITY);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_decimal_to_f64_success() {
+        let number = Sut::from(dec!(123.25));
+        let float = f64::try_from(number).unwrap();
+        assert_eq!(float, 123.25);
+    }
+
+    #[test]
+    fn test_deserialize_from_json_number() {
+        let number: Sut = serde_json::from_str("3.25").unwrap();
+        assert_eq!(number, Sut::from(dec!(3.25)));
+    }
+
+    #[test]
+    fn test_deserialize_invalid_json_type() {
+        let result = serde_json::from_str::<Sut>("\"abc\"");
         assert!(result.is_err());
     }
 }

@@ -1,6 +1,6 @@
 use derive_more::Constructor;
 
-use crate::{Error, Result};
+use crate::{ModelError, ModelResult};
 use derive_more::Deref;
 use derive_more::Display;
 use derive_more::From;
@@ -27,21 +27,21 @@ use serde::Serialize;
 pub struct Year(u16);
 
 impl std::str::FromStr for Year {
-    type Err = crate::Error;
+    type Err = ModelError;
 
     /// Parses a year from a string, e.g. "2025".
     /// # Errors
     /// Returns an error if the string is not a valid year.
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let year: Year = "2025".parse().unwrap();
     /// assert_eq!(*year, 2025);
     /// ```
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> ModelResult<Self, Self::Err> {
         s.parse::<u16>()
-            .map_err(|_| Error::FailedToParseYear {
+            .map_err(|_| ModelError::FailedToParseYear {
                 invalid_string: s.to_owned(),
             })
             .map(Self)
@@ -52,8 +52,8 @@ impl From<i32> for Year {
     /// Converts an `i32` year to a `Year`.
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let year: Year = 2025.into();
     /// assert_eq!(*year, 2025);
     /// ```
@@ -67,8 +67,8 @@ impl Year {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     ///
     /// assert!(Year::from(2024).is_leap());
     /// assert!(!Year::from(2025).is_leap());

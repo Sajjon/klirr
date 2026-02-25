@@ -7,7 +7,7 @@ use std::process::Command;
 ///
 /// If `allow_overwrite_expected` is `true`, the expected file is replaced with
 /// the new image whenever it is missing or the comparison fails.
-pub fn compare_image_against_expected(
+pub(crate) fn _compare_image_against_expected(
     new_image: Vec<u8>,
     path_to_expected_image: impl AsRef<Path>,
     allow_overwrite_expected: bool,
@@ -68,7 +68,7 @@ pub fn compare_image_against_expected(
 }
 
 /// Checks if ImageMagick is installed by trying to run `magick -version` or `convert -version`.
-pub fn is_imagemagick_installed() -> bool {
+pub(crate) fn is_imagemagick_installed() -> bool {
     Command::new("magick").arg("-version").output().is_ok()
         || Command::new("convert").arg("-version").output().is_ok()
 }
