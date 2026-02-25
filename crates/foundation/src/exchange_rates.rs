@@ -276,7 +276,15 @@ impl<T> ExchangeRatesFetcher<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
+    use rust_decimal::dec;
+    use tempfile::{TempDir, tempdir};
+
+    fn temp_fetcher(tempdir: &TempDir) -> ExchangeRatesFetcher {
+        ExchangeRatesFetcher::builder()
+            .path_to_cache(tempdir.path().to_path_buf())
+            .extra(())
+            .build()
+    }
 
     #[test]
     fn test_format_url() {
@@ -318,11 +326,77 @@ mod tests {
     #[test]
     fn fetcher_uses_custom_cache_dir() {
         let tempdir = tempdir().unwrap();
-        let fetcher = ExchangeRatesFetcher::builder()
-            .path_to_cache(tempdir.path().to_path_buf())
-            .extra(())
-            .build();
+        let fetcher = temp_fetcher(&tempdir);
         let path = fetcher.path();
         assert!(path.ends_with("cached_rates.ron"));
+    }
+
+    #[test]
+    fn if_fetched_new_rates_is_false_cache_is_unchanged() {
+        let tempdir = tempdir().unwrap();
+        let fetcher = temp_fetcher(&tempdir);
+
+        fetcher.update_cache_if_needed(&CachedRates::default(), false);
+
+        assert!(
+            !fetcher.path().exists(),
+            "Cache file should not exist when no new rates were fetched."
+        );
+    }
+
+    #[test]
+    fn if_fetched_new_rates_is_true_cache_is_changed() {
+        let tempdir = tempdir().unwrap();
+        let fetcher = temp_fetcher(&tempdir);
+        let mut cache = CachedRates::default();
+        let date = chrono::NaiveDate::from_ymd_opt(2025, 5, 31).unwrap();
+        cache
+            .rates_for_day_and_from_currency(date, "EUR")
+            .insert("USD".to_string(), dec!(1.2));
+
+        fetcher.update_cache_if_needed(&cache, true);
+
+        let loaded: CachedRates = deserialize_contents_of_ron(fetcher.path()).unwrap();
+        assert_eq!(loaded, cache, "Cache should be updated with new rates.");
+    }
+
+    #[test]
+    fn fetch_for_items_all_found_in_cache() {
+        let tempdir = tempdir().unwrap();
+        let fetcher = temp_fetcher(&tempdir);
+        let date = chrono::NaiveDate::from_ymd_opt(2025, 5, 31).unwrap();
+        let from = "GBP";
+        let to = "EUR";
+        let rate = dec!(1.174);
+
+        let mut cache = CachedRates::default();
+        cache
+            .rates_for_day_and_from_currency(date, from)
+            .insert(to.to_string(), rate);
+        fetcher.save_cache(&cache).unwrap();
+
+        let item = ExchangeRateItem::builder()
+            .transaction_date(date)
+            .source_currency(from)
+            .build();
+
+        let rates = fetcher.fetch_for_items(to, vec![item]).unwrap();
+
+        assert_eq!(rates.len(), 1);
+        assert_eq!(rates.get(from), Some(&rate));
+    }
+
+    #[test]
+    fn when_cache_is_filled_with_gibberish_then_it_is_reset() {
+        let tempdir = tempdir().unwrap();
+        let fetcher = temp_fetcher(&tempdir);
+
+        std::fs::write(fetcher.path(), "gibberish").unwrap();
+
+        assert_eq!(
+            fetcher.load_cache_else_new(),
+            CachedRates::default(),
+            "Cache should be reset to default when gibberish is found."
+        );
     }
 }
