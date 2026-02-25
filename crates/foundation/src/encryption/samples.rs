@@ -39,3 +39,25 @@ impl HasSample for EncryptedAppPassword {
         .expect("valid encrypted app password hex")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use secrecy::ExposeSecret;
+
+    #[test]
+    fn sample_secret_string_is_deterministic_and_distinct() {
+        let sample = SecretString::sample();
+        let sample_other = SecretString::sample_other();
+        assert_eq!(sample.expose_secret(), "encryption password");
+        assert_eq!(sample_other.expose_secret(), "another encryption password");
+        assert_ne!(sample.expose_secret(), sample_other.expose_secret());
+    }
+
+    #[test]
+    fn sample_salt_is_deterministic_and_distinct() {
+        assert_eq!(Salt::sample(), Salt::from([0xab; 16]));
+        assert_eq!(Salt::sample_other(), Salt::from([0xcd; 16]));
+        assert_ne!(Salt::sample(), Salt::sample_other());
+    }
+}

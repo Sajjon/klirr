@@ -159,3 +159,105 @@ pub fn quantity_in_period(
     quantity_in_period_inner(target_date, granularity, cadence, record_of_periods_off)
         .map_err(map_calendar_error)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use klirr_foundation::ModelError;
+
+    #[test]
+    fn map_calendar_error_maps_model_error() {
+        let mapped = map_calendar_error(CalendarError::Model(ModelError::InvalidDay {
+            day: 99,
+            reason: "out of range".to_string(),
+        }));
+        assert_eq!(
+            mapped,
+            Error::InvalidDay {
+                day: 99,
+                reason: "out of range".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn map_calendar_error_maps_invalid_period() {
+        let mapped = map_calendar_error(CalendarError::InvalidPeriod {
+            bad_value: "2025-Q2".to_string(),
+        });
+        assert_eq!(
+            mapped,
+            Error::InvalidPeriod {
+                bad_value: "2025-Q2".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn map_calendar_error_maps_start_period_after_end_period() {
+        let mapped = map_calendar_error(CalendarError::StartPeriodAfterEndPeriod {
+            start: "2025-06-30".to_string(),
+            end: "2025-05-31".to_string(),
+        });
+        assert_eq!(
+            mapped,
+            Error::StartPeriodAfterEndPeriod {
+                start: "2025-06-30".to_string(),
+                end: "2025-05-31".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn map_calendar_error_maps_records_off_and_target_period_errors() {
+        let records_off = map_calendar_error(CalendarError::RecordsOffMustNotContainOffsetPeriod {
+            offset_period: "2025-04-30".to_string(),
+        });
+        assert_eq!(
+            records_off,
+            Error::RecordsOffMustNotContainOffsetPeriod {
+                offset_period: "2025-04-30".to_string(),
+            }
+        );
+
+        let target_period =
+            map_calendar_error(CalendarError::TargetPeriodMustNotBeInRecordOfPeriodsOff {
+                target_period: "2025-05-31".to_string(),
+            });
+        assert_eq!(
+            target_period,
+            Error::TargetPeriodMustNotBeInRecordOfPeriodsOff {
+                target_period: "2025-05-31".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn map_calendar_error_maps_cadence_constraint_errors() {
+        assert_eq!(
+            map_calendar_error(CalendarError::CannotInvoiceForMonthWhenCadenceIsBiWeekly),
+            Error::CannotInvoiceForMonthWhenCadenceIsBiWeekly
+        );
+        assert_eq!(
+            map_calendar_error(CalendarError::CannotExpenseForMonthWhenCadenceIsBiWeekly),
+            Error::CannotExpenseForMonthWhenCadenceIsBiWeekly
+        );
+        assert_eq!(
+            map_calendar_error(CalendarError::CannotExpenseForFortnightWhenCadenceIsMonthly),
+            Error::CannotExpenseForFortnightWhenCadenceIsMonthly
+        );
+    }
+
+    #[test]
+    fn map_calendar_error_maps_invalid_date() {
+        let mapped = map_calendar_error(CalendarError::InvalidDate {
+            underlying: "negative period serial".to_string(),
+        });
+        assert_eq!(
+            mapped,
+            Error::InvalidDate {
+                underlying: "negative period serial".to_string(),
+            }
+        );
+    }
+}
