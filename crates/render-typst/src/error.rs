@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-/// Result alias for render-pdf operations.
+/// Result alias for render-typst operations.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Errors that can occur while rendering Typst documents into PDF bytes.

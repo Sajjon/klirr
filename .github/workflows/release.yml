@@ -103,7 +103,6 @@ jobs:
         run: |
           cargo publish --manifest-path crates/foundation/Cargo.toml
           cargo publish --manifest-path crates/core-invoice/Cargo.toml
-          cargo publish --manifest-path crates/render-pdf/Cargo.toml  
           cargo publish --manifest-path crates/render-typst/Cargo.toml  
           cargo publish --manifest-path crates/cli/Cargo.toml
       - name: Create GitHub Release with verified tag
