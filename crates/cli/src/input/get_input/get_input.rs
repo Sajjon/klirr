@@ -28,6 +28,8 @@ pub struct CliArgs {
 /// and performing data management tasks.
 #[derive(Debug, Subcommand, Unwrap)]
 pub enum Command {
+    Resume,
+
     /// Generate a sample invoice
     Sample,
 

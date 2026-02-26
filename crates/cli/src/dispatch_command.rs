@@ -11,14 +11,19 @@ use crate::{
     save_pdf_location_to_tmp_file, send_email_with_settings_for_pdf, service_fees_path,
     validate_email_data_at, vendor_path,
 };
+use indexmap::IndexSet;
 use klirr_core_invoice::L10n as InvoiceL10n;
 use klirr_core_invoice::PreparedData as InvoiceDataPrepared;
-use klirr_foundation::Pdf;
+use klirr_foundation::{
+    AbstractNamedPdf, FontIdentifier, FontRequiring, Pdf, ToTypst, ToTypstFn,
+    create_folder_to_parent_of_path_if_needed, save_pdf,
+};
 use klirr_render_typst::render as render_base;
 use log::error;
 use log::info;
 use log::warn;
 use secrecy::SecretString;
+use serde::Serialize;
 
 fn render_invoice(
     i18n: InvoiceL10n,
@@ -26,6 +31,44 @@ fn render_invoice(
     layout: klirr_core_invoice::Layout,
 ) -> Result<Pdf> {
     render_base(i18n, data, layout, Error::from)
+}
+
+fn render_resume() -> Result<Pdf> {
+    #[derive(Serialize)]
+    struct I18n;
+    #[derive(Serialize)]
+    struct Data;
+    struct Layout;
+    impl ToTypst for Layout {}
+    impl ToTypst for I18n {}
+    impl ToTypst for Data {}
+
+    impl ToTypstFn for Layout {
+        fn to_typst_fn(&self) -> String {
+            // This is a placeholder implementation. In a real implementation, you would
+            // convert the layout data into a Typst string that defines the layout of the resume.
+            r#"
+            #let render(data, l10n) = {
+                block(fill: none, inset: 0pt, stroke: none, width: 100%, [
+                    #set text(font: "CMU Serif", size: 12pt)
+                    Hello resume\
+                ])
+            }
+            "#
+            .to_string()
+        }
+    }
+
+    impl FontRequiring for Layout {
+        fn required_fonts(&self) -> IndexSet<klirr_foundation::FontIdentifier> {
+            [FontIdentifier::ComputerModern(
+                klirr_foundation::FontWeight::Regular,
+            )]
+            .into_iter()
+            .collect()
+        }
+    }
+    render_base(I18n, Data, Layout, Error::from)
 }
 
 fn init_email_data(
@@ -160,6 +203,35 @@ pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedInvoiceP
     )
 }
 
+pub type NamedResumePdf = AbstractNamedPdf<()>;
+
+fn run_resume_command_with_base_path(_data_path: impl AsRef<Path>) -> Result<NamedResumePdf> {
+    let output_name = "resume.pdf".to_string();
+    let output_path = data_dir().join(&output_name);
+    create_folder_to_parent_of_path_if_needed(&output_path).map_err(|e| {
+        Error::SpecifiedOutputPathDoesNotExist {
+            path: output_path.display().to_string(),
+        }
+    })?;
+    let pdf = render_resume()?;
+    save_pdf(pdf.clone(), &output_path).map_err(|e| Error::SpecifiedOutputPathDoesNotExist {
+        path: output_path.display().to_string(),
+    })?;
+    let named_pdf = NamedResumePdf::builder()
+        .pdf(pdf)
+        .saved_at(output_path)
+        .name(output_name)
+        .prepared_data(())
+        .build();
+
+    save_pdf_location_to_tmp_file(named_pdf.saved_at().clone());
+    info!(
+        "✅ Resume PDF created at: {}",
+        named_pdf.saved_at().display()
+    );
+    Ok(named_pdf)
+}
+
 fn run_invoice_command_with_base_path(
     input: InvoiceInput,
     data_path: impl AsRef<Path>,
@@ -214,6 +286,10 @@ pub fn run_email_command(
         EmailInputCommand::Validate => validate_email_data().map_to_void(),
         EmailInputCommand::Test => load_email_data_and_send_test_email(render_sample),
     }
+}
+
+pub fn run_resume_command() -> Result<NamedResumePdf> {
+    run_resume_command_with_base_path(data_dir())
 }
 
 pub fn run_invoice_command(input: InvoiceInput) -> Result<NamedInvoicePdf> {

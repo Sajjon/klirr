@@ -1,3 +1,4 @@
+use crate::dispatch_command::run_resume_command;
 use crate::migration_guides::requires_manual_data_migration;
 use crate::{
     CliArgs, CliResult, Command, Error, curry1, data_dir, email_settings_path,
@@ -65,6 +66,10 @@ fn open_file_at(path: impl AsRef<std::path::Path>) {
 /// Run CLI program with [`CliArgs`]
 pub fn run(input: CliArgs) -> CliResult<()> {
     match input.command {
+        Command::Resume => {
+            run_resume_command()
+                .inspect_err(|e| error!("Failed to execute resume command: {}", e))?;
+        }
         Command::Email(email_input) => {
             run_email_command(
                 email_input.command(),
