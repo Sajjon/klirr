@@ -1,0 +1,6 @@
+---
+source: crates/foundation/src/models/month_half.rs
+assertion_line: 127
+expression: "Sut::sample_other()"
+---
+second-half

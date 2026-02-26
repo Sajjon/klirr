@@ -1,11 +1,11 @@
 use crate::run::DATA_INIT_HINT;
 use crate::{
     Data, DataAdminInputCommand, DataSelector, DecryptedEmailSettings, EmailInputCommand,
-    EmailSettingsSelector, EncryptedEmailSettings, Error, HasSample, InvoiceInput, Item, NamedPdf,
-    Path, PathBuf, RelativeTime, Result, ResultExt, ValidInput, ask_for_data, ask_for_email,
-    client_path, create_invoice_pdf_with_data, curry2, data_dir, data_dir_create_if, edit_data_at,
-    edit_email_data_at, expensed_periods_path, get_email_encryption_password, init_data_at,
-    init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
+    EmailSettingsSelector, EncryptedEmailSettings, Error, HasSample, InvoiceInput, Item,
+    NamedInvoicePdf, Path, PathBuf, RelativeTime, Result, ResultExt, ValidInput, ask_for_data,
+    ask_for_email, client_path, create_invoice_pdf_with_data, curry2, data_dir, data_dir_create_if,
+    edit_data_at, edit_email_data_at, expensed_periods_path, get_email_encryption_password,
+    init_data_at, init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
     period_end_from_relative_time, proto_invoice_info_path, read_data_from_disk_with_base_path,
     record_expenses_with_base_path, record_period_off_with_base_path,
     save_pdf_location_to_tmp_file, send_email_with_settings_for_pdf, service_fees_path,
@@ -128,7 +128,7 @@ pub fn run_data_command(command: &DataAdminInputCommand) -> Result<()> {
     }
 }
 
-pub fn render_invoice_sample() -> Result<NamedPdf> {
+pub fn render_invoice_sample() -> Result<NamedInvoicePdf> {
     render_invoice_sample_with_nonce(false)
 }
 
@@ -136,7 +136,7 @@ pub fn render_invoice_sample() -> Result<NamedPdf> {
 /// This is useful for testing purposes, to avoid email spamming protection mechanisms.
 /// It is not meant to be used in production, where in fact we WANT the PDF to
 /// be identical each time it is rendered.
-pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
+pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedInvoicePdf> {
     let path = dirs_next::home_dir()
         .expect("Expected to be able to find HOME dir")
         .join("klirr_sample.pdf");
@@ -163,7 +163,7 @@ pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedPdf> {
 fn run_invoice_command_with_base_path(
     input: InvoiceInput,
     data_path: impl AsRef<Path>,
-) -> Result<NamedPdf> {
+) -> Result<NamedInvoicePdf> {
     let data_path = data_path.as_ref();
     let data = read_data_from_disk_with_base_path(data_path)?;
     let input = input.parsed(*data.service_fees().cadence())?;
@@ -191,19 +191,19 @@ pub fn validate_email_data() -> Result<DecryptedEmailSettings> {
 
 fn load_email_data_and_send_test_email_with(
     get_email_password: impl FnOnce() -> Result<SecretString>,
-    render_sample: impl FnOnce() -> Result<NamedPdf>,
+    render_sample: impl FnOnce() -> Result<NamedInvoicePdf>,
 ) -> Result<()> {
     load_email_data_and_send_test_email_at(data_dir(), get_email_password, render_sample)
 }
 pub fn load_email_data_and_send_test_email(
-    render_sample: impl FnOnce() -> Result<NamedPdf>,
+    render_sample: impl FnOnce() -> Result<NamedInvoicePdf>,
 ) -> Result<()> {
     load_email_data_and_send_test_email_with(get_email_encryption_password, render_sample)
 }
 
 pub fn run_email_command(
     command: &EmailInputCommand,
-    render_sample: impl FnOnce() -> Result<NamedPdf>,
+    render_sample: impl FnOnce() -> Result<NamedInvoicePdf>,
 ) -> Result<()> {
     match command {
         EmailInputCommand::Edit(input) => edit_email_data(curry2(
@@ -216,7 +216,7 @@ pub fn run_email_command(
     }
 }
 
-pub fn run_invoice_command(input: InvoiceInput) -> Result<NamedPdf> {
+pub fn run_invoice_command(input: InvoiceInput) -> Result<NamedInvoicePdf> {
     run_invoice_command_with_base_path(input, data_dir())
 }
 

@@ -507,6 +507,9 @@ impl From<klirr_foundation::ModelError> for Error {
             klirr_foundation::ModelError::FailedToParseDate { underlying } => {
                 Self::FailedToParseDate { underlying }
             }
+            klirr_foundation::ModelError::InvalidHexColor { invalid_string } => {
+                Self::InvalidHexColor { invalid_string }
+            }
             klirr_foundation::ModelError::InvalidDate { underlying } => {
                 Self::InvalidDate { underlying }
             }
