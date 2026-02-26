@@ -1,8 +1,8 @@
-use serde_with::DeserializeFromStr;
-
-use crate::{Error, FromStr, HasSample, Result};
+use crate::{HasSample, ModelError, ModelResult};
 use getset::Getters;
+use serde_with::DeserializeFromStr;
 use serde_with::SerializeDisplay;
+use std::str::FromStr;
 
 #[derive(
     Clone,
@@ -43,7 +43,7 @@ impl HasSample for HexColor {
 }
 
 impl FromStr for HexColor {
-    type Err = crate::Error;
+    type Err = ModelError;
 
     /// Parses a hex color string in the format "#RRGGBB" or "#RRGGBBAA".
     /// The string must start with a '#' and be followed by 6 hexadecimal
@@ -51,8 +51,8 @@ impl FromStr for HexColor {
     ///
     /// # Examples
     /// ```
-    /// extern crate klirr_core_invoice;
-    /// use klirr_core_invoice::*;
+    /// extern crate klirr_foundation;
+    /// use klirr_foundation::*;
     /// let color: HexColor = "#e6007a".parse().unwrap();
     /// assert_eq!(*color.red(), 230);
     /// assert_eq!(*color.green(), 0);
@@ -62,11 +62,11 @@ impl FromStr for HexColor {
     /// # Errors
     /// Returns an error if the string does not start with '#' or if it does not
     /// contain exactly 6 hexadecimal digits after the '#'.
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> ModelResult<Self, Self::Err> {
         if s.starts_with('#') && s.len() == 7 {
             let s = &s[1..];
             let parse_u8 = |start: usize, end: usize| {
-                u8::from_str_radix(&s[start..end], 16).map_err(|_| Error::InvalidHexColor {
+                u8::from_str_radix(&s[start..end], 16).map_err(|_| ModelError::InvalidHexColor {
                     invalid_string: s.to_string(),
                 })
             };
@@ -75,7 +75,7 @@ impl FromStr for HexColor {
             let blue = parse_u8(4, 6)?;
             Ok(Self { red, green, blue })
         } else {
-            Err(Error::InvalidHexColor {
+            Err(ModelError::InvalidHexColor {
                 invalid_string: s.to_string(),
             })
         }

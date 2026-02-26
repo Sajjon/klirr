@@ -1,0 +1,6 @@
+---
+source: crates/foundation/src/models/month_half.rs
+assertion_line: 122
+expression: "Sut::sample()"
+---
+first-half

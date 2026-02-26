@@ -33,9 +33,10 @@ pub use crate::exchange_rates::{
 pub use crate::fs_utils::{create_folder_if_needed, create_folder_to_parent_of_path_if_needed};
 pub use crate::functional::{ResultExt, curry1, curry2};
 pub use crate::models::{
-    AbstractNamedPdf, Cadence, Cost, Currency, Date, Day, Decimal, DueInDays, FontIdentifier,
-    FontWeight, Granularity, ModelError, ModelResult, Month, OutputPath, PathAndName, Pdf,
-    Quantity, RelativeTime, UnitPrice, Year, save_pdf,
+    AbstractNamedPdf, Cadence, CompanyInformation, Cost, Currency, Date, Day, Decimal, DueInDays,
+    FontIdentifier, FontWeight, Granularity, HexColor, ModelError, ModelResult, Month, MonthHalf,
+    OutputPath, PathAndName, Pdf, PostalAddress, Quantity, Rate, RelativeTime, StreetAddress,
+    UnitPrice, Year, save_pdf,
 };
 pub use crate::ron::{
     RonError, deserialize_contents_of_ron, deserialize_ron_str, path_to_ron_file_with_base,

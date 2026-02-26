@@ -1,8 +1,9 @@
-use crate::{Date, Error, FromStr, HasSample};
+use crate::{Date, HasSample, ModelError};
 use chrono::NaiveDate;
 use derive_more::Display;
 use serde_with::DeserializeFromStr;
 use serde_with::SerializeDisplay;
+use std::str::FromStr;
 use strum::EnumIter;
 
 /// Either the first or the second half of a month. For february for non leap
@@ -60,7 +61,7 @@ impl From<Date> for MonthHalf {
 }
 
 impl FromStr for MonthHalf {
-    type Err = crate::Error;
+    type Err = ModelError;
 
     /// Parses `1` into `MonthHalf::First`, and `2` into `MonthHalf::Second`.
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
@@ -71,7 +72,7 @@ impl FromStr for MonthHalf {
             "2" => Ok(Self::Second),
             "second-half" => Ok(Self::Second),
             "second" => Ok(Self::Second),
-            _ => Err(Error::FailedToParseDate {
+            _ => Err(ModelError::FailedToParseDate {
                 underlying: "Invalid Format MonthHalf".to_owned(),
             }),
         }
@@ -85,6 +86,7 @@ impl MonthHalf {
         MonthHalf::from(date)
     }
 }
+
 impl HasSample for MonthHalf {
     fn sample() -> Self {
         Self::First
@@ -101,7 +103,6 @@ mod tests {
 
     use super::*;
     use crate::HasSample;
-    use std::str::FromStr;
 
     type Sut = MonthHalf;
 

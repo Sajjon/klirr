@@ -40,6 +40,10 @@ pub enum ModelError {
     #[error("Failed to parse date, because: {underlying}")]
     FailedToParseDate { underlying: String },
 
+    /// Failed to parse a hex color string.
+    #[error("Invalid hex color format: {invalid_string}")]
+    InvalidHexColor { invalid_string: String },
+
     /// Date components were invalid.
     #[error("Invalid date, underlying: {underlying}")]
     InvalidDate { underlying: String },
