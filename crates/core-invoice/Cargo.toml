@@ -1,7 +1,7 @@
 [package]
 name = "klirr-core-invoice"
 rust-version = "1.85.1"
-version = "0.2.12"
+version = "0.2.13"
 edition = "2024"
 description = "Shared primitives for working with generation of invoices."
 license = "MIT"
