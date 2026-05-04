@@ -8,6 +8,11 @@ use serde::Deserialize;
 use serde::Serialize;
 
 /// The cost of a single item, e.g. the cost of one day of consulting service.
+///
+/// **Excludes VAT.** Any value-added tax is configured separately on
+/// [`crate::Vat`] (held by `PaymentInformation`) and applied to the invoice
+/// subtotal at render time. Quantities multiplied by this unit price form
+/// the VAT-exclusive subtotal of the invoice.
 #[derive(
     Clone,
     Copy,

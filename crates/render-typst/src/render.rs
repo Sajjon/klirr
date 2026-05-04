@@ -114,4 +114,96 @@ mod tests {
             MockedExchangeRatesFetcher::default(),
         );
     }
+
+    /// Compiles the layout with a non-zero VAT rate. We don't compare against a
+    /// fixture image (that would require regenerating the PNG and adds churn),
+    /// but successful compilation proves the Typst layout accepts the new
+    /// `data.payment_info.vat` field and the conditional VAT row.
+    #[test]
+    fn services_with_vat_renders_without_error() {
+        use klirr_core_invoice::{Layout, Vat, prepare_invoice_input_data};
+        use klirr_foundation::{TYPST_LAYOUT_FOUNDATION, ToTypstFn};
+        use rust_decimal::dec;
+
+        let data = Data::sample();
+        let payment_info = data
+            .payment_info()
+            .clone()
+            .with_vat(Vat::from_percent(dec!(25)).expect("25% is valid"));
+        let data = Data::builder()
+            .information(data.information().clone())
+            .vendor(data.vendor().clone())
+            .client(data.client().clone())
+            .payment_info(payment_info)
+            .service_fees(data.service_fees().clone())
+            .expensed_periods(data.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+
+        let layout = *input.layout();
+        let prepared =
+            prepare_invoice_input_data(data, input, MockedExchangeRatesFetcher::default()).unwrap();
+
+        // Sanity-check: confirm VAT made it into the Typst data dict.
+        let dict = prepared.to_typst_fn();
+        assert!(
+            dict.contains("vat: 25.0"),
+            "expected vat: 25.0 in dict, got: {dict}"
+        );
+
+        // Confirm the foundation module is non-empty (Typst will need it).
+        assert!(!TYPST_LAYOUT_FOUNDATION.is_empty());
+
+        // Compile the layout — the Layout enum's ToTypstFn must succeed.
+        let layout_fn = layout.to_typst_fn();
+        assert!(
+            layout_fn.contains("payment_info"),
+            "layout should reference payment_info"
+        );
+
+        // Render the actual PDF (this exercises the new VAT branch).
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+
+        // Suppress warning about Layout being unused if compilation order shifts.
+        let _: Layout = layout;
+    }
+
+    #[test]
+    fn services_with_zero_vat_renders_without_error() {
+        use klirr_core_invoice::prepare_invoice_input_data;
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared = prepare_invoice_input_data(
+            Data::sample(),
+            input,
+            MockedExchangeRatesFetcher::default(),
+        )
+        .unwrap();
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
 }

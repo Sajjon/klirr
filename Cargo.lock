@@ -2559,6 +2559,7 @@ dependencies = [
  "klirr-core-invoice",
  "klirr-foundation",
  "log",
+ "rust_decimal",
  "serde_json",
  "tempfile",
  "test-log",

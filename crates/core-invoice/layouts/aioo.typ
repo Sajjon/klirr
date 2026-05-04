@@ -124,12 +124,14 @@
 
   // ** Invoice Items Table **
   double-line()
-  // Calculate total in a scripting block
-  let grand_total
-  {
-    grand_total = 0.0
-    for it in data.line_items.items { grand_total = grand_total + it.total_cost }
-  }
+  // Calculate subtotal, VAT amount, and grand total.
+  // When VAT is 0% the VAT and subtotal rows are suppressed and the grand
+  // total equals the subtotal.
+  let subtotal = 0.0
+  for it in data.line_items.items { subtotal = subtotal + it.total_cost }
+  let vat_percent = if "vat" in data.payment_info { data.payment_info.vat } else { 0 }
+  let vat_amount = subtotal * vat_percent / 100
+  let grand_total = subtotal + vat_amount
   v(-10pt)
   table(
     columns: (auto, auto, 1fr, auto, auto),
@@ -154,6 +156,21 @@
       )
     },
   )
+  // Subtotal + VAT rows shown only when VAT > 0%.
+  if vat_percent > 0 {
+    align(right)[
+      #set text(weight: "bold")
+      #l10n.line_items.subtotal
+      #format_amount(subtotal, data.payment_info.currency)
+    ]
+    v(-5pt)
+    align(right)[
+      #set text(weight: "bold")
+      #l10n.line_items.vat #str(vat_percent)%
+      #format_amount(vat_amount, data.payment_info.currency)
+    ]
+    v(-5pt)
+  }
   // Grand Total Row
   align(right)[
     #set text(weight: "bold")

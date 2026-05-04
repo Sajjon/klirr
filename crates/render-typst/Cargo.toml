@@ -29,6 +29,7 @@ typst-pdf = "0.13.1"
 
 [dev-dependencies]
 klirr-core-invoice.workspace = true
+rust_decimal.workspace = true
 tempfile.workspace = true
 test-log.workspace = true
 image = { version = "0.25", default-features = false, features = ["png"] }

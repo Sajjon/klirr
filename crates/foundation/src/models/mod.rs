@@ -22,6 +22,7 @@ mod rate;
 mod relative_time;
 mod street_address;
 mod unit_price;
+mod vat;
 mod year;
 
 pub use cadence::Cadence;
@@ -50,4 +51,5 @@ pub use rate::Rate;
 pub use relative_time::RelativeTime;
 pub use street_address::StreetAddress;
 pub use unit_price::UnitPrice;
+pub use vat::Vat;
 pub use year::Year;

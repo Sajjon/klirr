@@ -121,9 +121,17 @@ After setup is complete, you should have the following files in `$DATA_PATH/klir
 1. `vendor.ron`
 1. `client.ron`
 1. `invoice_info.ron`
-1. `payment.ron`
-1. `service_fees.ron`
+1. `payment.ron` — bank info, currency, payment terms, **and your VAT rate** (default `0%`).
+1. `service_fees.ron` — service name, billing cadence, and unit price **excluding VAT**.
 1. `expenses.ron`
+
+> [!IMPORTANT]
+> **Service unit prices are stored VAT-exclusive.** Klirr keeps your service
+> rate (`service_fees.ron`) and any VAT rate (`payment.ron`) as separate
+> values. The rendered invoice computes the subtotal from the VAT-exclusive
+> rate, then adds VAT on top to produce the grand total. If your VAT is `0%`
+> the VAT row is omitted entirely. Never bake VAT into the unit price — set it
+> explicitly via `payment.ron` (or the TUI prompt) instead.
 
 These files use [`RON` ("Rusty Object Notation")][ron] file format, a modern object notation superior to JSON/YAML/TOML.
 

@@ -1,6 +1,5 @@
 ---
 source: crates/core-invoice/tests/typst_conversion.rs
-assertion_line: 35
 expression: typst
 ---
 #let provide() = {
@@ -50,6 +49,7 @@ expression: typst
     currency: "EUR",
     iban: "FR76 3000 6000 0112 3456 7890 189",
     terms: "Net 30",
+    vat: 0.0,
   ),
   vendor: (
     company_name: "Lupin et Associés",

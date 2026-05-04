@@ -32,6 +32,8 @@ L10n(
       quantity: "Quantity",
       unit_price: "Unit price",
       total_cost: "Total cost",
+      subtotal: "Subtotal:",
+      vat: "VAT",
       grand_total: "Grand Total:",
     ),
     month_names: ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"),

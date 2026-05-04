@@ -8,13 +8,19 @@ use serde::Serialize;
 
 /// Represents the fees for a consulting service, including the name, rate,
 /// and billing cadence.
+///
+/// **The `rate` is VAT-exclusive.** Any VAT is configured separately on
+/// [`crate::PaymentInformation::vat`] and applied to the resulting subtotal at
+/// render time, never embedded in the unit price stored here.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Getters, WithSetters)]
 pub struct ServiceFees {
     /// Description of the consulting service, e.g. `"Agreed Consulting Fees"`
     #[getset(get = "pub", set_with = "pub")]
     name: String,
 
-    /// The invoice rate
+    /// The invoice rate, **excluding VAT**. VAT — if any — is configured on
+    /// [`crate::PaymentInformation::vat`] and added on top of the computed
+    /// subtotal when the invoice is rendered.
     #[getset(get = "pub", set_with = "pub")]
     rate: Rate,
 

@@ -21,8 +21,10 @@ expression: typst
     description: "Item",
     grand_total: "Grand Total:",
     quantity: "Quantity",
+    subtotal: "Subtotal:",
     total_cost: "Total cost",
     unit_price: "Unit price",
+    vat: "VAT",
     when: "When",
   ),
   month_names: (

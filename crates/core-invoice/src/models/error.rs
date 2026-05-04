@@ -305,6 +305,24 @@ pub enum Error {
         invalid_string: String,
     },
 
+    /// VAT percentage was outside the allowed `[0, 100]` range.
+    #[error("Invalid VAT percentage: {percent}, reason: {reason}")]
+    InvalidVatPercentage {
+        /// The offending percentage value (as `f64` for diagnostics).
+        percent: f64,
+        /// Human-readable reason the value was rejected.
+        reason: String,
+    },
+
+    /// Failed to parse a VAT percentage from a string.
+    #[error("Failed to parse VAT percentage from {invalid_string:?}: {reason}")]
+    InvalidVatPercentageFromString {
+        /// String that failed to parse as a VAT percentage.
+        invalid_string: String,
+        /// Underlying reason from the parser or validator.
+        reason: String,
+    },
+
     /// Failed to parse a date, e.g. when the format is incorrect or the date is invalid.
     #[error("Failed to parse date, because: {underlying}")]
     FailedToParseDate {
@@ -513,6 +531,16 @@ impl From<klirr_foundation::ModelError> for Error {
             klirr_foundation::ModelError::InvalidDate { underlying } => {
                 Self::InvalidDate { underlying }
             }
+            klirr_foundation::ModelError::InvalidVatPercentage { percent, reason } => {
+                Self::InvalidVatPercentage { percent, reason }
+            }
+            klirr_foundation::ModelError::InvalidVatPercentageFromString {
+                invalid_string,
+                reason,
+            } => Self::InvalidVatPercentageFromString {
+                invalid_string,
+                reason,
+            },
         }
     }
 }

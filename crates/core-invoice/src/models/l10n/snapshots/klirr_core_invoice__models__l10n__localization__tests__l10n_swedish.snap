@@ -32,6 +32,8 @@ L10n(
       quantity: "Antal",
       unit_price: "Enhetspris",
       total_cost: "Kostnad",
+      subtotal: "Delsumma:",
+      vat: "Moms",
       grand_total: "Totalt:",
     ),
     month_names: ("Januari", "Februari", "Mars", "April", "Maj", "June", "July", "Augusti", "September", "October", "November", "December"),

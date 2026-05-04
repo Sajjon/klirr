@@ -47,4 +47,15 @@ pub enum ModelError {
     /// Date components were invalid.
     #[error("Invalid date, underlying: {underlying}")]
     InvalidDate { underlying: String },
+
+    /// VAT percentage was outside `[0, 100]`.
+    #[error("Invalid VAT percentage: {percent}, reason: {reason}")]
+    InvalidVatPercentage { percent: f64, reason: String },
+
+    /// Failed to parse VAT percentage from text.
+    #[error("Failed to parse VAT percentage from {invalid_string:?}: {reason}")]
+    InvalidVatPercentageFromString {
+        invalid_string: String,
+        reason: String,
+    },
 }

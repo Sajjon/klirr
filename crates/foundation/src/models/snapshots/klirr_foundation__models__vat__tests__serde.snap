@@ -1,0 +1,6 @@
+---
+source: crates/foundation/src/models/vat.rs
+assertion_line: 183
+expression: "Sut::sample()"
+---
+25.0

@@ -2,6 +2,7 @@ use crate::{Currency, HasSample, PaymentTerms};
 use bon::Builder;
 use getset::Getters;
 use getset::WithSetters;
+use klirr_foundation::Vat;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -31,6 +32,19 @@ pub struct PaymentInformation {
     /// The payment terms of this invoice, e.g. `Net { due_in: 30 }`
     #[getset(get = "pub", set_with = "pub")]
     terms: PaymentTerms,
+
+    /// VAT rate applied **on top of** the VAT-exclusive invoice subtotal.
+    ///
+    /// The subtotal is the sum of each line item's `quantity * unit_price`
+    /// where unit prices are stored VAT-exclusive (see [`crate::ServiceFees`]
+    /// and [`klirr_foundation::UnitPrice`]). VAT is computed as
+    /// `subtotal * percent / 100` and added to the subtotal to produce the
+    /// grand total. When `0%` (the default), no VAT row is rendered and the
+    /// grand total equals the subtotal.
+    #[builder(default)]
+    #[serde(default)]
+    #[getset(get = "pub", set_with = "pub")]
+    vat: Vat,
 }
 
 impl HasSample for PaymentInformation {
@@ -41,6 +55,7 @@ impl HasSample for PaymentInformation {
             .bic("BNPAFRPP".into())
             .currency(Currency::EUR)
             .terms(PaymentTerms::sample())
+            .vat(Vat::ZERO)
             .build()
     }
 
@@ -51,6 +66,7 @@ impl HasSample for PaymentInformation {
             .bic("NWBKGB2L".into())
             .currency(Currency::USD)
             .terms(PaymentTerms::sample_other())
+            .vat(Vat::sample())
             .build()
     }
 }
