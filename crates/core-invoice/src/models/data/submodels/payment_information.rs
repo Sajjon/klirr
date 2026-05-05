@@ -1,10 +1,16 @@
-use crate::{Currency, HasSample, PaymentTerms};
+use crate::{Currency, Error, HasSample, LabeledField, PaymentTerms, Result};
 use bon::Builder;
 use getset::Getters;
 use getset::WithSetters;
 use klirr_foundation::Vat;
 use serde::Deserialize;
 use serde::Serialize;
+
+/// Maximum number of [`LabeledField`] entries accepted in
+/// [`PaymentInformation::payment_method_overrides`]. The Typst layout has
+/// exactly two slots (the IBAN slot and the BIC slot) that overrides can
+/// occupy.
+pub const MAX_PAYMENT_METHOD_OVERRIDES: usize = 2;
 
 /// Bank account details for the vendor, used for international transfers.
 /// This includes the IBAN, bank name, and BIC.
@@ -45,6 +51,59 @@ pub struct PaymentInformation {
     #[serde(default)]
     #[getset(get = "pub", set_with = "pub")]
     vat: Vat,
+
+    /// Optional payment-method overrides shown in the rendered footer in
+    /// place of the IBAN / BIC values. `iban` and `bic` remain in the data
+    /// model so they can still be sent or persisted, but they are *not*
+    /// rendered when overridden.
+    ///
+    /// Slot mapping in the rendered middle column (top → bottom):
+    ///
+    /// 1. Bank name (always shown).
+    /// 2. **IBAN slot** — replaced when `payment_method_overrides.len() == 2`
+    ///    by `payment_method_overrides[0]`.
+    /// 3. **BIC slot** — replaced when `payment_method_overrides.len() >= 1`
+    ///    by `payment_method_overrides.last()`.
+    ///
+    /// Use cases: swapping IBAN+BIC for a Swedish `Bankgiro` + `Kontonummer`
+    /// pair, or showing a single `Plusgiro` line in place of the BIC.
+    ///
+    /// Validation: at most [`MAX_PAYMENT_METHOD_OVERRIDES`] entries.
+    /// `#[serde(default)]` keeps existing RON files (written before this
+    /// field existed) deserializable with no overrides.
+    #[builder(default)]
+    #[serde(default)]
+    #[getset(get = "pub")]
+    payment_method_overrides: Vec<LabeledField>,
+}
+
+impl PaymentInformation {
+    /// Validates the [`PaymentInformation`] invariants and returns `self` when
+    /// valid. Currently checks that at most
+    /// [`MAX_PAYMENT_METHOD_OVERRIDES`] override entries are present.
+    ///
+    /// # Errors
+    /// Returns [`Error::TooManyPaymentMethodOverrides`] when
+    /// `payment_method_overrides.len() > MAX_PAYMENT_METHOD_OVERRIDES`.
+    pub fn validate(self) -> Result<Self> {
+        if self.payment_method_overrides.len() > MAX_PAYMENT_METHOD_OVERRIDES {
+            return Err(Error::TooManyPaymentMethodOverrides {
+                found: self.payment_method_overrides.len(),
+                max: MAX_PAYMENT_METHOD_OVERRIDES,
+            });
+        }
+        Ok(self)
+    }
+
+    /// Replaces the override list, validating the new size.
+    ///
+    /// # Errors
+    /// Returns [`Error::TooManyPaymentMethodOverrides`] when more than
+    /// [`MAX_PAYMENT_METHOD_OVERRIDES`] entries are supplied.
+    pub fn with_payment_method_overrides(mut self, overrides: Vec<LabeledField>) -> Result<Self> {
+        self.payment_method_overrides = overrides;
+        self.validate()
+    }
 }
 
 impl HasSample for PaymentInformation {
@@ -134,5 +193,90 @@ mod tests {
             .terms(PaymentTerms::sample())
             .build();
         assert_eq!(*pi.vat(), Vat::ZERO);
+    }
+
+    #[test]
+    fn samples_have_no_payment_method_overrides() {
+        assert!(Sut::sample().payment_method_overrides().is_empty());
+        assert!(Sut::sample_other().payment_method_overrides().is_empty());
+    }
+
+    #[test]
+    fn deserializes_with_default_overrides_when_field_missing() {
+        let ron = r#"PaymentInformation(
+            iban: "FR76 3000 6000 0112 3456 7890 189",
+            bank_name: "Banque de Paris",
+            bic: "BNPAFRPP",
+            currency: "EUR",
+            terms: "Net 30",
+        )"#;
+        let parsed: PaymentInformation = ron::from_str(ron).unwrap();
+        assert!(parsed.payment_method_overrides().is_empty());
+    }
+
+    #[test]
+    fn with_payment_method_overrides_accepts_zero_one_or_two() {
+        let base = Sut::sample();
+        assert!(base.clone().with_payment_method_overrides(vec![]).is_ok());
+        assert!(
+            base.clone()
+                .with_payment_method_overrides(vec![LabeledField::sample()])
+                .is_ok()
+        );
+        assert!(
+            base.clone()
+                .with_payment_method_overrides(vec![
+                    LabeledField::sample(),
+                    LabeledField::sample_other(),
+                ])
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn with_payment_method_overrides_rejects_more_than_max() {
+        let three = vec![
+            LabeledField::sample(),
+            LabeledField::sample_other(),
+            LabeledField::new("Plusgiro", "12-3456-7"),
+        ];
+        let result = Sut::sample().with_payment_method_overrides(three);
+        assert!(matches!(
+            result,
+            Err(Error::TooManyPaymentMethodOverrides { found: 3, max: 2 })
+        ));
+    }
+
+    #[test]
+    fn validate_rejects_too_many_overrides_when_built_directly() {
+        let pi = PaymentInformation::builder()
+            .bank_name("Bank".into())
+            .iban("IBAN".into())
+            .bic("BIC".into())
+            .currency(Currency::EUR)
+            .terms(PaymentTerms::sample())
+            .payment_method_overrides(vec![
+                LabeledField::sample(),
+                LabeledField::sample_other(),
+                LabeledField::new("Plusgiro", "12-3456-7"),
+            ])
+            .build();
+        assert!(matches!(
+            pi.validate(),
+            Err(Error::TooManyPaymentMethodOverrides { found: 3, max: 2 })
+        ));
+    }
+
+    #[test]
+    fn validate_passes_with_zero_one_or_two_overrides() {
+        let valid = PaymentInformation::builder()
+            .bank_name("Bank".into())
+            .iban("IBAN".into())
+            .bic("BIC".into())
+            .currency(Currency::EUR)
+            .terms(PaymentTerms::sample())
+            .payment_method_overrides(vec![LabeledField::sample(), LabeledField::sample_other()])
+            .build();
+        assert!(valid.validate().is_ok());
     }
 }

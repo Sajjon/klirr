@@ -83,7 +83,11 @@ impl Data {
             ));
         }
         self.information.validate()?;
-        Ok(self)
+        let payment_info = self.payment_info.clone().validate()?;
+        Ok(Self {
+            payment_info,
+            ..self
+        })
     }
 
     fn billable_quantity(

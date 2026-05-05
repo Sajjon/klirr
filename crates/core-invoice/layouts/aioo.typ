@@ -33,6 +33,22 @@
 
 
   // Page setup: A4 paper, custom margins, and footer for contact details
+  // Resolve the middle-column slots once. The middle column lists Bank
+  // first, then two more rows that default to IBAN and BIC. The
+  // `payment_method_overrides` array (length 0–2) replaces those rows
+  // bottom-up: a single override replaces the BIC slot; two overrides
+  // replace both the IBAN slot and the BIC slot.
+  let overrides = if "payment_method_overrides" in data.payment_info {
+    data.payment_info.payment_method_overrides
+  } else {
+    ()
+  }
+  let n_overrides = overrides.len()
+  let iban_label = if n_overrides == 2 { overrides.at(0).label } else { l10n.vendor_info.iban }
+  let iban_value = if n_overrides == 2 { overrides.at(0).value } else { data.payment_info.iban }
+  let bic_label = if n_overrides >= 1 { overrides.at(n_overrides - 1).label } else { l10n.vendor_info.bic }
+  let bic_value = if n_overrides >= 1 { overrides.at(n_overrides - 1).value } else { data.payment_info.bic }
+
   set page(margin: (top: 2cm, bottom: 11cm, left: 1.5cm, right: 1.5cm), footer: [
     // Wrap both items in a vertical block
     #block[
@@ -42,18 +58,18 @@
         align: (left, left, left),
         stroke: none,
         [#strong(l10n.vendor_info.address)],
-        [#strong(l10n.vendor_info.iban)],
+        [#strong(l10n.vendor_info.bank)],
         [#strong(l10n.vendor_info.organisation_number)],
 
-        [#data.vendor.company_name], [#data.payment_info.iban], [#data.vendor.organisation_number],
+        [#data.vendor.company_name], [#data.payment_info.bank_name], [#data.vendor.organisation_number],
         [#data.vendor.postal_address.street_address.line_1],
-        [#strong(l10n.vendor_info.bank)],
+        [#strong(iban_label)],
         [#strong(l10n.vendor_info.vat_number)],
 
-        [#data.vendor.postal_address.street_address.line_2], [#data.payment_info.bank_name], [#data.vendor.vat_number],
+        [#data.vendor.postal_address.street_address.line_2], [#iban_value], [#data.vendor.vat_number],
 
-        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(l10n.vendor_info.bic)], [],
-        [#data.vendor.postal_address.country], [#data.payment_info.bic], [],
+        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(bic_label)], [],
+        [#data.vendor.postal_address.country], [#bic_value], [],
       )
       #hline()
       // Conditionally display footer text if it exists

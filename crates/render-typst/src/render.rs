@@ -233,4 +233,89 @@ mod tests {
         .unwrap();
         assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
     }
+
+    /// Single payment-method override replaces the BIC slot.
+    #[test]
+    fn services_with_one_payment_method_override_renders() {
+        use klirr_core_invoice::{LabeledField, prepare_invoice_input_data};
+
+        let base = Data::sample();
+        let payment_info = base
+            .payment_info()
+            .clone()
+            .with_payment_method_overrides(vec![LabeledField::new("Plusgiro", "12-3456-7")])
+            .expect("one override is within the cap");
+        let data = Data::builder()
+            .information(base.information().clone())
+            .vendor(base.vendor().clone())
+            .client(base.client().clone())
+            .payment_info(payment_info)
+            .service_fees(base.service_fees().clone())
+            .expensed_periods(base.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared =
+            prepare_invoice_input_data(data, input, MockedExchangeRatesFetcher::default()).unwrap();
+
+        assert_eq!(prepared.payment_info().payment_method_overrides().len(), 1);
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
+
+    /// Two payment-method overrides replace both the IBAN and BIC slots.
+    #[test]
+    fn services_with_two_payment_method_overrides_renders() {
+        use klirr_core_invoice::{LabeledField, prepare_invoice_input_data};
+
+        let base = Data::sample();
+        let payment_info = base
+            .payment_info()
+            .clone()
+            .with_payment_method_overrides(vec![
+                LabeledField::new("Bankgiro", "153-3827"),
+                LabeledField::new("Kontonummer", "8327-9,964 769 716-9"),
+            ])
+            .expect("two overrides is within the cap");
+        let data = Data::builder()
+            .information(base.information().clone())
+            .vendor(base.vendor().clone())
+            .client(base.client().clone())
+            .payment_info(payment_info)
+            .service_fees(base.service_fees().clone())
+            .expensed_periods(base.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared =
+            prepare_invoice_input_data(data, input, MockedExchangeRatesFetcher::default()).unwrap();
+
+        assert_eq!(prepared.payment_info().payment_method_overrides().len(), 2);
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
 }

@@ -323,6 +323,17 @@ pub enum Error {
         reason: String,
     },
 
+    /// Too many `payment_method_overrides` entries supplied; the Typst
+    /// layout has only two slots (IBAN slot + BIC slot) that overrides
+    /// can occupy.
+    #[error("Too many payment method overrides: found {found}, maximum is {max}")]
+    TooManyPaymentMethodOverrides {
+        /// Number of overrides supplied.
+        found: usize,
+        /// Maximum allowed (currently 2).
+        max: usize,
+    },
+
     /// Failed to parse a date, e.g. when the format is incorrect or the date is invalid.
     #[error("Failed to parse date, because: {underlying}")]
     FailedToParseDate {
