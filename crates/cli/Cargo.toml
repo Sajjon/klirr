@@ -28,6 +28,7 @@ inquire = { version = "0.7.5", features = ["date"] }
 log.workspace = true
 rand.workspace = true
 rpassword.workspace = true
+rust_decimal.workspace = true
 ron.workspace = true
 serde.workspace = true
 secrecy.workspace = true
