@@ -24,16 +24,20 @@ impl TemplatePart {
     const VENDOR: &str = "<FROM_CO>";
     const CLIENT: &str = "<TO_CO>";
     const INVOICE_DATE: &str = "<INV_DATE>";
+    /// The invoice's purchase-order string, or empty when none was set.
+    const PURCHASE_ORDER: &str = "<PO>";
 
     pub fn tutorial() -> String {
         format!(
-            "Placeholders: '{}', '{}', '{}', '{}'. Example: 'Invoice {} from {}' → 'Invoice 42 from Lupin et Associés'. Placeholders are case-sensitive and must include '<' and '>'.",
+            "Placeholders: '{}', '{}', '{}', '{}', '{}'. Example: 'Invoice {} from {}' → 'Invoice 42 from Lupin et Associés'. '{}' expands to the purchase order or an empty string when none is set. Placeholders are case-sensitive and must include '<' and '>'.",
             Self::NUMBER,
             Self::VENDOR,
             Self::CLIENT,
             Self::INVOICE_DATE,
+            Self::PURCHASE_ORDER,
             Self::NUMBER,
-            Self::VENDOR
+            Self::VENDOR,
+            Self::PURCHASE_ORDER
         )
     }
 
@@ -49,6 +53,13 @@ impl TemplatePart {
             Self::INVOICE_DATE,
             data.information().invoice_date().to_string().as_str(),
         );
+        let po = data
+            .information()
+            .purchase_order()
+            .as_ref()
+            .map(|po| po.to_string())
+            .unwrap_or_default();
+        raw = raw.replace(Self::PURCHASE_ORDER, po.as_str());
 
         #[cfg(debug_assertions)]
         {
@@ -88,6 +99,40 @@ mod tests {
         assert!(tutorial.contains(TemplatePart::VENDOR));
         assert!(tutorial.contains(TemplatePart::CLIENT));
         assert!(tutorial.contains(TemplatePart::INVOICE_DATE));
+        assert!(tutorial.contains(TemplatePart::PURCHASE_ORDER));
+    }
+
+    #[test]
+    fn test_purchase_order_placeholder_is_replaced_when_set() {
+        let template = TemplatePart::from("PO: <PO>");
+        let result = template.materialize(&PreparedData::sample());
+        // PreparedData::sample() carries PurchaseOrder::sample() => "PO-12345".
+        assert_eq!(result, "PO: PO-12345");
+    }
+
+    #[test]
+    fn test_purchase_order_placeholder_is_empty_when_unset() {
+        use crate::{
+            CompanyInformation, InvoiceInfoFull, InvoiceNumber, LineItemsFlat, OutputPath,
+            PaymentInformation, PreparedData,
+        };
+        use klirr_foundation::Date;
+        // Build a PreparedData with no purchase order set.
+        let info = InvoiceInfoFull::builder()
+            .number(InvoiceNumber::sample())
+            .invoice_date(Date::sample())
+            .due_date(Date::sample())
+            .build();
+        let prepared = PreparedData::builder()
+            .information(info)
+            .vendor(CompanyInformation::sample_vendor())
+            .client(CompanyInformation::sample_client())
+            .line_items(LineItemsFlat::sample())
+            .payment_info(PaymentInformation::sample())
+            .output_path(OutputPath::Name("invoice.pdf".into()))
+            .build();
+        let template = TemplatePart::from("PO: '<PO>'");
+        assert_eq!(template.materialize(&prepared), "PO: ''");
     }
 
     #[test]
