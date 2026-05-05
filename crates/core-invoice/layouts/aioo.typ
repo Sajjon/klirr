@@ -53,23 +53,38 @@
     // Wrap both items in a vertical block
     #block[
       #hline()
+      // Three content columns separated by two flexible spacer columns.
+      // Each `auto` shrinks to the intrinsic width of its widest cell;
+      // the two `1fr` spacers absorb the leftover row width and split it
+      // 50/50 so the gap between columns 1↔2 equals the gap between 2↔3.
+      // Equivalent to: gutter = (content_width − Σ auto_widths) / 2.
       #table(
-        columns: (1fr, auto, auto),
-        align: (left, left, left),
+        columns: (auto, 1fr, auto, 1fr, auto),
+        align: (left, left, left, left, left),
         stroke: none,
-        [#strong(l10n.vendor_info.address)],
-        [#strong(l10n.vendor_info.bank)],
+        [#strong(l10n.vendor_info.address)], [],
+        [#strong(l10n.vendor_info.bank)], [],
         [#strong(l10n.vendor_info.organisation_number)],
 
-        [#data.vendor.company_name], [#data.payment_info.bank_name], [#data.vendor.organisation_number],
-        [#data.vendor.postal_address.street_address.line_1],
-        [#strong(iban_label)],
+        [#data.vendor.company_name], [],
+        [#data.payment_info.bank_name], [],
+        [#data.vendor.organisation_number],
+
+        [#data.vendor.postal_address.street_address.line_1], [],
+        [#strong(iban_label)], [],
         [#strong(l10n.vendor_info.vat_number)],
 
-        [#data.vendor.postal_address.street_address.line_2], [#iban_value], [#data.vendor.vat_number],
+        [#data.vendor.postal_address.street_address.line_2], [],
+        [#iban_value], [],
+        [#data.vendor.vat_number],
 
-        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(bic_label)], [],
-        [#data.vendor.postal_address.country], [#bic_value], [],
+        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [],
+        [#strong(bic_label)], [],
+        [],
+
+        [#data.vendor.postal_address.country], [],
+        [#bic_value], [],
+        [],
       )
       #hline()
       // Conditionally display footer text if it exists
