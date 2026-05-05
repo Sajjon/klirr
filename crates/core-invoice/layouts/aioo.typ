@@ -157,13 +157,19 @@
     },
   )
   // Subtotal + VAT rows shown only when VAT > 0%.
+  // The subtotal row is suppressed when there is a single line item, because
+  // its "Total cost" already equals the subtotal — restating it just adds
+  // visual noise. Multi-line invoices (typically expenses) keep the subtotal
+  // since the eye can't sum the column at a glance.
   if vat_percent > 0 {
-    align(right)[
-      #set text(weight: "bold")
-      #l10n.line_items.subtotal
-      #format_amount(subtotal, data.payment_info.currency)
-    ]
-    v(-5pt)
+    if data.line_items.items.len() > 1 {
+      align(right)[
+        #set text(weight: "bold")
+        #l10n.line_items.subtotal
+        #format_amount(subtotal, data.payment_info.currency)
+      ]
+      v(-5pt)
+    }
     align(right)[
       #set text(weight: "bold")
       #l10n.line_items.vat #str(vat_percent)%

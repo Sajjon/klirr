@@ -186,4 +186,51 @@ mod tests {
         .unwrap();
         assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
     }
+
+    /// Multi-line invoices (typical for expenses) should still render
+    /// successfully when VAT is configured, exercising the Subtotal-row
+    /// branch of the layout that single-line service invoices skip.
+    #[test]
+    fn expenses_with_vat_renders_without_error() {
+        use klirr_core_invoice::{Currency, Vat, prepare_invoice_input_data};
+        use rust_decimal::dec;
+
+        let configured_vat = Vat::from_percent(dec!(25)).expect("25% is valid");
+        let base = Data::sample();
+        let payment_info = base.payment_info().clone().with_vat(configured_vat);
+        let data = Data::builder()
+            .information(base.information().clone())
+            .vendor(base.vendor().clone())
+            .client(base.client().clone())
+            .payment_info(payment_info)
+            .service_fees(base.service_fees().clone())
+            .expensed_periods(base.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Expenses)
+            .date("2025-05-31".parse::<Date>().unwrap())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared = prepare_invoice_input_data(
+            data,
+            input,
+            MockedExchangeRatesFetcher::from(ExchangeRatesMap::from_iter([
+                (Currency::EUR, UnitPrice::from(10)),
+                (Currency::SEK, UnitPrice::from(10)),
+            ])),
+        )
+        .unwrap();
+        assert_eq!(*prepared.payment_info().vat(), configured_vat);
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
 }
