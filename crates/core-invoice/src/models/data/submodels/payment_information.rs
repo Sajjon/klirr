@@ -75,6 +75,7 @@ impl HasSample for PaymentInformation {
 mod tests {
     use super::*;
     use crate::HasSample;
+    use rust_decimal::dec;
 
     type Sut = PaymentInformation;
 
@@ -87,5 +88,51 @@ mod tests {
     #[test]
     fn inequality() {
         assert_ne!(Sut::sample(), Sut::sample_other());
+    }
+
+    #[test]
+    fn sample_defaults_to_zero_vat() {
+        assert_eq!(*Sut::sample().vat(), Vat::ZERO);
+    }
+
+    #[test]
+    fn sample_other_has_non_zero_vat() {
+        assert!(!Sut::sample_other().vat().is_zero());
+    }
+
+    #[test]
+    fn with_vat_overrides_field() {
+        let vat = Vat::from_percent(dec!(12)).unwrap();
+        let sut = Sut::sample().with_vat(vat);
+        assert_eq!(*sut.vat(), vat);
+    }
+
+    /// `#[serde(default)]` on `vat` lets older RON files (written before VAT
+    /// was added) deserialize cleanly with `Vat::ZERO`.
+    #[test]
+    fn deserializes_with_default_vat_when_field_missing() {
+        let ron_without_vat = r#"PaymentInformation(
+            iban: "FR76 3000 6000 0112 3456 7890 189",
+            bank_name: "Banque de Paris",
+            bic: "BNPAFRPP",
+            currency: "EUR",
+            terms: "Net 30",
+        )"#;
+        let parsed: PaymentInformation = ron::from_str(ron_without_vat).unwrap();
+        assert_eq!(*parsed.vat(), Vat::ZERO);
+    }
+
+    /// Builder uses `#[builder(default)]` for `vat`, so existing call sites
+    /// that didn't set VAT must still build successfully and produce `0%`.
+    #[test]
+    fn builder_default_vat_is_zero() {
+        let pi = PaymentInformation::builder()
+            .bank_name("Bank".into())
+            .iban("IBAN".into())
+            .bic("BIC".into())
+            .currency(Currency::EUR)
+            .terms(PaymentTerms::sample())
+            .build();
+        assert_eq!(*pi.vat(), Vat::ZERO);
     }
 }

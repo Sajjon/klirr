@@ -54,3 +54,33 @@ impl L10nLineItems {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn english_exposes_subtotal_and_vat_labels() {
+        let sut = L10nLineItems::english();
+        assert_eq!(sut.subtotal(), "Subtotal:");
+        assert_eq!(sut.vat(), "VAT");
+    }
+
+    #[test]
+    fn swedish_exposes_subtotal_and_vat_labels() {
+        let sut = L10nLineItems::swedish();
+        assert_eq!(sut.subtotal(), "Delsumma:");
+        assert_eq!(sut.vat(), "Moms");
+    }
+
+    #[test]
+    fn english_exposes_existing_labels() {
+        let sut = L10nLineItems::english();
+        assert_eq!(sut.description(), "Item");
+        assert_eq!(sut.when(), "When");
+        assert_eq!(sut.quantity(), "Quantity");
+        assert_eq!(sut.unit_price(), "Unit price");
+        assert_eq!(sut.total_cost(), "Total cost");
+        assert_eq!(sut.grand_total(), "Grand Total:");
+    }
+}

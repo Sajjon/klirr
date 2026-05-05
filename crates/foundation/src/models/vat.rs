@@ -36,6 +36,18 @@ impl Vat {
     ///
     /// # Errors
     /// Returns an error if `percent` is negative or greater than `100`.
+    ///
+    /// # Examples
+    /// ```
+    /// use klirr_foundation::Vat;
+    /// use rust_decimal::dec;
+    ///
+    /// let vat = Vat::from_percent(dec!(25)).unwrap();
+    /// assert!(!vat.is_zero());
+    ///
+    /// assert!(Vat::from_percent(dec!(-1)).is_err());
+    /// assert!(Vat::from_percent(dec!(101)).is_err());
+    /// ```
     pub fn from_percent(percent: impl Into<Decimal>) -> ModelResult<Self> {
         let percent = percent.into();
         let raw: rust_decimal::Decimal = *percent;
@@ -56,11 +68,30 @@ impl Vat {
 
     /// Returns true if this VAT rate is exactly 0% — meaning the row should be
     /// hidden on the rendered invoice.
+    ///
+    /// # Examples
+    /// ```
+    /// use klirr_foundation::Vat;
+    /// use rust_decimal::dec;
+    ///
+    /// assert!(Vat::ZERO.is_zero());
+    /// assert!(Vat::default().is_zero());
+    /// assert!(!Vat::from_percent(dec!(25)).unwrap().is_zero());
+    /// ```
     pub fn is_zero(&self) -> bool {
         *self.0 == rust_decimal::Decimal::ZERO
     }
 
     /// The percentage as a `Decimal` (e.g. `25.0` for 25%).
+    ///
+    /// # Examples
+    /// ```
+    /// use klirr_foundation::{Decimal, Vat};
+    /// use rust_decimal::dec;
+    ///
+    /// let vat = Vat::from_percent(dec!(25)).unwrap();
+    /// assert_eq!(*vat.percent(), dec!(25));
+    /// ```
     pub fn percent(&self) -> Decimal {
         self.0
     }

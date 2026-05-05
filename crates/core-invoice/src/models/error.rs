@@ -818,5 +818,64 @@ mod tests {
                 underlying: "day out of range".to_string()
             }
         );
+
+        let err: Error = klirr_foundation::ModelError::InvalidHexColor {
+            invalid_string: "#zzz".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidHexColor {
+                invalid_string: "#zzz".to_string()
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidVatPercentage {
+            percent: -5.0,
+            reason: "VAT percentage must not be negative".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidVatPercentage {
+                percent: -5.0,
+                reason: "VAT percentage must not be negative".to_string(),
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidVatPercentageFromString {
+            invalid_string: "abc".to_string(),
+            reason: "Invalid decimal: cannot parse from empty string".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidVatPercentageFromString {
+                invalid_string: "abc".to_string(),
+                reason: "Invalid decimal: cannot parse from empty string".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn invalid_vat_percentage_displays_percent_and_reason() {
+        let err = Error::InvalidVatPercentage {
+            percent: 150.0,
+            reason: "VAT percentage must not exceed 100".to_string(),
+        };
+        let display = format!("{err}");
+        assert!(display.contains("150"));
+        assert!(display.contains("must not exceed 100"));
+    }
+
+    #[test]
+    fn invalid_vat_percentage_from_string_displays_input_and_reason() {
+        let err = Error::InvalidVatPercentageFromString {
+            invalid_string: "twenty-five".to_string(),
+            reason: "not a number".to_string(),
+        };
+        let display = format!("{err}");
+        assert!(display.contains("twenty-five"));
+        assert!(display.contains("not a number"));
     }
 }
