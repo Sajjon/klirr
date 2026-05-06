@@ -22,9 +22,9 @@ pub fn build_service_fees(default: &ServiceFees) -> Result<ServiceFees> {
             .with_default(default.rate().granularity())
             .prompt()?;
 
-        let unit_price = CustomType::<UnitPrice>::new("Unit price?")
+        let unit_price = CustomType::<UnitPrice>::new("Unit price (excl. VAT)?")
             .with_help_message(&format!(
-                "Price per {}, e.g. {}",
+                "Price per {}, excluding VAT (VAT is configured separately on payment info), e.g. {}",
                 granularity,
                 granularity.example_rate()
             ))

@@ -50,7 +50,7 @@ expression: typst
     iban: "FR76 3000 6000 0112 3456 7890 189",
     payment_method_overrides: (),
     terms: "Net 30",
-    vat: 0.0,
+    vat: 25.0,
   ),
   vendor: (
     company_name: "Lupin et Associés",

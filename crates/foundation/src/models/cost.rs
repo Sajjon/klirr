@@ -8,6 +8,10 @@ use serde::Serialize;
 
 /// The total cost of an item, e.g. the total cost of a consulting service.
 /// Being the quantity multiplied by the unit price.
+///
+/// **Excludes VAT.** Like [`crate::UnitPrice`], this value is the VAT-exclusive
+/// amount; VAT (see [`crate::Vat`]) is added on top at render time, after all
+/// item totals have been summed into the subtotal.
 #[derive(
     Clone, Copy, Display, Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize, From, Deref,
 )]

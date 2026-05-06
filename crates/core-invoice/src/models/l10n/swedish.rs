@@ -55,6 +55,8 @@ impl L10nLineItems {
             .quantity("Antal".to_string())
             .unit_price("Enhetspris".to_string())
             .total_cost("Kostnad".to_string())
+            .subtotal("Delsumma:".to_string())
+            .vat("Moms".to_string())
             .grand_total("Totalt:".to_string())
             .build()
     }

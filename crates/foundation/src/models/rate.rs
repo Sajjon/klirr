@@ -5,6 +5,11 @@ use serde::Deserialize;
 use serde::Serialize;
 
 /// Invoice rate, a fixed price per month, per day or per hour.
+///
+/// **VAT-exclusive.** All variants wrap a [`UnitPrice`] that does not include
+/// VAT. VAT is configured separately on
+/// `klirr_core_invoice::PaymentInformation::vat` and added to the subtotal at
+/// render time.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub enum Rate {
     /// A fixed rate per month, invoiced monthly

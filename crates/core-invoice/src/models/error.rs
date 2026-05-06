@@ -305,6 +305,35 @@ pub enum Error {
         invalid_string: String,
     },
 
+    /// VAT percentage was outside the allowed `[0, 100]` range.
+    #[error("Invalid VAT percentage: {percent}, reason: {reason}")]
+    InvalidVatPercentage {
+        /// The offending percentage value (as `f64` for diagnostics).
+        percent: f64,
+        /// Human-readable reason the value was rejected.
+        reason: String,
+    },
+
+    /// Failed to parse a VAT percentage from a string.
+    #[error("Failed to parse VAT percentage from {invalid_string:?}: {reason}")]
+    InvalidVatPercentageFromString {
+        /// String that failed to parse as a VAT percentage.
+        invalid_string: String,
+        /// Underlying reason from the parser or validator.
+        reason: String,
+    },
+
+    /// Too many `payment_method_overrides` entries supplied; the Typst
+    /// layout has only two slots (IBAN slot + BIC slot) that overrides
+    /// can occupy.
+    #[error("Too many payment method overrides: found {found}, maximum is {max}")]
+    TooManyPaymentMethodOverrides {
+        /// Number of overrides supplied.
+        found: usize,
+        /// Maximum allowed (currently 2).
+        max: usize,
+    },
+
     /// Failed to parse a date, e.g. when the format is incorrect or the date is invalid.
     #[error("Failed to parse date, because: {underlying}")]
     FailedToParseDate {
@@ -513,6 +542,16 @@ impl From<klirr_foundation::ModelError> for Error {
             klirr_foundation::ModelError::InvalidDate { underlying } => {
                 Self::InvalidDate { underlying }
             }
+            klirr_foundation::ModelError::InvalidVatPercentage { percent, reason } => {
+                Self::InvalidVatPercentage { percent, reason }
+            }
+            klirr_foundation::ModelError::InvalidVatPercentageFromString {
+                invalid_string,
+                reason,
+            } => Self::InvalidVatPercentageFromString {
+                invalid_string,
+                reason,
+            },
         }
     }
 }
@@ -790,5 +829,64 @@ mod tests {
                 underlying: "day out of range".to_string()
             }
         );
+
+        let err: Error = klirr_foundation::ModelError::InvalidHexColor {
+            invalid_string: "#zzz".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidHexColor {
+                invalid_string: "#zzz".to_string()
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidVatPercentage {
+            percent: -5.0,
+            reason: "VAT percentage must not be negative".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidVatPercentage {
+                percent: -5.0,
+                reason: "VAT percentage must not be negative".to_string(),
+            }
+        );
+
+        let err: Error = klirr_foundation::ModelError::InvalidVatPercentageFromString {
+            invalid_string: "abc".to_string(),
+            reason: "Invalid decimal: cannot parse from empty string".to_string(),
+        }
+        .into();
+        assert_eq!(
+            err,
+            Error::InvalidVatPercentageFromString {
+                invalid_string: "abc".to_string(),
+                reason: "Invalid decimal: cannot parse from empty string".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn invalid_vat_percentage_displays_percent_and_reason() {
+        let err = Error::InvalidVatPercentage {
+            percent: 150.0,
+            reason: "VAT percentage must not exceed 100".to_string(),
+        };
+        let display = format!("{err}");
+        assert!(display.contains("150"));
+        assert!(display.contains("must not exceed 100"));
+    }
+
+    #[test]
+    fn invalid_vat_percentage_from_string_displays_input_and_reason() {
+        let err = Error::InvalidVatPercentageFromString {
+            invalid_string: "twenty-five".to_string(),
+            reason: "not a number".to_string(),
+        };
+        let display = format!("{err}");
+        assert!(display.contains("twenty-five"));
+        assert!(display.contains("not a number"));
     }
 }

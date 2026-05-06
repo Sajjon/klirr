@@ -27,6 +27,14 @@ pub struct L10nLineItems {
     #[getset(get = "pub")]
     total_cost: String,
 
+    /// EN: "Subtotal:" — printed above the VAT row when VAT > 0%.
+    #[getset(get = "pub")]
+    subtotal: String,
+
+    /// EN: "VAT" — label for the value-added tax row, hidden when VAT is 0%.
+    #[getset(get = "pub")]
+    vat: String,
+
     /// EN: "Grand Total:"
     #[getset(get = "pub")]
     grand_total: String,
@@ -40,7 +48,39 @@ impl L10nLineItems {
             .quantity("Quantity".to_string())
             .unit_price("Unit price".to_string())
             .total_cost("Total cost".to_string())
+            .subtotal("Subtotal:".to_string())
+            .vat("VAT".to_string())
             .grand_total("Grand Total:".to_string())
             .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn english_exposes_subtotal_and_vat_labels() {
+        let sut = L10nLineItems::english();
+        assert_eq!(sut.subtotal(), "Subtotal:");
+        assert_eq!(sut.vat(), "VAT");
+    }
+
+    #[test]
+    fn swedish_exposes_subtotal_and_vat_labels() {
+        let sut = L10nLineItems::swedish();
+        assert_eq!(sut.subtotal(), "Delsumma:");
+        assert_eq!(sut.vat(), "Moms");
+    }
+
+    #[test]
+    fn english_exposes_existing_labels() {
+        let sut = L10nLineItems::english();
+        assert_eq!(sut.description(), "Item");
+        assert_eq!(sut.when(), "When");
+        assert_eq!(sut.quantity(), "Quantity");
+        assert_eq!(sut.unit_price(), "Unit price");
+        assert_eq!(sut.total_cost(), "Total cost");
+        assert_eq!(sut.grand_total(), "Grand Total:");
     }
 }

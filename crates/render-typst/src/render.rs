@@ -114,4 +114,208 @@ mod tests {
             MockedExchangeRatesFetcher::default(),
         );
     }
+
+    /// Compiles the layout with a non-zero VAT rate. We don't compare against a
+    /// fixture image (that would require regenerating the PNG and adds churn),
+    /// but successful compilation proves the Typst layout accepts the new
+    /// `data.payment_info.vat` field and the conditional VAT row.
+    #[test]
+    fn services_with_vat_renders_without_error() {
+        use klirr_core_invoice::{Vat, prepare_invoice_input_data};
+        use rust_decimal::dec;
+
+        let configured_vat = Vat::from_percent(dec!(25)).expect("25% is valid");
+        let data = Data::sample();
+        let payment_info = data.payment_info().clone().with_vat(configured_vat);
+        let data = Data::builder()
+            .information(data.information().clone())
+            .vendor(data.vendor().clone())
+            .client(data.client().clone())
+            .payment_info(payment_info)
+            .service_fees(data.service_fees().clone())
+            .expensed_periods(data.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+
+        let layout = *input.layout();
+        let prepared =
+            prepare_invoice_input_data(data, input, MockedExchangeRatesFetcher::default()).unwrap();
+
+        // Structural check: VAT propagated to the prepared data unchanged.
+        assert_eq!(*prepared.payment_info().vat(), configured_vat);
+
+        // Render the actual PDF (this exercises the new VAT branch).
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
+
+    #[test]
+    fn services_with_zero_vat_renders_without_error() {
+        use klirr_core_invoice::prepare_invoice_input_data;
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared = prepare_invoice_input_data(
+            Data::sample(),
+            input,
+            MockedExchangeRatesFetcher::default(),
+        )
+        .unwrap();
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
+
+    /// Multi-line invoices (typical for expenses) should still render
+    /// successfully when VAT is configured, exercising the Subtotal-row
+    /// branch of the layout that single-line service invoices skip.
+    #[test]
+    fn expenses_with_vat_renders_without_error() {
+        use klirr_core_invoice::{Currency, Vat, prepare_invoice_input_data};
+        use rust_decimal::dec;
+
+        let configured_vat = Vat::from_percent(dec!(25)).expect("25% is valid");
+        let base = Data::sample();
+        let payment_info = base.payment_info().clone().with_vat(configured_vat);
+        let data = Data::builder()
+            .information(base.information().clone())
+            .vendor(base.vendor().clone())
+            .client(base.client().clone())
+            .payment_info(payment_info)
+            .service_fees(base.service_fees().clone())
+            .expensed_periods(base.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Expenses)
+            .date("2025-05-31".parse::<Date>().unwrap())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared = prepare_invoice_input_data(
+            data,
+            input,
+            MockedExchangeRatesFetcher::from(ExchangeRatesMap::from_iter([
+                (Currency::EUR, UnitPrice::from(10)),
+                (Currency::SEK, UnitPrice::from(10)),
+            ])),
+        )
+        .unwrap();
+        assert_eq!(*prepared.payment_info().vat(), configured_vat);
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
+
+    /// Single payment-method override replaces the BIC slot.
+    #[test]
+    fn services_with_one_payment_method_override_renders() {
+        use klirr_core_invoice::{LabeledField, prepare_invoice_input_data};
+
+        let base = Data::sample();
+        let payment_info = base
+            .payment_info()
+            .clone()
+            .with_payment_method_overrides(vec![LabeledField::new("Plusgiro", "12-3456-7")])
+            .expect("one override is within the cap");
+        let data = Data::builder()
+            .information(base.information().clone())
+            .vendor(base.vendor().clone())
+            .client(base.client().clone())
+            .payment_info(payment_info)
+            .service_fees(base.service_fees().clone())
+            .expensed_periods(base.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared =
+            prepare_invoice_input_data(data, input, MockedExchangeRatesFetcher::default()).unwrap();
+
+        assert_eq!(prepared.payment_info().payment_method_overrides().len(), 1);
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
+
+    /// Two payment-method overrides replace both the IBAN and BIC slots.
+    #[test]
+    fn services_with_two_payment_method_overrides_renders() {
+        use klirr_core_invoice::{LabeledField, prepare_invoice_input_data};
+
+        let base = Data::sample();
+        let payment_info = base
+            .payment_info()
+            .clone()
+            .with_payment_method_overrides(vec![
+                LabeledField::new("Bankgiro", "153-3827"),
+                LabeledField::new("Kontonummer", "8327-9,964 769 716-9"),
+            ])
+            .expect("two overrides is within the cap");
+        let data = Data::builder()
+            .information(base.information().clone())
+            .vendor(base.vendor().clone())
+            .client(base.client().clone())
+            .payment_info(payment_info)
+            .service_fees(base.service_fees().clone())
+            .expensed_periods(base.expensed_periods().clone())
+            .build();
+
+        let input = ValidInput::builder()
+            .items(InvoicedItems::Service { time_off: None })
+            .date(Date::sample())
+            .language(Language::EN)
+            .build();
+        let layout = *input.layout();
+        let prepared =
+            prepare_invoice_input_data(data, input, MockedExchangeRatesFetcher::default()).unwrap();
+
+        assert_eq!(prepared.payment_info().payment_method_overrides().len(), 2);
+
+        let pdf = crate::render::render(
+            klirr_core_invoice::L10n::new(Language::EN).unwrap(),
+            prepared,
+            layout,
+            |e| panic!("render failed: {e}"),
+        )
+        .unwrap();
+        assert!(!pdf.as_ref().is_empty(), "rendered PDF should be non-empty");
+    }
 }

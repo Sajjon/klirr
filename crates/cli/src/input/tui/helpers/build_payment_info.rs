@@ -1,6 +1,6 @@
 use inquire::{CustomType, Text, error::InquireResult};
 
-use crate::{Currency, InvoiceDataFromTuiError, PaymentInformation, PaymentTerms, Result};
+use crate::{Currency, InvoiceDataFromTuiError, PaymentInformation, PaymentTerms, Result, Vat};
 
 pub fn build_payment_info(default: &PaymentInformation) -> Result<PaymentInformation> {
     fn inner(default: &PaymentInformation) -> InquireResult<PaymentInformation> {
@@ -26,13 +26,23 @@ pub fn build_payment_info(default: &PaymentInformation) -> Result<PaymentInforma
             .with_default(PaymentTerms::net30())
             .prompt()?;
 
+        let vat = CustomType::<Vat>::new("VAT percentage?")
+            .with_help_message(
+                "Value-added tax rate added on top of the VAT-exclusive subtotal \
+                 (your service unit price excludes VAT), e.g. '25' for 25%. \
+                 Enter '0' to omit the VAT row entirely.",
+            )
+            .with_default(*default.vat())
+            .prompt()?;
+
         let payment_info = default
             .clone()
             .with_bank_name(bank_name)
             .with_iban(iban)
             .with_bic(bic)
             .with_currency(currency)
-            .with_terms(payment_terms);
+            .with_terms(payment_terms)
+            .with_vat(vat);
 
         Ok(payment_info)
     }

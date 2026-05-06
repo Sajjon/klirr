@@ -2,7 +2,7 @@ use crate::run::DATA_INIT_HINT;
 use crate::{
     Data, DataAdminInputCommand, DataSelector, DecryptedEmailSettings, EmailInputCommand,
     EmailSettingsSelector, EncryptedEmailSettings, Error, HasSample, InvoiceInput, Item,
-    NamedInvoicePdf, Path, PathBuf, RelativeTime, Result, ResultExt, ValidInput, ask_for_data,
+    NamedInvoicePdf, Path, PathBuf, RelativeTime, Result, ResultExt, ValidInput, Vat, ask_for_data,
     ask_for_email, client_path, create_invoice_pdf_with_data, curry2, data_dir, data_dir_create_if,
     edit_data_at, edit_email_data_at, expensed_periods_path, get_email_encryption_password,
     init_data_at, init_email_data_at, load_email_data_and_send_test_email_at, payment_info_path,
@@ -140,7 +140,21 @@ pub fn render_invoice_sample_with_nonce(use_nonce: bool) -> Result<NamedInvoiceP
     let path = dirs_next::home_dir()
         .expect("Expected to be able to find HOME dir")
         .join("klirr_sample.pdf");
-    let mut data = Data::sample();
+    // Show a non-zero VAT in the sample so the rendered example demonstrates
+    // the VAT row + grand-total math. Matches the README walkthrough.
+    let base = Data::sample();
+    let payment_with_vat = base
+        .payment_info()
+        .clone()
+        .with_vat(Vat::from_percent(rust_decimal::dec!(25)).expect("25% is valid"));
+    let mut data = Data::builder()
+        .information(base.information().clone())
+        .vendor(base.vendor().clone())
+        .client(base.client().clone())
+        .payment_info(payment_with_vat)
+        .service_fees(base.service_fees().clone())
+        .expensed_periods(base.expensed_periods().clone())
+        .build();
     if use_nonce {
         let vat = format!("VAT{} {}", rand::random::<u64>(), rand::random::<u64>());
         data = data

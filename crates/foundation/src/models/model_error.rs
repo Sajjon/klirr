@@ -47,4 +47,58 @@ pub enum ModelError {
     /// Date components were invalid.
     #[error("Invalid date, underlying: {underlying}")]
     InvalidDate { underlying: String },
+
+    /// VAT percentage was outside `[0, 100]`.
+    #[error("Invalid VAT percentage: {percent}, reason: {reason}")]
+    InvalidVatPercentage { percent: f64, reason: String },
+
+    /// Failed to parse VAT percentage from text.
+    #[error("Failed to parse VAT percentage from {invalid_string:?}: {reason}")]
+    InvalidVatPercentageFromString {
+        invalid_string: String,
+        reason: String,
+    },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn invalid_vat_percentage_display_contains_percent_and_reason() {
+        let err = ModelError::InvalidVatPercentage {
+            percent: -1.5,
+            reason: "VAT percentage must not be negative".to_owned(),
+        };
+        let display = format!("{err}");
+        assert!(display.contains("-1.5"), "got: {display}");
+        assert!(display.contains("must not be negative"), "got: {display}");
+    }
+
+    #[test]
+    fn invalid_vat_percentage_from_string_display_contains_input_and_reason() {
+        let err = ModelError::InvalidVatPercentageFromString {
+            invalid_string: "abc".to_owned(),
+            reason: "not a decimal".to_owned(),
+        };
+        let display = format!("{err}");
+        assert!(display.contains("abc"), "got: {display}");
+        assert!(display.contains("not a decimal"), "got: {display}");
+    }
+
+    #[test]
+    fn vat_errors_implement_partial_eq_and_clone() {
+        let err = ModelError::InvalidVatPercentage {
+            percent: 150.0,
+            reason: "too big".to_owned(),
+        };
+        assert_eq!(err.clone(), err);
+
+        let err2 = ModelError::InvalidVatPercentageFromString {
+            invalid_string: "x".to_owned(),
+            reason: "y".to_owned(),
+        };
+        assert_eq!(err2.clone(), err2);
+        assert_ne!(err, err2);
+    }
 }

@@ -36,7 +36,7 @@ pub use crate::models::{
     AbstractNamedPdf, Cadence, CompanyInformation, Cost, Currency, Date, Day, Decimal, DueInDays,
     FontIdentifier, FontWeight, Granularity, HexColor, ModelError, ModelResult, Month, MonthHalf,
     OutputPath, PathAndName, Pdf, PostalAddress, Quantity, Rate, RelativeTime, StreetAddress,
-    UnitPrice, Year, save_pdf,
+    UnitPrice, Vat, Year, save_pdf,
 };
 pub use crate::ron::{
     RonError, deserialize_contents_of_ron, deserialize_ron_str, path_to_ron_file_with_base,

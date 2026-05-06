@@ -57,6 +57,12 @@ fn to_typst_value(value: &Value, indent: usize) -> String {
 
     match value {
         Value::Object(map) => {
+            // Empty dict in Typst is `(:)`. The trailing-comma form
+            // `(\n,\n)` is a parse error (`unexpected comma`).
+            if map.is_empty() {
+                return "(:)".to_string();
+            }
+
             // Flatten single-entry enum-like objects (e.g. { "Net": 30 }) to (net: 30)
             if map.len() == 1 {
                 let (variant, inner) = map
@@ -91,6 +97,12 @@ fn to_typst_value(value: &Value, indent: usize) -> String {
         }
 
         Value::Array(arr) => {
+            // Empty array in Typst is `()`. The trailing-comma form
+            // `(\n,\n)` is a parse error (`unexpected comma`).
+            if arr.is_empty() {
+                return "()".to_string();
+            }
+
             let items = arr
                 .iter()
                 .map(|v| format!("{}{}", next_indent_str, to_typst_value(v, next_indent)))
@@ -177,5 +189,17 @@ mod tests {
         assert_eq!(to_typst_value(&json!(12), 0), "12");
         assert_eq!(to_typst_value(&json!("abc"), 0), "\"abc\"");
         assert_eq!(to_typst_value(&json!(null), 0), "none");
+    }
+
+    /// Typst rejects `(\n,\n)` as a parse error (`unexpected comma`).
+    /// Empty arrays must render as `()` and empty objects as `(:)`.
+    #[test]
+    fn typst_value_emits_empty_array_as_unit() {
+        assert_eq!(to_typst_value(&json!([]), 0), "()");
+    }
+
+    #[test]
+    fn typst_value_emits_empty_object_as_colon_unit() {
+        assert_eq!(to_typst_value(&json!({}), 0), "(:)");
     }
 }

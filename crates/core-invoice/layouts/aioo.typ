@@ -33,27 +33,58 @@
 
 
   // Page setup: A4 paper, custom margins, and footer for contact details
+  // Resolve the middle-column slots once. The middle column lists Bank
+  // first, then two more rows that default to IBAN and BIC. The
+  // `payment_method_overrides` array (length 0–2) replaces those rows
+  // bottom-up: a single override replaces the BIC slot; two overrides
+  // replace both the IBAN slot and the BIC slot.
+  let overrides = if "payment_method_overrides" in data.payment_info {
+    data.payment_info.payment_method_overrides
+  } else {
+    ()
+  }
+  let n_overrides = overrides.len()
+  let iban_label = if n_overrides == 2 { overrides.at(0).label } else { l10n.vendor_info.iban }
+  let iban_value = if n_overrides == 2 { overrides.at(0).value } else { data.payment_info.iban }
+  let bic_label = if n_overrides >= 1 { overrides.at(n_overrides - 1).label } else { l10n.vendor_info.bic }
+  let bic_value = if n_overrides >= 1 { overrides.at(n_overrides - 1).value } else { data.payment_info.bic }
+
   set page(margin: (top: 2cm, bottom: 11cm, left: 1.5cm, right: 1.5cm), footer: [
     // Wrap both items in a vertical block
     #block[
       #hline()
+      // Three content columns separated by two flexible spacer columns.
+      // Each `auto` shrinks to the intrinsic width of its widest cell;
+      // the two `1fr` spacers absorb the leftover row width and split it
+      // 50/50 so the gap between columns 1↔2 equals the gap between 2↔3.
+      // Equivalent to: gutter = (content_width − Σ auto_widths) / 2.
       #table(
-        columns: (1fr, auto, auto),
-        align: (left, left, left),
+        columns: (auto, 1fr, auto, 1fr, auto),
+        align: (left, left, left, left, left),
         stroke: none,
-        [#strong(l10n.vendor_info.address)],
-        [#strong(l10n.vendor_info.iban)],
+        [#strong(l10n.vendor_info.address)], [],
+        [#strong(l10n.vendor_info.bank)], [],
         [#strong(l10n.vendor_info.organisation_number)],
 
-        [#data.vendor.company_name], [#data.payment_info.iban], [#data.vendor.organisation_number],
-        [#data.vendor.postal_address.street_address.line_1],
-        [#strong(l10n.vendor_info.bank)],
+        [#data.vendor.company_name], [],
+        [#data.payment_info.bank_name], [],
+        [#data.vendor.organisation_number],
+
+        [#data.vendor.postal_address.street_address.line_1], [],
+        [#strong(iban_label)], [],
         [#strong(l10n.vendor_info.vat_number)],
 
-        [#data.vendor.postal_address.street_address.line_2], [#data.payment_info.bank_name], [#data.vendor.vat_number],
+        [#data.vendor.postal_address.street_address.line_2], [],
+        [#iban_value], [],
+        [#data.vendor.vat_number],
 
-        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [#strong(l10n.vendor_info.bic)], [],
-        [#data.vendor.postal_address.country], [#data.payment_info.bic], [],
+        [#data.vendor.postal_address.zip, #data.vendor.postal_address.city], [],
+        [#strong(bic_label)], [],
+        [],
+
+        [#data.vendor.postal_address.country], [],
+        [#bic_value], [],
+        [],
       )
       #hline()
       // Conditionally display footer text if it exists
@@ -124,12 +155,14 @@
 
   // ** Invoice Items Table **
   double-line()
-  // Calculate total in a scripting block
-  let grand_total
-  {
-    grand_total = 0.0
-    for it in data.line_items.items { grand_total = grand_total + it.total_cost }
-  }
+  // Calculate subtotal, VAT amount, and grand total.
+  // When VAT is 0% the VAT and subtotal rows are suppressed and the grand
+  // total equals the subtotal.
+  let subtotal = 0.0
+  for it in data.line_items.items { subtotal = subtotal + it.total_cost }
+  let vat_percent = if "vat" in data.payment_info { data.payment_info.vat } else { 0 }
+  let vat_amount = subtotal * vat_percent / 100
+  let grand_total = subtotal + vat_amount
   v(-10pt)
   table(
     columns: (auto, auto, 1fr, auto, auto),
@@ -154,6 +187,27 @@
       )
     },
   )
+  // Subtotal + VAT rows shown only when VAT > 0%.
+  // The subtotal row is suppressed when there is a single line item, because
+  // its "Total cost" already equals the subtotal — restating it just adds
+  // visual noise. Multi-line invoices (typically expenses) keep the subtotal
+  // since the eye can't sum the column at a glance.
+  if vat_percent > 0 {
+    if data.line_items.items.len() > 1 {
+      align(right)[
+        #set text(weight: "bold")
+        #l10n.line_items.subtotal
+        #format_amount(subtotal, data.payment_info.currency)
+      ]
+      v(-5pt)
+    }
+    align(right)[
+      #set text(weight: "bold")
+      #l10n.line_items.vat #str(vat_percent)%
+      #format_amount(vat_amount, data.payment_info.currency)
+    ]
+    v(-5pt)
+  }
   // Grand Total Row
   align(right)[
     #set text(weight: "bold")

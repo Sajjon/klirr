@@ -15,7 +15,7 @@ pub(crate) use klirr_core_invoice::{
     Path, PathBuf, PaymentInformation, PaymentTerms, PostalAddress, ProtoInvoiceInfo,
     PurchaseOrder, Quantity, Rate, RelativeTime, ResultExt, Salt, Select, ServiceFees, SmtpServer,
     StreetAddress, Template, TemplatePart, TimeOff, TimestampedInvoiceNumber, UnitPrice,
-    ValidInput, Year, client_path, create_invoice_pdf_with_data, curry1, curry2, data_dir,
+    ValidInput, Vat, Year, client_path, create_invoice_pdf_with_data, curry1, curry2, data_dir,
     data_dir_create_if, edit_data_at, edit_email_data_at, email_settings_path,
     expensed_periods_path, init_data_at, init_email_data_at,
     load_email_data_and_send_test_email_at, payment_info_path, period_end_from_relative_time,
