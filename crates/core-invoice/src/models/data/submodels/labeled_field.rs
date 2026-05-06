@@ -45,11 +45,11 @@ impl LabeledField {
 
 impl HasSample for LabeledField {
     fn sample() -> Self {
-        Self::new("Bankgiro", "153-3827")
+        Self::new("Reference", "INV-SAMPLE-001")
     }
 
     fn sample_other() -> Self {
-        Self::new("Kontonummer", "8327-9,964 769 716-9")
+        Self::new("Cost Center", "CC-42-EU")
     }
 }
 
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn deserializes_from_ron() {
         let parsed: LabeledField =
-            ron::from_str(r#"LabeledField(label: "Bankgiro", value: "153-3827")"#).unwrap();
+            ron::from_str(r#"LabeledField(label: "Reference", value: "INV-SAMPLE-001")"#).unwrap();
         assert_eq!(parsed, Sut::sample());
     }
 }
