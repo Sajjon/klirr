@@ -82,11 +82,25 @@ impl Data {
                 Version::current(),
             ));
         }
-        self.information.validate()?;
-        let payment_info = self.payment_info.clone().validate()?;
-        Ok(Self {
+        let Self {
+            version,
+            information,
+            vendor,
+            client,
             payment_info,
-            ..self
+            service_fees,
+            expensed_periods,
+        } = self;
+        information.validate()?;
+        let payment_info = payment_info.validate()?;
+        Ok(Self {
+            version,
+            information,
+            vendor,
+            client,
+            payment_info,
+            service_fees,
+            expensed_periods,
         })
     }
 
