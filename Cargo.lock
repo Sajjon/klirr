@@ -2448,7 +2448,7 @@ dependencies = [
 
 [[package]]
 name = "klirr"
-version = "0.2.14"
+version = "0.2.15"
 dependencies = [
  "bon",
  "chrono",
@@ -2479,7 +2479,7 @@ dependencies = [
 
 [[package]]
 name = "klirr-core-invoice"
-version = "0.2.14"
+version = "0.2.15"
 dependencies = [
  "base64 0.22.1",
  "bon",
@@ -2513,7 +2513,7 @@ dependencies = [
 
 [[package]]
 name = "klirr-foundation"
-version = "0.2.14"
+version = "0.2.15"
 dependencies = [
  "aes-gcm",
  "bon",
@@ -2547,7 +2547,7 @@ dependencies = [
 
 [[package]]
 name = "klirr-render-typst"
-version = "0.2.14"
+version = "0.2.15"
 dependencies = [
  "bon",
  "chrono",
