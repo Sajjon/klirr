@@ -1,6 +1,6 @@
 use crate::{
-    Cadence, Date, Error, Granularity, InvoiceNumber, Quantity, RecordOfPeriodsOff, RelativeTime,
-    Result, TimestampedInvoiceNumber,
+    BankHolidays, Cadence, Date, Error, Granularity, InvoiceNumber, Quantity, RecordOfPeriodsOff,
+    RelativeTime, Result, TimestampedInvoiceNumber,
 };
 use klirr_foundation::{
     CalendarError, calculate_period_number, normalize_period_end_date_for_cadence as normalize,
@@ -145,6 +145,7 @@ pub fn calculate_invoice_number(
 ///     Granularity::Day,
 ///     Cadence::Monthly,
 ///     &RecordOfPeriodsOff::default(),
+///     &BankHolidays::default(),
 /// )
 /// .unwrap();
 ///
@@ -155,9 +156,16 @@ pub fn quantity_in_period(
     granularity: Granularity,
     cadence: Cadence,
     record_of_periods_off: &RecordOfPeriodsOff,
+    bank_holidays: &BankHolidays,
 ) -> Result<Quantity> {
-    quantity_in_period_inner(target_date, granularity, cadence, record_of_periods_off)
-        .map_err(map_calendar_error)
+    quantity_in_period_inner(
+        target_date,
+        granularity,
+        cadence,
+        record_of_periods_off,
+        bank_holidays,
+    )
+    .map_err(map_calendar_error)
 }
 
 #[cfg(test)]

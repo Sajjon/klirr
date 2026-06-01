@@ -2,6 +2,9 @@
 extend-exclude = [
     "crates/core-invoice/src/models/l10n/swedish.rs",
     "crates/core-invoice/src/models/l10n/snapshots/klirr_core_invoice__models__l10n__localization__tests__l10n_swedish.snap",
+    # Flat table of ISO country codes and names (e.g. "ba"->BA, "fo"->FO,
+    # "viet nam") which the spell checker flags as typos.
+    "crates/foundation/src/models/country_code.rs",
 ]
 
 [default.extend-words]

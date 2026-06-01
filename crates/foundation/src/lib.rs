@@ -1,3 +1,5 @@
+#[cfg(feature = "bank-holidays")]
+mod bank_holidays;
 mod calendar_logic;
 mod document;
 #[cfg(feature = "crypto")]
@@ -13,6 +15,11 @@ mod sample;
 mod traits;
 mod typst_layouts;
 
+#[cfg(feature = "bank-holidays")]
+pub use crate::bank_holidays::{
+    BankHolidaysError, BankHolidaysFetcher, DeserializableHolidaysResponse,
+    get_bank_holidays_with_fetcher, get_bank_holidays_with_reqwest,
+};
 pub use crate::calendar_logic::{
     CalendarError, CalendarResult, calculate_period_number, normalize_period_end_date_for_cadence,
     parse_period_label_for_cadence, period_end_from_relative_time, quantity_in_period,
@@ -33,10 +40,11 @@ pub use crate::exchange_rates::{
 pub use crate::fs_utils::{create_folder_if_needed, create_folder_to_parent_of_path_if_needed};
 pub use crate::functional::{ResultExt, curry1, curry2};
 pub use crate::models::{
-    AbstractNamedPdf, Cadence, CompanyInformation, Cost, Currency, Date, Day, Decimal, DueInDays,
-    FontIdentifier, FontWeight, Granularity, HexColor, ModelError, ModelResult, Month, MonthHalf,
-    OutputPath, PathAndName, Pdf, PostalAddress, Quantity, Rate, RelativeTime, StreetAddress,
-    UnitPrice, Vat, Year, save_pdf,
+    AbstractNamedPdf, BankHolidays, Cadence, CompanyInformation, Cost, CountryCode, Currency, Date,
+    Day, Decimal, DueDays, DueInDays, FontIdentifier, FontWeight, Granularity, HexColor,
+    InvalidCountryCode, InvalidDueDays, ModelError, ModelResult, Month, MonthHalf, OutputPath,
+    PathAndName, Pdf, PostalAddress, Quantity, Rate, RelativeTime, StreetAddress, UnitPrice, Vat,
+    Year, save_pdf,
 };
 pub use crate::ron::{
     RonError, deserialize_contents_of_ron, deserialize_ron_str, path_to_ron_file_with_base,

@@ -23,6 +23,19 @@ pub struct ValidInput {
     #[getset(get = "pub")]
     layout: Layout,
 
+    /// Per-invoice override: when `true`, bank holidays in the target period are
+    /// treated as worked, so none are deducted from billable days — even if the
+    /// vendor has `off_on_bank_holidays` enabled. Defaults to `false`.
+    #[builder(default)]
+    #[getset(get = "pub")]
+    worked_holidays: bool,
+
+    /// When `true`, re-fetch bank holidays from the API instead of using the
+    /// disk cache for this invoice (picks up corrections). Defaults to `false`.
+    #[builder(default)]
+    #[getset(get = "pub")]
+    refresh_holidays: bool,
+
     #[getset(get = "pub")]
     maybe_output_path: Option<PathBuf>,
 

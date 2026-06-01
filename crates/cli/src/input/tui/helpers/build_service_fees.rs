@@ -1,4 +1,4 @@
-use inquire::{CustomType, Text, error::InquireResult};
+use inquire::{Confirm, CustomType, Text, error::InquireResult};
 
 use crate::{
     Cadence, Granularity, InvoiceDataFromTuiError, Rate, Result, ServiceFees, UnitPrice,
@@ -33,10 +33,20 @@ pub fn build_service_fees(default: &ServiceFees) -> Result<ServiceFees> {
 
         let rate = Rate::from((unit_price, granularity));
 
+        let off_on_bank_holidays = Confirm::new("Off on bank holidays?")
+            .with_help_message(
+                "If yes, public holidays in the vendor's country are deducted from billable \
+                 working days (day/hour rates only), looked up online and cached. Don't also \
+                 log a holiday as time off, or it is deducted twice.",
+            )
+            .with_default(*default.off_on_bank_holidays())
+            .prompt()?;
+
         Ok(ServiceFees::builder()
             .name(name)
             .cadence(cadence)
             .rate(rate)
+            .off_on_bank_holidays(off_on_bank_holidays)
             .build()
             .unwrap())
     }

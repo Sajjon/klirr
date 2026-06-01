@@ -1,6 +1,8 @@
 [all]
 exclude-files = [
     "crates/foundation/src/exchange_rates.rs",
+    "crates/foundation/src/bank_holidays.rs",
+    "crates/core-invoice/src/logic/prepare_data/bank_holidays.rs",
     "crates/render-typst/src/compare_images.rs",
     "crates/render-typst/src/render.rs",
     "crates/cli/src/init_logging.rs",

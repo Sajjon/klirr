@@ -1,4 +1,4 @@
-use crate::{Day, FromStr, HasSample, NetDays, Result};
+use crate::{DueDays, FromStr, HasSample, NetDays, Result};
 use derive_more::Display;
 use serde::Deserialize;
 use serde::Serialize;
@@ -45,7 +45,7 @@ impl PaymentTerms {
 }
 
 impl klirr_foundation::DueInDays for PaymentTerms {
-    fn due_in_days(&self) -> Day {
+    fn due_in_days(&self) -> DueDays {
         match self {
             PaymentTerms::Net(days) => *days.due_in(),
         }
@@ -60,7 +60,7 @@ impl HasSample for PaymentTerms {
     fn sample_other() -> Self {
         Self::Net(
             NetDays::builder()
-                .due_in(Day::try_from(15).unwrap())
+                .due_in(DueDays::try_from(15u16).unwrap())
                 .build(),
         )
     }
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn test_payment_terms_net_days() {
         let net_days: NetDays = "Net 30".parse().unwrap();
-        assert_eq!(net_days.due_in(), &Day::try_from(30).unwrap());
+        assert_eq!(net_days.due_in(), &DueDays::try_from(30u16).unwrap());
         assert_ron_snapshot!(net_days);
     }
 
@@ -105,7 +105,7 @@ mod tests {
             "Net",          // Missing days
             "Net 0",        // Invalid days (0)
             "Net -30",      // Invalid days (negative)
-            "Net 32",       // Invalid days (more than 31)
+            "Net 366",      // Invalid days (more than one year)
             "Net abc",      // Non-numeric days
             "Net 30 extra", // Extra text after valid input
         ];
@@ -120,5 +120,17 @@ mod tests {
     fn test_payment_terms_from_str() {
         let payment_terms: PaymentTerms = "Net 30".parse().unwrap();
         assert!(matches!(payment_terms, PaymentTerms::Net(_)));
+    }
+
+    #[test]
+    fn parses_terms_greater_than_31() {
+        // Regression: net terms used to reuse the calendar `Day` type (1..=31),
+        // so "Net 35", "Net 60", etc. failed to parse.
+        for days in [35u16, 45, 60, 90, 120, 365] {
+            let terms: PaymentTerms = format!("Net {days}").parse().unwrap();
+            let PaymentTerms::Net(net) = terms;
+            assert_eq!(net.due_in(), &DueDays::try_from(days).unwrap());
+            assert_eq!(terms.to_string(), format!("Net {days}"));
+        }
     }
 }

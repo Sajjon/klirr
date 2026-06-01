@@ -1,6 +1,6 @@
 use crate::{
     Currency, Data, ExchangeRates, ExchangeRatesMap, Item, LineItemsPricedInSourceCurrency,
-    PreparedData, Result, ValidInput,
+    PreparedData, Result, ValidInput, normalize_period_end_date_for_cadence, resolve_bank_holidays,
 };
 use log::debug;
 use log::info;
@@ -32,7 +32,15 @@ pub fn prepare_invoice_input_data(
     fetcher: impl FetchExchangeRates,
 ) -> Result<PreparedData> {
     info!("Preparing invoice input data for PDF generation...");
-    let partial = data.to_partial(input)?;
+    let cadence = *data.service_fees().cadence();
+    let target_period_end_date = normalize_period_end_date_for_cadence(*input.date(), cadence)?;
+    let bank_holidays = resolve_bank_holidays(
+        &data,
+        &target_period_end_date,
+        *input.worked_holidays(),
+        *input.refresh_holidays(),
+    );
+    let partial = data.to_partial(input, &bank_holidays)?;
     let currency = *partial.payment_info().currency();
     let exchange_rates = fetcher.fetch_for_line_items(currency, partial.line_items())?;
     let data_typst_compat = partial.to_typst(exchange_rates)?;

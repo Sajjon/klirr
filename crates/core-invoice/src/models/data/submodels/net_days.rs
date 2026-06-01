@@ -1,4 +1,4 @@
-use crate::{Day, Error, FromStr, HasSample, Result};
+use crate::{DueDays, Error, FromStr, HasSample, Result};
 use bon::Builder;
 use derive_more::Display;
 use getset::Getters;
@@ -24,7 +24,7 @@ use serde_with::SerializeDisplay;
 pub struct NetDays {
     /// The number of days until payment is due
     #[getset(get = "pub")]
-    due_in: Day,
+    due_in: DueDays,
 }
 
 impl FromStr for NetDays {
@@ -38,8 +38,8 @@ impl FromStr for NetDays {
     /// ```
     /// extern crate klirr_core_invoice;
     /// use klirr_core_invoice::*;
-    /// let net_days: NetDays = "Net 30".parse().unwrap();
-    /// assert_eq!(net_days.due_in(), &Day::try_from(30).unwrap());
+    /// let net_days: NetDays = "Net 35".parse().unwrap();
+    /// assert_eq!(net_days.due_in(), &DueDays::try_from(35u16).unwrap());
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let days = s
@@ -48,9 +48,10 @@ impl FromStr for NetDays {
             .ok_or(Error::FailedToParsePaymentTermsNetDays {
                 invalid_string: s.to_owned(),
             })?;
-        let days = Day::from_str(days).map_err(|_| Error::FailedToParsePaymentTermsNetDays {
-            invalid_string: s.to_owned(),
-        })?;
+        let days =
+            DueDays::from_str(days).map_err(|_| Error::FailedToParsePaymentTermsNetDays {
+                invalid_string: s.to_owned(),
+            })?;
         Ok(Self::builder().due_in(days).build())
     }
 }
@@ -58,17 +59,17 @@ impl FromStr for NetDays {
 impl NetDays {
     pub fn net30() -> Self {
         Self::builder()
-            .due_in(Day::try_from(30).expect("LEQ 31 days"))
+            .due_in(DueDays::try_from(30u16).expect("30 is a valid net term"))
             .build()
     }
 }
 
 impl HasSample for NetDays {
     fn sample() -> Self {
-        Self::builder().due_in(Day::sample()).build()
+        Self::builder().due_in(DueDays::sample()).build()
     }
     fn sample_other() -> Self {
-        Self::builder().due_in(Day::sample_other()).build()
+        Self::builder().due_in(DueDays::sample_other()).build()
     }
 }
 

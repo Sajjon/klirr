@@ -6,4 +6,5 @@ ServiceFees(
   name: "Discreet Investigative Services",
   rate: Daily(UnitPrice(777.0)),
   cadence: Monthly,
+  off_on_bank_holidays: false,
 )
