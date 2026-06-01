@@ -1,8 +1,8 @@
 use crate::{
-    Cadence, CompanyInformation, DataFromDiskWithItemsOfKind, DataWithItemsPricedInSourceCurrency,
-    Error, ExpensedPeriods, HasSample, InvoiceInfoFull, InvoicedItems, Item,
-    LineItemsPricedInSourceCurrency, OutputPath, PaymentInformation, ProtoInvoiceInfo, Quantity,
-    Result, ServiceFees, TimeOff, ValidInput, calculate_invoice_number,
+    BankHolidays, Cadence, CompanyInformation, DataFromDiskWithItemsOfKind,
+    DataWithItemsPricedInSourceCurrency, Error, ExpensedPeriods, HasSample, InvoiceInfoFull,
+    InvoicedItems, Item, LineItemsPricedInSourceCurrency, OutputPath, PaymentInformation,
+    ProtoInvoiceInfo, Quantity, Result, ServiceFees, TimeOff, ValidInput, calculate_invoice_number,
     normalize_period_end_date_for_cadence, quantity_in_period,
 };
 use bon::Builder;
@@ -109,11 +109,17 @@ impl Data {
         target_period_end_date: &crate::Date,
         cadence: Cadence,
         time_off: &Option<TimeOff>,
+        bank_holidays: &BankHolidays,
     ) -> Result<Quantity> {
         let granularity = self.service_fees().rate().granularity();
         let periods_off = self.information().record_of_periods_off();
-        let quantity_in_period =
-            quantity_in_period(target_period_end_date, granularity, cadence, periods_off)?;
+        let quantity_in_period = quantity_in_period(
+            target_period_end_date,
+            granularity,
+            cadence,
+            periods_off,
+            bank_holidays,
+        )?;
         Ok(quantity_in_period - time_off.map(|d| *d).unwrap_or(Quantity::ZERO))
     }
 
@@ -130,11 +136,15 @@ impl Data {
     ///
     /// let data = Data::sample();
     /// let input = ValidInput::sample();
-    /// let partial = data.to_partial(input).unwrap();
+    /// let partial = data.to_partial(input, &BankHolidays::default()).unwrap();
     ///
     /// assert!(!partial.line_items().is_expenses());
     /// ```
-    pub fn to_partial(self, input: ValidInput) -> Result<DataWithItemsPricedInSourceCurrency> {
+    pub fn to_partial(
+        self,
+        input: ValidInput,
+        bank_holidays: &BankHolidays,
+    ) -> Result<DataWithItemsPricedInSourceCurrency> {
         let items = input.items();
         let cadence = *self.service_fees().cadence();
         let target_period_end_date = normalize_period_end_date_for_cadence(*input.date(), cadence)?;
@@ -200,8 +210,12 @@ impl Data {
                             }
                         }
 
-                        let quantity =
-                            self.billable_quantity(&target_period_end_date, cadence, time_off)?;
+                        let quantity = self.billable_quantity(
+                            &target_period_end_date,
+                            cadence,
+                            time_off,
+                            bank_holidays,
+                        )?;
                         let service = Item::builder()
                             .name(self.service_fees.name().clone())
                             .transaction_date(invoice_date)
@@ -321,7 +335,7 @@ mod tests {
             .items(InvoicedItems::Expenses)
             .date(crate::Date::sample())
             .build();
-        let partial = sut.to_partial(input).unwrap();
+        let partial = sut.to_partial(input, &BankHolidays::default()).unwrap();
         assert!(partial.line_items().is_expenses());
     }
 
@@ -350,7 +364,7 @@ mod tests {
             .date(crate::Date::sample())
             .build();
 
-        let result = sut.to_partial(input);
+        let result = sut.to_partial(input, &BankHolidays::default());
 
         if let Err(Error::InvalidGranularityForTimeOff {
             free_granularity,

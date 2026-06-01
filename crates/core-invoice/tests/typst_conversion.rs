@@ -1,7 +1,7 @@
 use insta::assert_snapshot;
 use klirr_core_invoice::{
-    Currency, Data, Date, ExchangeRates, ExchangeRatesMap, HasSample, InvoicedItems, L10n,
-    LabeledField, Language, PreparedData, UnitPrice, ValidInput, Vat,
+    BankHolidays, Currency, Data, Date, ExchangeRates, ExchangeRatesMap, HasSample, InvoicedItems,
+    L10n, LabeledField, Language, PreparedData, UnitPrice, ValidInput, Vat,
 };
 use klirr_foundation::ToTypstFn;
 use rust_decimal::dec;
@@ -18,7 +18,7 @@ fn sample_exchange_rates() -> ExchangeRates {
 
 fn prepared_data_from(input: ValidInput) -> PreparedData {
     Data::sample()
-        .to_partial(input)
+        .to_partial(input, &BankHolidays::default())
         .unwrap()
         .to_typst(sample_exchange_rates())
         .unwrap()
@@ -77,7 +77,7 @@ fn data_services_with_payment_method_overrides_to_typst() {
         .expensed_periods(data.expensed_periods().clone())
         .build();
     let typst = data
-        .to_partial(input)
+        .to_partial(input, &BankHolidays::default())
         .unwrap()
         .to_typst(sample_exchange_rates())
         .unwrap()
@@ -109,7 +109,7 @@ fn data_services_with_vat_to_typst() {
         .expensed_periods(data.expensed_periods().clone())
         .build();
     let typst = data
-        .to_partial(input)
+        .to_partial(input, &BankHolidays::default())
         .unwrap()
         .to_typst(sample_exchange_rates())
         .unwrap()

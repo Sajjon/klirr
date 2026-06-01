@@ -25,8 +25,8 @@ pub use item_converted_into_target_currency::*;
 pub use klirr_foundation::HasSample;
 pub use klirr_foundation::OutputPath;
 pub use klirr_foundation::{
-    CompanyInformation, Cost, Date, Day, Decimal, HexColor, Month, MonthHalf, PostalAddress,
-    Quantity, Rate, RelativeTime, StreetAddress, UnitPrice, Vat, Year,
+    BankHolidays, CompanyInformation, Cost, CountryCode, Date, Day, Decimal, HexColor, Month,
+    MonthHalf, PostalAddress, Quantity, Rate, RelativeTime, StreetAddress, UnitPrice, Vat, Year,
 };
 pub use l10n::*;
 pub use layout::*;

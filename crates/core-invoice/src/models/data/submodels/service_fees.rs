@@ -27,6 +27,17 @@ pub struct ServiceFees {
     /// How often you invoice, cannot be
     #[getset(get = "pub")]
     cadence: Cadence,
+
+    /// When `true`, public holidays in the vendor's country are deducted from
+    /// billable working days (for day- and hour-granularity rates). Defaults to
+    /// `false`, which preserves the prior behavior of counting every weekday.
+    ///
+    /// Holidays are looked up online (and cached to disk) using the vendor's
+    /// country; if the country cannot be resolved or the lookup fails, no
+    /// deduction is made.
+    #[getset(get = "pub")]
+    #[serde(default)]
+    off_on_bank_holidays: bool,
 }
 
 #[bon]
@@ -36,6 +47,7 @@ impl ServiceFees {
         name: impl AsRef<str>,
         rate: impl Into<Rate>,
         cadence: Cadence,
+        #[builder(default)] off_on_bank_holidays: bool,
     ) -> Result<Self, Error> {
         let rate = rate.into();
         if !cadence.validate(rate.granularity()) {
@@ -45,6 +57,7 @@ impl ServiceFees {
             name: name.as_ref().to_owned(),
             rate,
             cadence,
+            off_on_bank_holidays,
         })
     }
 }
@@ -98,5 +111,35 @@ mod tests {
     #[test]
     fn test_serde() {
         assert_ron_snapshot!(Sut::sample())
+    }
+
+    #[test]
+    fn off_on_bank_holidays_defaults_to_false() {
+        assert!(!Sut::sample().off_on_bank_holidays());
+    }
+
+    #[test]
+    fn builder_sets_off_on_bank_holidays() {
+        let fees = Sut::builder()
+            .name("Consulting".to_string())
+            .rate(crate::Rate::daily(dec!(100.0)))
+            .cadence(crate::Cadence::Monthly)
+            .off_on_bank_holidays(true)
+            .build()
+            .unwrap();
+        assert!(fees.off_on_bank_holidays());
+    }
+
+    #[test]
+    fn deserializes_legacy_ron_without_flag_as_false() {
+        // RON persisted before the field existed must still load (serde default).
+        let legacy = r#"(
+            name: "Agreed Consulting Service",
+            rate: Daily(UnitPrice(777.0)),
+            cadence: Monthly,
+        )"#;
+        let fees: Sut = crate::deserialize_ron_str(legacy).unwrap();
+        assert!(!fees.off_on_bank_holidays());
+        assert_eq!(fees.name(), "Agreed Consulting Service");
     }
 }

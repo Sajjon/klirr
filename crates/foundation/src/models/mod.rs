@@ -1,6 +1,8 @@
+mod bank_holidays;
 mod cadence;
 mod company_information;
 mod cost;
+mod country_code;
 mod currency;
 mod date;
 mod day;
@@ -25,9 +27,11 @@ mod unit_price;
 mod vat;
 mod year;
 
+pub use bank_holidays::BankHolidays;
 pub use cadence::Cadence;
 pub use company_information::CompanyInformation;
 pub use cost::Cost;
+pub use country_code::{CountryCode, InvalidCountryCode};
 pub use currency::Currency;
 pub use date::Date;
 pub use date::DueInDays;
