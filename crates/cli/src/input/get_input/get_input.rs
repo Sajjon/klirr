@@ -79,6 +79,21 @@ pub struct InvoiceInput {
     #[arg(long, short = 'e')]
     #[builder(default = false)]
     email: bool,
+
+    /// Treat bank holidays in the target period as worked, deducting none of
+    /// them from billable days. Overrides the vendor's `off_on_bank_holidays`
+    /// setting for this invoice only; has no effect if that setting is off.
+    #[arg(long, short = 'w')]
+    #[builder(default = false)]
+    #[getset(get = "pub")]
+    worked_holidays: bool,
+
+    /// Re-fetch bank holidays from the API instead of using the cached copy,
+    /// then update the cache. Use this if a country's published holidays change.
+    #[arg(long, short = 'r')]
+    #[builder(default = false)]
+    #[getset(get = "pub")]
+    refresh_holidays: bool,
 }
 
 impl InvoiceInput {
@@ -128,6 +143,8 @@ impl InvoiceInput {
             .layout(*self.layout())
             .items(items)
             .language(*self.language())
+            .worked_holidays(self.worked_holidays)
+            .refresh_holidays(self.refresh_holidays)
             .maybe_maybe_output_path(self.out)
             .maybe_email(email_config)
             .build();
@@ -276,6 +293,36 @@ mod tests {
                 let input = CliArgs::parse_from([BINARY_NAME, "invoice"]);
                 assert_eq!(input.command.unwrap_invoice().out, None);
             }
+
+            #[test]
+            fn test_input_parsing_worked_holidays_flag() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "--worked-holidays"]);
+                assert!(input.command.unwrap_invoice().worked_holidays);
+            }
+
+            #[test]
+            fn test_input_parsing_worked_holidays_short_flag() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "-w"]);
+                assert!(input.command.unwrap_invoice().worked_holidays);
+            }
+
+            #[test]
+            fn test_input_parsing_worked_holidays_default() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice"]);
+                assert!(!input.command.unwrap_invoice().worked_holidays);
+            }
+
+            #[test]
+            fn test_input_parsing_refresh_holidays_flag() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice", "--refresh-holidays"]);
+                assert!(input.command.unwrap_invoice().refresh_holidays);
+            }
+
+            #[test]
+            fn test_input_parsing_refresh_holidays_default() {
+                let input = CliArgs::parse_from([BINARY_NAME, "invoice"]);
+                assert!(!input.command.unwrap_invoice().refresh_holidays);
+            }
         }
 
         mod tests_parsed_input {
@@ -320,6 +367,27 @@ mod tests {
                     *input.maybe_output_path(),
                     Some(PathBuf::from("/tmp/invoice.pdf"))
                 );
+            }
+
+            #[test]
+            fn test_input_parsing_worked_holidays_threads_to_valid_input() {
+                let input = InvoiceInput::builder().worked_holidays(true).build();
+                let input = input.parsed(Cadence::Monthly).unwrap();
+                assert!(*input.worked_holidays());
+            }
+
+            #[test]
+            fn test_input_parsing_worked_holidays_defaults_to_false() {
+                let input = InvoiceInput::builder().build();
+                let input = input.parsed(Cadence::Monthly).unwrap();
+                assert!(!*input.worked_holidays());
+            }
+
+            #[test]
+            fn test_input_parsing_refresh_holidays_threads_to_valid_input() {
+                let input = InvoiceInput::builder().refresh_holidays(true).build();
+                let input = input.parsed(Cadence::Monthly).unwrap();
+                assert!(*input.refresh_holidays());
             }
 
             #[test]

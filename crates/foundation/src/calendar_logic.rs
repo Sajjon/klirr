@@ -1,7 +1,9 @@
 use std::str::FromStr;
 use std::{cmp::Ordering, ops::Mul};
 
-use crate::{Cadence, Date, Day, Granularity, ModelError, Month, Quantity, RelativeTime, Year};
+use crate::{
+    BankHolidays, Cadence, Date, Day, Granularity, ModelError, Month, Quantity, RelativeTime, Year,
+};
 use chrono::{Datelike, NaiveDate, Weekday};
 use indexmap::IndexSet;
 use thiserror::Error as ThisError;
@@ -370,7 +372,14 @@ fn period_bounds(period_end: Date, cadence: Cadence) -> CalendarResult<(Date, Da
     Ok((start, period_end))
 }
 
-fn working_days_between(start: Date, end: Date) -> CalendarResult<Quantity> {
+/// Counts weekdays (Mon–Fri) in the inclusive range `[start, end]`, excluding
+/// any date in `bank_holidays`. A holiday that already falls on a weekend is a
+/// no-op, so it is never double-counted.
+fn working_days_between(
+    start: Date,
+    end: Date,
+    bank_holidays: &BankHolidays,
+) -> CalendarResult<Quantity> {
     let start = NaiveDate::from_ymd_opt(
         **start.year() as i32,
         **start.month() as u32,
@@ -389,14 +398,16 @@ fn working_days_between(start: Date, end: Date) -> CalendarResult<Quantity> {
         underlying: "Invalid end date".to_owned(),
     })?;
 
+    let holidays = bank_holidays.as_naive_dates();
     let mut current = start;
     let mut working_days = 0;
     while current <= end {
-        match current.weekday() {
-            Weekday::Mon | Weekday::Tue | Weekday::Wed | Weekday::Thu | Weekday::Fri => {
-                working_days += 1;
-            }
-            Weekday::Sat | Weekday::Sun => {}
+        let is_weekday = matches!(
+            current.weekday(),
+            Weekday::Mon | Weekday::Tue | Weekday::Wed | Weekday::Thu | Weekday::Fri
+        );
+        if is_weekday && !holidays.contains(&current) {
+            working_days += 1;
         }
         current = current.succ_opt().ok_or(CalendarError::InvalidDate {
             underlying: "Failed to advance day".to_owned(),
@@ -406,12 +417,20 @@ fn working_days_between(start: Date, end: Date) -> CalendarResult<Quantity> {
     Ok(Quantity::from(working_days))
 }
 
-fn working_days_in_period(period_end: Date, cadence: Cadence) -> CalendarResult<Quantity> {
+fn working_days_in_period(
+    period_end: Date,
+    cadence: Cadence,
+    bank_holidays: &BankHolidays,
+) -> CalendarResult<Quantity> {
     let (start, end) = period_bounds(period_end, cadence)?;
-    working_days_between(start, end)
+    working_days_between(start, end, bank_holidays)
 }
 
 /// Calculates billable quantity for a period-end date and cadence.
+///
+/// `bank_holidays` are deducted from billable working days for day- and
+/// hour-granularity rates only; monthly/fortnightly fixed rates are unaffected.
+/// Pass [`BankHolidays::default`] (empty) to count every weekday.
 ///
 /// # Examples
 /// ```
@@ -426,6 +445,7 @@ fn working_days_in_period(period_end: Date, cadence: Cadence) -> CalendarResult<
 ///     Granularity::Day,
 ///     Cadence::Monthly,
 ///     &IndexSet::default(),
+///     &BankHolidays::default(),
 /// )
 /// .unwrap();
 ///
@@ -436,6 +456,7 @@ pub fn quantity_in_period(
     granularity: Granularity,
     cadence: Cadence,
     record_of_periods_off: &IndexSet<Date>,
+    bank_holidays: &BankHolidays,
 ) -> CalendarResult<Quantity> {
     let target_date = period_end_for_cadence(*target_date, cadence)?;
 
@@ -458,10 +479,12 @@ pub fn quantity_in_period(
             Cadence::Monthly => Ok(Quantity::TWO),
             Cadence::BiWeekly => Ok(Quantity::ONE),
         },
-        Granularity::Day => working_days_in_period(target_date, cadence),
-        Granularity::Hour => {
-            Ok(Quantity::EIGHT.mul(*working_days_in_period(target_date, cadence)?))
-        }
+        Granularity::Day => working_days_in_period(target_date, cadence, bank_holidays),
+        Granularity::Hour => Ok(Quantity::EIGHT.mul(*working_days_in_period(
+            target_date,
+            cadence,
+            bank_holidays,
+        )?)),
     }
 }
 
@@ -724,13 +747,65 @@ mod tests {
         assert_eq!(end_second, d("2025-05-31"));
     }
 
+    fn no_holidays() -> BankHolidays {
+        BankHolidays::default()
+    }
+
     #[test]
     fn working_days_between_counts_weekdays_only() {
-        let weekends = working_days_between(d("2025-05-17"), d("2025-05-18")).unwrap();
+        let weekends =
+            working_days_between(d("2025-05-17"), d("2025-05-18"), &no_holidays()).unwrap();
         assert_eq!(*weekends, dec!(0));
 
-        let weekday = working_days_between(d("2025-05-19"), d("2025-05-19")).unwrap();
+        let weekday =
+            working_days_between(d("2025-05-19"), d("2025-05-19"), &no_holidays()).unwrap();
         assert_eq!(*weekday, dec!(1));
+    }
+
+    #[test]
+    fn working_days_between_excludes_bank_holiday() {
+        // 2025-05-19 .. 2025-05-23 is Mon..Fri => 5 working days.
+        let span = (d("2025-05-19"), d("2025-05-23"));
+        let full = working_days_between(span.0, span.1, &no_holidays()).unwrap();
+        assert_eq!(*full, dec!(5));
+
+        // Marking the Wednesday as a holiday removes exactly one working day.
+        let holidays = BankHolidays::new([d("2025-05-21")]);
+        let reduced = working_days_between(span.0, span.1, &holidays).unwrap();
+        assert_eq!(*reduced, dec!(4));
+    }
+
+    #[test]
+    fn working_days_between_holiday_on_weekend_is_noop() {
+        // 2025-05-17 is a Saturday — marking it as a holiday changes nothing.
+        let span = (d("2025-05-19"), d("2025-05-23"));
+        let holidays = BankHolidays::new([d("2025-05-17")]);
+        let count = working_days_between(span.0, span.1, &holidays).unwrap();
+        assert_eq!(*count, dec!(5));
+    }
+
+    #[test]
+    fn quantity_in_period_deducts_bank_holidays_for_hours() {
+        let target = d("2025-05-31");
+        let days_off_one = BankHolidays::new([d("2025-05-21")]);
+        let hours_full = quantity_in_period(
+            &target,
+            Granularity::Hour,
+            Cadence::Monthly,
+            &IndexSet::default(),
+            &no_holidays(),
+        )
+        .unwrap();
+        let hours_reduced = quantity_in_period(
+            &target,
+            Granularity::Hour,
+            Cadence::Monthly,
+            &IndexSet::default(),
+            &days_off_one,
+        )
+        .unwrap();
+        // One holiday removes one working day == 8 hours.
+        assert_eq!(*hours_full - *hours_reduced, dec!(8));
     }
 
     #[test]
@@ -741,6 +816,7 @@ mod tests {
             Granularity::Day,
             Cadence::Monthly,
             &IndexSet::default(),
+            &no_holidays(),
         )
         .unwrap();
         let fortnight = quantity_in_period(
@@ -748,6 +824,7 @@ mod tests {
             Granularity::Day,
             Cadence::BiWeekly,
             &IndexSet::default(),
+            &no_holidays(),
         )
         .unwrap();
         assert!(fortnight < monthly);
@@ -761,6 +838,7 @@ mod tests {
                 Granularity::Month,
                 Cadence::Monthly,
                 &IndexSet::default(),
+                &no_holidays(),
             )
             .unwrap(),
             Quantity::ONE
@@ -771,6 +849,7 @@ mod tests {
                 Granularity::Fortnight,
                 Cadence::Monthly,
                 &IndexSet::default(),
+                &no_holidays(),
             )
             .unwrap(),
             Quantity::TWO
@@ -781,6 +860,7 @@ mod tests {
                 Granularity::Fortnight,
                 Cadence::BiWeekly,
                 &IndexSet::default(),
+                &no_holidays(),
             )
             .unwrap(),
             Quantity::ONE
@@ -795,6 +875,7 @@ mod tests {
             Granularity::Day,
             Cadence::BiWeekly,
             &IndexSet::default(),
+            &no_holidays(),
         )
         .unwrap();
         let hours = quantity_in_period(
@@ -802,6 +883,7 @@ mod tests {
             Granularity::Hour,
             Cadence::BiWeekly,
             &IndexSet::default(),
+            &no_holidays(),
         )
         .unwrap();
         assert_eq!(hours, Quantity::EIGHT.mul(*days));
@@ -811,7 +893,13 @@ mod tests {
     fn quantity_in_period_fails_when_target_is_in_periods_off() {
         let target = d("2025-05-31");
         let periods_off = periods_off([target]);
-        let result = quantity_in_period(&target, Granularity::Day, Cadence::Monthly, &periods_off);
+        let result = quantity_in_period(
+            &target,
+            Granularity::Day,
+            Cadence::Monthly,
+            &periods_off,
+            &no_holidays(),
+        );
         assert_eq!(
             result.unwrap_err(),
             CalendarError::TargetPeriodMustNotBeInRecordOfPeriodsOff {
@@ -828,6 +916,7 @@ mod tests {
             Granularity::Month,
             Cadence::BiWeekly,
             &IndexSet::default(),
+            &no_holidays(),
         );
         assert_eq!(
             result.unwrap_err(),

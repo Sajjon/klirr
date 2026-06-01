@@ -1,4 +1,4 @@
-use crate::{Day, HasSample, ModelError, ModelResult, Month, Year};
+use crate::{Day, DueDays, HasSample, ModelError, ModelResult, Month, Year};
 use bon::Builder;
 use chrono::Datelike;
 use chrono::Local;
@@ -44,7 +44,7 @@ pub struct Date {
 
 /// Abstraction for terms that can advance a date by a number of days.
 pub trait DueInDays {
-    fn due_in_days(&self) -> Day;
+    fn due_in_days(&self) -> DueDays;
 }
 
 impl std::str::FromStr for Date {
@@ -208,13 +208,13 @@ impl Date {
     /// use klirr_foundation::*;
     ///
     /// let date = "2025-05-23".parse::<Date>().unwrap();
-    /// let advanced = date.advance_days(&Day::try_from(7).unwrap());
+    /// let advanced = date.advance_days(&DueDays::try_from(7u16).unwrap());
     ///
     /// assert_eq!(advanced.to_string(), "2025-05-30");
     /// ```
-    pub fn advance_days(&self, days: &Day) -> Self {
+    pub fn advance_days(&self, days: &DueDays) -> Self {
         let datetime = self.to_datetime();
-        let days: u8 = **days;
+        let days: u16 = **days;
         let advanced_date = datetime + chrono::Duration::days(days as i64);
         Self::from(advanced_date)
     }
@@ -229,8 +229,8 @@ impl Date {
     /// let invoice_date = "2025-05-23".parse::<Date>().unwrap();
     /// struct Net7;
     /// impl DueInDays for Net7 {
-    ///     fn due_in_days(&self) -> Day {
-    ///         Day::try_from(7).unwrap()
+    ///     fn due_in_days(&self) -> DueDays {
+    ///         DueDays::try_from(7u16).unwrap()
     ///     }
     /// }
     ///
@@ -380,13 +380,13 @@ mod tests {
         assert_eq!(datetime.time().minute(), 0);
         assert_eq!(datetime.time().second(), 0);
 
-        let plus_seven = date.advance_days(&Day::try_from(7).unwrap());
+        let plus_seven = date.advance_days(&DueDays::try_from(7u16).unwrap());
         assert_eq!(plus_seven, Sut::from_str("2025-05-30").unwrap());
 
         struct Net30;
         impl DueInDays for Net30 {
-            fn due_in_days(&self) -> Day {
-                Day::try_from(30).unwrap()
+            fn due_in_days(&self) -> DueDays {
+                DueDays::try_from(30u16).unwrap()
             }
         }
 

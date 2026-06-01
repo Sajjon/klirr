@@ -9,7 +9,11 @@ documentation = "https://docs.rs/klirr-core-invoice"
 repository = "https://github.com/Sajjon/klirr"
 
 [dependencies]
-klirr-foundation = { workspace = true, features = ["crypto", "exchange-rates"] }
+klirr-foundation = { workspace = true, features = [
+    "crypto",
+    "exchange-rates",
+    "bank-holidays",
+] }
 
 bon.workspace = true
 chrono.workspace = true

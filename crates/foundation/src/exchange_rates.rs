@@ -253,7 +253,7 @@ impl<T> ExchangeRatesFetcher<T> {
         match self.save_cache(rates_by_day) {
             Ok(_) => debug!("✅ Cached exchange rates updated."),
             Err(e) => {
-                warn!("Failed to cache exchange rates: {e} (this has no affect on PDF generation.)")
+                warn!("Failed to cache exchange rates: {e} (this has no effect on PDF generation.)")
             }
         }
     }

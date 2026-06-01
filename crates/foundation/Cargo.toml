@@ -20,6 +20,7 @@ crypto = [
     "dep:zeroize",
 ]
 exchange-rates = ["dep:reqwest"]
+bank-holidays = ["dep:reqwest"]
 
 [dependencies]
 aes-gcm = { workspace = true, optional = true }
